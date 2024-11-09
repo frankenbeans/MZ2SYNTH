@@ -1,6 +1,6 @@
 * ======================================================================
 * WVECMP.F - FOURIER SYNTHESIS OF COMMON MUSICAL SYNTHESIZER WAVEFORMS
-* COPYRIGHT (C) 2017 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+* COPYRIGHT (C) 2017 BY E. LAMPRECHT.  SEE LICENSE.md IN THIS REPOSITORY
 * ======================================================================
 
 #define PPI 3.14159265358979D0

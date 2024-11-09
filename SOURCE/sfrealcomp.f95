@@ -3,7 +3,7 @@
 !
 ! Practical real-number comparisons for SFDEFLIC project
 !
-! Copyright (C) 2023 by E. Lamprecht - all rights reserved
+! Copyright (C) 2024 by E. Lamprecht.   See LICENSE.md in this repository.
 ! ------------------------------------------------------------------------------
 
 MODULE SFRealComp

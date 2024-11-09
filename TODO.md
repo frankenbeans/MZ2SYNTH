@@ -2,6 +2,7 @@
 
 ## IMMEDIATE
 - Test repository contents to see that it is complete and builds without warnings.
+  - NB:  original local copy already builds with no warnings
 - Write basic usage instructions
 - Make public, warts and all
 

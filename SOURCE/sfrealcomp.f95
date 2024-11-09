@@ -53,7 +53,3 @@ CONTAINS
   END FUNCTION RNZ
   
 END MODULE SFRealComp
-  
-  
-  
-  

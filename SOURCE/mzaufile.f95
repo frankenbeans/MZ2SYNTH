@@ -1,4 +1,8 @@
+! Copyright (C) 2024 by E. Lamprecht
+! See LICENSE.md in this repository.
+
 #include "defaults.inc"
+
 MODULE MZAUFILE
   USE ISO_C_BINDING
   USE BREVERSE

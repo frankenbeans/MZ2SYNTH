@@ -43,10 +43,8 @@
 !|                       seriously look at removing this ugly kludge.         |
 !|                       (PRI=MED)                                            |
 !|                                                                            |
-!| Copyright (C) 2023 by E. Lamprecht.  All rights reserved.                  |
+!| Copyright (C) 2024 by E. Lamprecht.  See LICENSE.md in this repository.    |
 !+============================================================================+
-
-! $CVSHeader: MZ2/SOURCE/fimagemod.f95,v 1.3 2024/11/09 22:00:08 emman Exp $
 
 MODULE FImageMod
   USE Constant,    ONLY: RKIND

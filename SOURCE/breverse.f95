@@ -1,3 +1,6 @@
+! Copyright (C) 2024 by E. Lamprecht
+! See LICENSE.md in this repository.
+
 MODULE BREVERSE
   USE ISO_C_BINDING
   IMPLICIT NONE

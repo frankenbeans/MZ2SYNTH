@@ -7,6 +7,8 @@
 - Make public, warts and all
 
 ## MEDIUM TERM
-- Tidy up source code - lots of styles, lots of header formats, etc.
+- Tidy up source code
+  - lots of styles, lots of header formats, etc.
+  - Fortran 2008 required to build, see if can modify to allow Fortran 2003 only
 - Write proper documentation (manual page + tutorial information)
 - Supply template files and examples

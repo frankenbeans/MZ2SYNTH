@@ -1,3 +1,6 @@
+! Copyright (C) 2024 by E. Lamprecht
+! See LICENSE.md in this repository.
+
 #ifndef DFTRZ
 #define DFTRZ 0.333_RKIND
 #endif

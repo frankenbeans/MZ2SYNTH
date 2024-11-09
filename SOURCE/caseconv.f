@@ -3,10 +3,8 @@
 *
 * FORTRAN-77 ROUTINES FOR CONVERTING STRINGS TO UPPERCASE OR LOWERCASE.
 *
-* COPYRIGHT (C) 2014 BY E. LAMPRECHT.  ALL RIGHTS RESERVED.
+* COPYRIGHT (C) 2024 BY E. LAMPRECHT. SEE LICENSE.md IN THIS REPOSITORY.
 * ----------------------------------------------------------------------
-
-* $CVSHeader: MZ2/SOURCE/caseconv.f,v 1.1.1.1 2021/05/23 02:02:44 emman Exp $
 
 * ----------------------------------------------------------------------
 * SUBROUTINE TOUPPR(C)

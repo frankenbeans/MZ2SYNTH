@@ -12,3 +12,16 @@
   - Fortran 2008 required to build, see if can modify to allow Fortran 2003 only
 - Write proper documentation (manual page + tutorial information)
 - Supply template files and examples
+
+## LONG TERM
+- Re-imagine the way in which output is created currently.  The main problem is
+  that output files are created in one go at the end of execuation so that live
+  performance is impossible.  The problems are going to be in
+  - totally changing the file-creation mechanism in the MZAUFILE module
+  - finding a smarter way to use functions in MZNORM for soft clipping to prevent
+    clipping in output
+- Look at the mechanisms in mzpnl - these are a bodge at the curren time and
+  are probably much more processor intensive than necessary.
+- Establish a FIFO for interprocess communication that will allow at least the
+  rate of advance to be changed during execution to allow for limited live
+  performance.

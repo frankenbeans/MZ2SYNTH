@@ -1,9 +1,9 @@
 ! ------------------------------------------------------------------------------
 ! SFREALCOMP.F95
 !
-! Practical real-number comparisons for SFDEFLIC project
+! PRACTICAL REAL NUMBER COMPARISON FUNCTIONS (ORIGINALLY FOR SFDEFLIC PROJECT)
 !
-! Copyright (C) 2024 by E. Lamprecht.   See LICENSE.md in this repository.
+! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 MODULE SFRealComp
@@ -53,3 +53,7 @@ CONTAINS
   END FUNCTION RNZ
   
 END MODULE SFRealComp
+  
+  
+  
+  

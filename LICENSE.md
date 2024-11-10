@@ -20,15 +20,18 @@
   this license is retained in full and that the terms and conditions of this license shall apply to any recipients.
 - You may freely distribute *modified* versions of the Materials subject to the condition that all such copies must
   bear a clear notice to the following effect:
-  - The modified versions are derived from Materials obtained originally from the FrankenBeans Github repository, stating
+  - The modified versions are derived from Materials obtained originally from THIS repository, stating
     the specific name of the repository.
   - The modified versions have been changed by you without specific approval from the original author.
-- Subject to the above, you may distribute executables that you have derived from *modified* or *unmodified* versions of the Materials with no obligation
-  to release the source code from which these executables are generated.
+- Subject to the above, you may distribute executables that you have derived from *modified* or
+  *unmodified* versions of the Materials with no obligation to release the source code from which these
+  executables are generated, provided that the recipients are referred to THIS repository to be able to access the
+  original Materials.
 
 ### Specific Exclusions to Rights Conferred to You by this License
 - You may NOT distribute *modified* versions under the full, unaltered name of the original.
-- You may NOT include the Materials in any derived work that is distributed to others if that derived work is protected by software patents.
+- You may NOT include the Materials in any derived work that is distributed to others if that
+  derived work is protected by software patents.
 
 ### Disclaimer of All Liability or Obligation
 I have provided the Materials to you on the understanding that:

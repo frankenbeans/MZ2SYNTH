@@ -1,9 +1,9 @@
 * ======================================================================
 * WVECMP.F - FOURIER SYNTHESIS OF COMMON MUSICAL SYNTHESIZER WAVEFORMS
-* COPYRIGHT (C) 2017 BY E. LAMPRECHT.  SEE LICENSE.md IN THIS REPOSITORY
+* COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 * ======================================================================
 
-#define PPI 3.14159265358979D0
+#define PPI (4.0D0*ATAN(1.0D0))
 
 * ======================================================================
 *     FUNCTIONS WVFxxx(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
@@ -88,7 +88,7 @@
 *     --- DUMMIES ---
       DOUBLE PRECISION F
 *     --- EXE CODE ---
-      OMEGA=2*PPI*F
+      OMEGA=2.0D0*PPI*F
 *     --- END CODE ---
       END
 * -----------------------------------------------------------------------

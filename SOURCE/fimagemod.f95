@@ -43,7 +43,7 @@
 !|                       seriously look at removing this ugly kludge.         |
 !|                       (PRI=MED)                                            |
 !|                                                                            |
-!| Copyright (C) 2024 by E. Lamprecht.  See LICENSE.md in this repository.    |
+!| Copyright (C) 2024 by E. Lamprecht.  All rights reserved.                  |
 !+============================================================================+
 
 MODULE FImageMod

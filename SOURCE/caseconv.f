@@ -3,7 +3,7 @@
 *
 * FORTRAN-77 ROUTINES FOR CONVERTING STRINGS TO UPPERCASE OR LOWERCASE.
 *
-* COPYRIGHT (C) 2024 BY E. LAMPRECHT. SEE LICENSE.md IN THIS REPOSITORY.
+* COPYRIGHT (C) 2024 BY E. LAMPRECHT -  ALL RIGHTS RESERVED.
 * ----------------------------------------------------------------------
 
 * ----------------------------------------------------------------------

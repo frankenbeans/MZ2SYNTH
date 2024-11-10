@@ -1,13 +1,8 @@
-# ------------------------------------------------------------------------------
-# Makefile for MZ2 (GFortran)
-# Copyright (C) 2024 by E. Lamprecht - see LICENSE.md in this repository
-# ------------------------------------------------------------------------------
-
 FC=gfortran
-CFLAGS=-cpp -Wall -fopenmp -Ofast
+CFLAGS=-cpp -Wall -O3 -Ofast -fopenmp -ffast-math -flto
 EXE=mz2
-OBJ=constant.o caseconv.o logist.o wvecmp.o pflags.o breverse.o \
-    sfrealcomp.o fimagemod.o mzosc.o mznorm.o mzpnl.o mzaufile.o mzsynth.o
+OBJ=constant.o caseconv.o logist.o wvecmp.o pflags.o sfrealcomp.o \
+    fimagemod.o mzosc.o mzpnl.o mzaufile.o mzsynth.o
 
 $(EXE) : $(OBJ)
 	$(FC) $(CFLAGS) -o $(EXE) $(OBJ)

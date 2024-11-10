@@ -1,9 +1,9 @@
 # TODO for MZ2SYNTH
 
 ## IMMEDIATE
-- Test repository contents to see that it is complete and builds without warnings.
+- [*** DONE ***] Test repository contents to see that it is complete and builds without warnings.
   - NB:  original local copy already builds with no warnings
-- Write basic usage instructions
+- [*** DONE ***] Write basic usage instructions
 - Make public, warts and all
 
 ## MEDIUM TERM
@@ -14,7 +14,7 @@
 - Supply template files and examples
 
 ## LONG TERM
-- Re-imagine the way in which output is created currently.  The main problem is
+- [*** DONE ***] Re-imagine the way in which output is created currently.  The main problem is
   that output files are created in one go at the end of execuation so that live
   performance is impossible.  The problems are going to be in
   - totally changing the file-creation mechanism in the MZAUFILE module

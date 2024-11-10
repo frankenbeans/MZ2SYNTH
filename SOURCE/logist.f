@@ -1,9 +1,9 @@
 * ----------------------------------------------------------------------
-* LOGIST.F
+*     LOGIST.F
 *
-* LOGISTIC FUNCTION (SIGMOID CURVE)
+*     LOGISTIC FUNCTION (SIGMOID CURVE)
 *
-* COPYRIGHT (C) 2024 BY E. LAMPRECHT.  SEE LICENSE.md IN THIS REPOSITORY
+*     COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 * ----------------------------------------------------------------------
 *
       FUNCTION LOGIST(X)

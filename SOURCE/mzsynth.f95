@@ -244,7 +244,7 @@ CONTAINS
          'Toggle overwrite mode','off'
     WRITE(*,710) '-x','-fixed-phase','',                  &
          'Toggle fixed phase mode','off'
-    WRITE(*,710) '-x','-zero-phase','',                   &
+    WRITE(*,710) '-z','-zero-phase','',                   &
          'Toggle zero phase mode','off'
     WRITE(*,710) '-a','-advance','<r>',                   &
          'Set advance rate in cols/sec ','10'

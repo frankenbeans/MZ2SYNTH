@@ -28,6 +28,7 @@ PROGRAM MZSYNTH
   LOGICAL             :: ABIN=.FALSE.
   LOGICAL             :: CMPR=.FALSE.
   LOGICAL             :: FXPH=DFXP
+  LOGICAL             :: ZRPH=DZRP
   INTEGER             :: SMPR=DSMP
 
   ! DERIVED PARAMETERS
@@ -115,6 +116,15 @@ CONTAINS
           ELSE
              IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
           END IF          
+       CASE('-Z','-ZERO-PHASE')
+          ZRPH=.NOT.ZRPH
+          RARG='ZERO PHASES INITIALLY'
+          IF (FXPH) THEN
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+          ELSE
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
+          END IF
+          
        ! --- BINARY ARGUMENTS ---
        CASE('-A','-ADVANCE')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET ADVANCE RATE'
@@ -265,7 +275,7 @@ CONTAINS
     ! --- VARIABLES ---
     INTEGER :: FS
     ! --- EXE CODE ---
-    CALL MZOSC_INIT(ABIN,WFN,SMPR)
+    CALL MZOSC_INIT(ABIN,WFN,SMPR,PHRND=.NOT.ZRPH)
     CALL MZPNL_LOAD(PIFN,VCHS,AFTRZ=TRZF,ANCLPS=ACPS)
     CALL AU_WRTHDR(OFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,MCBE,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900

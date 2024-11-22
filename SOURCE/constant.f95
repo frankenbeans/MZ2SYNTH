@@ -90,6 +90,11 @@
 #define CONST_DFXP .FALSE.
 #endif
 
+#ifndef CONST_DZRP
+#define CONST_DZRP .FALSE.
+#endif
+
+
 MODULE CONSTANT
   IMPLICIT NONE
 
@@ -121,4 +126,5 @@ MODULE CONSTANT
   INTEGER            ,PARAMETER :: DWWW = CONST_DWWW ! Width of wavetable window
   INTEGER            ,PARAMETER :: DRNS = CONST_DRNS ! Random seed for phase ini
   LOGICAL            ,PARAMETER :: DFXP = CONST_DFXP ! Fixed phase mode
+  LOGICAL            ,PARAMETER :: DZRP = CONST_DZRP ! Initialize phases with zero
 END MODULE CONSTANT

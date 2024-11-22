@@ -8,10 +8,10 @@ $(EXE) : $(OBJ)
 	$(FC) $(CFLAGS) -o $(EXE) $(OBJ)
 
 %.o : %.f
-	$(FC) $(CFLAGS) -std=f2008 -c $<
+	$(FC) $(CFLAGS) -std=f2003 -c $<
 
 %.o : %.f95
-	$(FC) $(CFLAGS) -std=f2008 -c $<
+	$(FC) $(CFLAGS) -std=f2003 -c $<
 
 all : $(EXE)
 

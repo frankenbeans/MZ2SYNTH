@@ -11,7 +11,7 @@
   - lots of styles, lots of header formats, etc.
   - [*** DONE ***] Fortran 2008 required to build, see if can modify to allow Fortran 2003 only
 - Write proper documentation (manual page + tutorial information)
-- Supply template files and examples
+- Supply template files and examples [*** DONE: 1 example ***]
 
 ## LONG TERM
 - [*** DONE ***] Re-imagine the way in which output is created currently.  The main problem is

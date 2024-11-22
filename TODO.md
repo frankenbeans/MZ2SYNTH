@@ -20,8 +20,12 @@
   - totally changing the file-creation mechanism in the MZAUFILE module
   - finding a smarter way to use functions in MZNORM for soft clipping to prevent
     clipping in output
-- Look at the mechanisms in mzpnl - these are a bodge at the curren time and
+- [*** DONE *** ] Look at the mechanisms in mzpnl - these are a bodge at the current time and
   are probably much more processor intensive than necessary.
 - Establish a FIFO for interprocess communication that will allow at least the
   rate of advance to be changed during execution to allow for limited live
   performance.
+- In MZOSC, the sine-wave oscillator is profligate its use of RAM.  Unlike the other voices,
+  where in principle the number of Fourier components present change through the octaves,
+  the sine wave oscillator could consist of only one element that can be sampled at all
+  frequencies.  This could have been done long ago, but I forgot about it...

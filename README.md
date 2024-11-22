@@ -52,6 +52,7 @@ The following options are available (case insensitive):
 |-p        | -dynamic-compression     | Toggle dynamic compression on                   |
 |-w        | -overwrite               | Toggle audio file overwrite mode                |
 |-x        | -fixed-phase             | Toggle on fixed-phase mode (slower, accurate)   |
+|-z        | -zero-phase              | Toggle on zero-phase mode (changes beat freq.s) |
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M)                                |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
@@ -74,6 +75,8 @@ wave-table used was generated with the sampling rate being used.
 - Volume multiplier:  1.0
 - Transition fraction: 0.333 (also the maximum)
 - Sampling rate: 44100 c.p.s.
+- Fixed phase:  off
+- Zero phase:   off (i.e., phases are randomized at start by default)
 
 ## USAGE EXAMPLES
 

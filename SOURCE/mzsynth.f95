@@ -123,8 +123,7 @@ CONTAINS
              IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
           ELSE
              IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
-          END IF
-          
+          END IF          
        ! --- BINARY ARGUMENTS ---
        CASE('-A','-ADVANCE')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET ADVANCE RATE'
@@ -244,7 +243,9 @@ CONTAINS
     WRITE(*,710) '-w','-overwrite','',                    &
          'Toggle overwrite mode','off'
     WRITE(*,710) '-x','-fixed-phase','',                  &
-         'Toggle fixed phase mode','off'    
+         'Toggle fixed phase mode','off'
+    WRITE(*,710) '-x','-zero-phase','',                   &
+         'Toggle zero phase mode','off'
     WRITE(*,710) '-a','-advance','<r>',                   &
          'Set advance rate in cols/sec ','10'
     WRITE(*,710) '-c','-channel-select','<sqwt>',         &

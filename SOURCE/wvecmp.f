@@ -179,13 +179,13 @@
          IF (ABS(OUTPUT(J)).GT.ABSAMP) ABSAMP=ABS(OUTPUT(J))
  30   CONTINUE
 *
-      IF (ABSAMP.EQ.0) GOTO 40
+      IF (ABSAMP.EQ.0) GOTO 999
       DO 40 J=1,IZOUTP         
          OUTPUT(J)=OUTPUT(J)/ABSAMP         
  40   CONTINUE
 *     ..................................................................
 *     --- END CODE ---
-      END
+999   END
 * ======================================================================
       FUNCTION FGNSIN(OMEGA,T,K)
       IMPLICIT NONE

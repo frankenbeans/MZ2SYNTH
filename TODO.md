@@ -6,6 +6,8 @@
   - Test properly on native machine with Win64 to compare performance with my development system
   - Provide a Makefile.gfortran.w32 which defines CONST_DWWW as 2**15, which will at least give an executable
     that generates output, however glacial the pace.
+  - let input and output filenames '-' represent the standard input and output streams, IF it is possible to
+    do so within F2003 without using extensions.
 
 ## MEDIUM TERM
 - Tidy up source code

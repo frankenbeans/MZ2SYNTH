@@ -3,7 +3,8 @@
 * COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 * ======================================================================
 
-#define PPI (4.0D0*ATAN(1.0D0))
+#define PPI    (4.0D0*ATAN(1.0D0))
+#define MXNCMP (128)
 
 * ======================================================================
 *     FUNCTIONS WVFxxx(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
@@ -28,11 +29,14 @@
       DOUBLE PRECISION IFSMPL
       INTEGER          IZOUTP
       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+*     --- PARAMETER ---
+      INTEGER          MXNITR
+      PARAMETER(MXNITR=1)
 *     --- EXTERNALS ---
       DOUBLE PRECISION FGNSIN
       EXTERNAL         FGNSIN
 *     --- EXE CODE ---
-      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNSIN)
+      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNSIN,MXNITR)
 *     --- END CODE ---
       END
 * ----------------------------------------------------------------------
@@ -43,11 +47,14 @@
       DOUBLE PRECISION IFSMPL
       INTEGER          IZOUTP
       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+*     --- PARAMETER ---
+      INTEGER          MXNITR
+      PARAMETER(MXNITR=MXNCMP)
 *     --- EXTERNALS ---
       DOUBLE PRECISION FGNSQR
       EXTERNAL         FGNSQR
 *     --- EXE CODE ---
-      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNSQR)
+      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNSQR,MXNITR)
 *     --- END CODE ---
       END
 * ----------------------------------------------------------------------
@@ -58,11 +65,14 @@
       DOUBLE PRECISION IFSMPL
       INTEGER          IZOUTP
       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+*     --- PARAMETER ---
+      INTEGER          MXNITR
+      PARAMETER(MXNITR=MXNCMP)
 *     --- VARIABLES ---
       DOUBLE PRECISION FGNSAW
       EXTERNAL         FGNSAW
 *     --- EXE CODE ---
-      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNSAW)
+      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNSAW,MXNITR)
 *     --- END CODE ---
       END
 * ----------------------------------------------------------------------
@@ -73,11 +83,14 @@
       DOUBLE PRECISION IFSMPL
       INTEGER          IZOUTP
       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+*     --- PARAMETER ---
+      INTEGER          MXNITR
+      PARAMETER(MXNITR=MXNCMP)
 *     --- EXTERNALS ---
       DOUBLE PRECISION FGNTRI
       EXTERNAL         FGNTRI
 *     --- EXE CODE ---
-      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNTRI)      
+      CALL WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,FGNTRI,MXNITR)      
 *     --- END CODE ---
       END
 * =======================================================================
@@ -110,7 +123,7 @@
 *     --- END CODE ---      
       END
 * -----------------------------------------------------------------------      
-      SUBROUTINE WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,WVFUNC)
+      SUBROUTINE WVF000(IFWAVE,IFSMPL,IZOUTP,OUTPUT,WVFUNC,MXNITR)
       IMPLICIT NONE
 *     --- DUMMIES ---
       DOUBLE PRECISION IFWAVE
@@ -118,10 +131,8 @@
       INTEGER          IZOUTP
       DOUBLE PRECISION OUTPUT(1:IZOUTP)
       DOUBLE PRECISION WVFUNC
-      EXTERNAL         WVFUNC
-*     --- PARAMETERS ---
-      INTEGER          MXNCMP
-      PARAMETER       (MXNCMP=128)
+      INTEGER          MXNITR
+      EXTERNAL         WVFUNC   
 *     --- VARIABLES ---
       INTEGER          J
       INTEGER          K,MAXK
@@ -151,7 +162,7 @@
 *     of the highest frequency Fourier component that should appear in
 *     OUTPUT.
 *     ..................................................................
-      MAXK=MIN(INT(0.5D0*IFSMPL/IFWAVE),MXNCMP)
+      MAXK=MIN(INT(0.5D0*IFSMPL/IFWAVE),MXNITR)
 *     DO FOURIER SUMMATION FOR THIS WAVEFORM
  10   K=K+1
       IF (K.GT.MAXK) GOTO 25
@@ -168,13 +179,9 @@
          IF (ABS(OUTPUT(J)).GT.ABSAMP) ABSAMP=ABS(OUTPUT(J))
  30   CONTINUE
 *
-      DO 40 J=1,IZOUTP
-         IF (ABSAMP.GT.0) OUTPUT(J)=OUTPUT(J)/ABSAMP
-         IF (OUTPUT(J).GT.1D0) THEN
-            OUTPUT(J)= 1D0
-         ELSE IF (OUTPUT(J).LT.-1D0) THEN
-            OUTPUT(J)=-1D0
-         END IF
+      IF (ABSAMP.EQ.0) GOTO 40
+      DO 40 J=1,IZOUTP         
+         OUTPUT(J)=OUTPUT(J)/ABSAMP         
  40   CONTINUE
 *     ..................................................................
 *     --- END CODE ---

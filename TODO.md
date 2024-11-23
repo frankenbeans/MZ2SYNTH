@@ -8,6 +8,7 @@
     that generates output, however glacial the pace.
   - let input and output filenames '-' represent the standard input and output streams, IF it is possible to
     do so within F2003 without using extensions.
+  - in verbose mode, put elementary clipping stats at the end of the run.
 
 ## MEDIUM TERM
 - Tidy up source code

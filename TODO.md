@@ -22,7 +22,8 @@
   the sine wave oscillator could consist of only one element that can be sampled at all
   frequencies.  This could have been done long ago, but I forgot about it...
 - Also in MZOSC, look at the possibility of changing the way that wavetables are done to save space.
-  This will allow small platforms (e.g., Raspberry Pi) to be supported in future
+  This will allow small platforms (e.g., Raspberry Pi) to be supported in future.
+  
   Avenues to consider:
   - Make one wavetable for every OCTAVE (nyquist = max frequency / 2) instead of for every TONE
   - Make wavetables substantially narrower and use a sensible interpolation scheme instead of a

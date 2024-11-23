@@ -14,6 +14,7 @@
   - lots of styles, lots of header formats, etc.
 - Write proper documentation (manual page + tutorial information)
 - Supply template files and examples [*** DONE: 1 example ***]
+- Support Intel Fortran
 
 ## LONG TERM
 - Establish a FIFO for interprocess communication that will allow at least the

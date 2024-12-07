@@ -130,11 +130,9 @@ CONTAINS
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'    
 
     IF (PFL_VERB) WRITE(*,700) 'Initializing wavetables'    
-    CALL WVFSIN(DBLE(ob%freq(1)),DBLE(ob%smpr),N_TIC_PER_CYC,WTS)
-    
+    CALL WVFSIN(DBLE(ob%freq(1)),DBLE(ob%smpr),N_TIC_PER_CYC,WTS)    
     !$OMP PARALLEL DO
     DO j=1,N_WVT
-       ! WRITE(*,*) '-o-',j,OscNmbr(j),ob%freq(OscNmbr(j))
        CALL WVFSQR(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
             N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SQW))
        CALL WVFSAW(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
@@ -147,7 +145,10 @@ CONTAINS
     ob%tsqw=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW)
     ob%tswt=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
     ob%ttri=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
-    CALL OscBank_Updt(ob,(/(.TRUE.,I=1,N_OSC)/))
+    CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SIN)
+    CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SQW)
+    CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SWT)
+    CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_TRI)
 
     IF (PFL_VERB) WRITE(*,700) 'Wavetables initialized'
     IF (PFL_VERB) WRITE(*,700) 'Done!'    
@@ -208,36 +209,76 @@ CONTAINS
     ob=OscBank()
   END SUBROUTINE OscBank_Clear
 
-  SUBROUTINE OscBank_Updt(ob,msk)
+  SUBROUTINE OscBank_Update(ob,msk,vce)
     IMPLICIT NONE
     ! ------------------------------------------
     TYPE(OscBank),INTENT(INOUT) :: ob
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
+    INTEGER      ,INTENT(IN)    :: vce
     ! ------------------------------------------
     INTEGER          :: j,x0,x1
     REAL(KIND=RKIND) :: y0,y1
     ! ------------------------------------------
-    !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
-    DO j=1,N_OSC
-       IF (msk(j)) THEN
-          x0=INT(ob%accm(j))
-          x1=TRANSFER(MERGE((/1/),(/x0+1/),(/x0+1.GT.N_TIC_PER_CYC/)),x1)
-          ! ...................................................................
-          y0=ob%tsin(x0) ; y1=ob%tsin(x1)
-          ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-          ! ...................................................................
-          y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
-          ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-          ! ...................................................................
-          y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
-          ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-          ! ...................................................................
-          y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
-          ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-       END IF
-    END DO
-    !$OMP END PARALLEL DO
-
+    IF (vce.EQ.V_SIN) THEN
+       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
+       DO j=1,N_OSC
+          IF (msk(j)) THEN
+             x0=INT(ob%accm(j))
+             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
+             ! ...................................................................
+             y0=ob%tsin(x0) ; y1=ob%tsin(x1)
+             ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+             ! ...................................................................
+          END IF
+       END DO
+       !$OMP END PARALLEL DO
+    ELSE IF (vce.EQ.V_SQW) THEN
+       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
+       DO j=1,N_OSC
+          IF (msk(j)) THEN
+             x0=INT(ob%accm(j))
+             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
+             ! ...................................................................
+             y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
+             ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+             ! ...................................................................
+          END IF
+       END DO
+       !$OMP END PARALLEL DO       
+    ELSE IF (vce.EQ.V_SWT) THEN
+       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
+       DO j=1,N_OSC
+          IF (msk(j)) THEN
+             x0=INT(ob%accm(j))
+             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
+             ! ...................................................................
+             y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
+             ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+             ! ...................................................................
+          END IF
+       END DO
+       !$OMP END PARALLEL DO
+    ELSE IF (vce.EQ.V_TRI) THEN
+       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
+       DO j=1,N_OSC
+          IF (msk(j)) THEN
+             x0=INT(ob%accm(j))
+             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
+             ! ...................................................................
+             y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
+             ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+             ! ...................................................................             
+          END IF
+       END DO
+       !$OMP END PARALLEL DO       
+    ELSE
+       GOTO 900
+    END IF
+    RETURN
+    
+800 FORMAT('* ERROR (OscBank_Update):',1x,A)
+900 WRITE(*,800) 'Invalid voice number' ; STOP
+    
   CONTAINS
 
     ELEMENTAL FUNCTION Yli(x0,x1,y0,y1,x) RESULT(y)
@@ -252,7 +293,7 @@ CONTAINS
       c=y1-m*x1
       y=m*x+c
     END FUNCTION Yli    
-  END SUBROUTINE OscBank_Updt
+  END SUBROUTINE OscBank_Update
 
   SUBROUTINE OscBank_Tick(ob,msk)
     IMPLICIT NONE
@@ -268,7 +309,6 @@ CONTAINS
     WHERE(lmsk) ob%accm=ob%accm+ob%incr
     WHERE(lmsk.AND.ob%accm.GT.N_TIC_PER_CYC) ob%accm=ob%accm-N_TIC_PER_CYC
     !$OMP END PARALLEL WORKSHARE
-    CALL OscBank_Updt(ob,lmsk)
   END SUBROUTINE OscBank_Tick
     
 END MODULE MZOsc

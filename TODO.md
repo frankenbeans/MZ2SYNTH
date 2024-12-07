@@ -1,10 +1,10 @@
 # TODO for MZ2SYNTH
 
 ## SHORT TERM
-- MZ2SYNTH compiles on Win32 but cannot successfully allocate MZOSC wavetable arrays, and the
-  program performs abominably slowly.  The compiler used was GFortran 2.10.0 (msys2-base-i686-20210705.sfx).  
+- MZ2SYNTH compiles on Win32 but the program performs abominably slowly.  The compiler used was
+  GFortran 2.10.0 (msys2-base-i686-20210705.sfx).  
   - Test properly on native machine with Win64 to compare performance with my development system
-  - in verbose mode, put elementary clipping stats at the end of the run.
+- in verbose mode, put elementary clipping stats at the end of the run.
 
 ## MEDIUM TERM
 - Tidy up source code

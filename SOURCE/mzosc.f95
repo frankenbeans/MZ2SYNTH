@@ -306,8 +306,8 @@ CONTAINS
     ! ------------------------------------------
     lmsk=.TRUE. ; IF (PRESENT(msk)) lmsk=msk
     !$OMP PARALLEL WORKSHARE
-    WHERE(lmsk) ob%accm=ob%accm+ob%incr
-    WHERE(lmsk.AND.ob%accm.GT.N_TIC_PER_CYC) ob%accm=ob%accm-N_TIC_PER_CYC
+    WHERE(lmsk) ob%accm=MERGE(ob%accm+ob%incr-N_TIC_PER_CYC,ob%accm+ob%incr, &
+                              ob%accm+ob%incr.GT.N_TIC_PER_CYC)
     !$OMP END PARALLEL WORKSHARE
   END SUBROUTINE OscBank_Tick
     

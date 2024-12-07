@@ -149,16 +149,14 @@ CONTAINS
     ob%ttri=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
     CALL OscBank_Updt(ob,(/(.TRUE.,I=1,N_OSC)/))
 
-    IF (PFL_VERB) WRITE(*,700) 'Wavetables initialized'    
-
-    IF (PFL_VERB) WRITE(*,700) 'Done!'
-    
+    IF (PFL_VERB) WRITE(*,700) 'Wavetables initialized'
+    IF (PFL_VERB) WRITE(*,700) 'Done!'    
     ! --- END CODE ---
     RETURN
 700 FORMAT('OscBank_Init:',1x,A)
 800 FORMAT('* ERROR (OscBank_Init):',1x,A)
 900 WRITE(*,800) 'Out of memory' ; STOP
-    
+
   CONTAINS
 
     ELEMENTAL FUNCTION OscFreq(n) RESULT(f)
@@ -196,8 +194,19 @@ CONTAINS
          a=0
       END IF      
     END FUNCTION OscAccm
-
   END SUBROUTINE OscBank_Init
+
+  SUBROUTINE OscBank_Clear(ob)
+    IMPLICIT NONE
+    ! --------------------------------
+    TYPE(OscBank),INTENT(INOUT) :: ob
+    ! --------------------------------
+    IF (ASSOCIATED(ob%tsin)) DEALLOCATE(ob%tsin)
+    IF (ASSOCIATED(ob%tsqw)) DEALLOCATE(ob%tsqw)
+    IF (ASSOCIATED(ob%tswt)) DEALLOCATE(ob%tswt)
+    IF (ASSOCIATED(ob%ttri)) DEALLOCATE(ob%ttri)
+    ob=OscBank()
+  END SUBROUTINE OscBank_Clear
 
   SUBROUTINE OscBank_Updt(ob,msk)
     IMPLICIT NONE

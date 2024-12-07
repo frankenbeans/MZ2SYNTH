@@ -26,16 +26,16 @@
 #define CONST_DIFN 'input.ppm'
 #endif
 
-#ifndef CONST_DWFN
-#define CONST_DWFN '/usr/lib/mz2wave.tbl'
-#endif
-
 #ifndef CONST_DOFN
 #define CONST_DOFN 'output.au'
 #endif
 
 #ifndef CONST_DNOC
 #define CONST_DNOC 10
+#endif
+
+#ifndef CONST_DNWT
+#define CONST_DNWT 72
 #endif
 
 #ifndef CONST_DNOO
@@ -107,10 +107,10 @@ MODULE CONSTANT
   INTEGER,PARAMETER :: ZSTR =CONST_ZSTR  ! String length
   ! --- PROGRAM DEFAULT FILENAMES ---  
   CHARACTER(LEN=ZSTR),PARAMETER :: DIFN = CONST_DIFN ! Input image file name
-  CHARACTER(LEN=ZSTR),PARAMETER :: DWFN = CONST_DWFN ! Wavetable file name
   CHARACTER(LEN=ZSTR),PARAMETER :: DOFN = CONST_DOFN ! Output audio file name
   ! --- MUSICAL PARAMETERS ---
   INTEGER            ,PARAMETER :: DNOC = CONST_DNOC ! Number of octaves in span
+  INTEGER            ,PARAMETER :: DNWT = CONST_DNWT ! Number of octaves in span
   INTEGER            ,PARAMETER :: DNOO = CONST_DNOO ! Number of oscillator freq
   INTEGER            ,PARAMETER :: DNSO = CONST_DNSO ! Number of semitones/oct
   INTEGER            ,PARAMETER :: DFRF = CONST_DFRF ! Calibration frequency ref

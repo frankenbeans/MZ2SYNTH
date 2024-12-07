@@ -1,17 +1,20 @@
 ! ------------------------------------------------------------------------------
 ! MZOSC.F95
 !
-! OSCILLATOR SIMULATIONS (SINE,SQUARE,SAWTOOTH,TRIANGLE) FOR MZ2 SYNTHESIZER
+! SIMULATED OSCILLATOR BANK (SINE,SQUARE,SAWTOOTH,TRIANGLE) FOR MZ2 SYNTHESIZER
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED
 ! ------------------------------------------------------------------------------
 
-MODULE MZOSC
+MODULE MZOsc
   USE Constant
-  USE Pflags
+  USE PFlags
   IMPLICIT NONE
 
+  INTEGER,PARAMETER :: N_VOC        =4 ! (SIN,SQW,SWT,TRI)
+  INTEGER,PARAMETER :: V_SIN=1,V_SQW=2,V_SWT=3,V_TRI=N_VOC
   INTEGER,PARAMETER :: N_OCT        =DNOC
+  INTEGER,PARAMETER :: N_WVT        =DNWT
   INTEGER,PARAMETER :: N_OSC_PER_OCT=DNOO
   INTEGER,PARAMETER :: N_SMT_PER_OCT=DNSO
   INTEGER,PARAMETER :: N_OSC        =N_OCT*N_OSC_PER_OCT
@@ -20,306 +23,243 @@ MODULE MZOSC
   INTEGER,PARAMETER :: FRQ_REFERENCE_OSC=DFRF
   INTEGER,PARAMETER :: REFERENCE_SMT_NUM=DSRF
 
-  CHARACTER(LEN=ZSTR)           :: OSC_D_WVNAME =DWFN
-  INTEGER                       :: N_SMP_PER_SEC=DSMP
-  REAL(KIND=RKIND), ALLOCATABLE :: OSC_FREQ(:)
-  REAL(KIND=RKIND), ALLOCATABLE :: OSC_INCR(:)
-  REAL(KIND=RKIND), ALLOCATABLE :: OSC_ACCM(:)
-  REAL(KIND=RKIND), ALLOCATABLE :: LKT_SINE(:,:)
-  REAL(KIND=RKIND), ALLOCATABLE :: LKT_SQWV(:,:)
-  REAL(KIND=RKIND), ALLOCATABLE :: LKT_SWTH(:,:)
-  REAL(KIND=RKIND), ALLOCATABLE :: LKT_TRNG(:,:)
-  
+  TYPE :: OscBank
+     INTEGER          :: smpr=DSMP
+     REAL(KIND=RKIND) :: freq(1:N_OSC)=0
+     REAL(KIND=RKIND) :: incr(1:N_OSC)=0
+     REAL(KIND=RKIND) :: accm(1:N_OSC)=0
+     INTEGER          :: wtno(1:N_OSC)=0
+     REAL(KIND=RKIND) :: vval(1:N_OSC,1:N_VOC)=0 ! VOICE E {SIN,SQW,SWT,TRI}
+     REAL(KIND=RKIND),POINTER :: tsin(:)  =>NULL()
+     REAL(KIND=RKIND),POINTER :: tsqw(:,:)=>NULL()
+     REAL(KIND=RKIND),POINTER :: tswt(:,:)=>NULL()
+     REAL(KIND=RKIND),POINTER :: ttri(:,:)=>NULL()
+  END TYPE OscBank
+
+  INTERFACE ! WVCOMP.F
+     SUBROUTINE WVFSIN(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
+       IMPLICIT NONE
+       DOUBLE PRECISION IFWAVE,IFSMPL
+       INTEGER          IZOUTP
+       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+       INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
+       INTENT(INOUT) :: OUTPUT
+     END SUBROUTINE WVFSIN
+
+     SUBROUTINE WVFSQR(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
+       IMPLICIT NONE
+       DOUBLE PRECISION IFWAVE,IFSMPL
+       INTEGER          IZOUTP
+       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+       INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
+       INTENT(INOUT) :: OUTPUT
+     END SUBROUTINE WVFSQR
+
+     SUBROUTINE WVFSAW(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
+       IMPLICIT NONE
+       DOUBLE PRECISION IFWAVE,IFSMPL
+       INTEGER          IZOUTP
+       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+       INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
+       INTENT(INOUT) :: OUTPUT
+     END SUBROUTINE WVFSAW
+
+     SUBROUTINE WVFTRI(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
+       IMPLICIT NONE
+       DOUBLE PRECISION IFWAVE,IFSMPL
+       INTEGER          IZOUTP
+       DOUBLE PRECISION OUTPUT(1:IZOUTP)
+       INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
+       INTENT(INOUT) :: OUTPUT
+     END SUBROUTINE WVFTRI
+  END INTERFACE
+
 CONTAINS
 
-  SUBROUTINE MZOSC_CLEAR()
+  ELEMENTAL FUNCTION WvtNmbr(osno) RESULT(r)
     IMPLICIT NONE
-    ! --- EXE CODE ---
-    IF (ALLOCATED(LKT_TRNG)) DEALLOCATE(LKT_TRNG)
-    IF (ALLOCATED(LKT_SWTH)) DEALLOCATE(LKT_SWTH)
-    IF (ALLOCATED(LKT_SQWV)) DEALLOCATE(LKT_SQWV)
-    IF (ALLOCATED(LKT_SINE)) DEALLOCATE(LKT_SINE)
-    IF (ALLOCATED(OSC_ACCM)) DEALLOCATE(OSC_ACCM)
-    IF (ALLOCATED(OSC_INCR)) DEALLOCATE(OSC_INCR)
-    IF (ALLOCATED(OSC_FREQ)) DEALLOCATE(OSC_FREQ)    
-    ! --- END CODE ---
-  END SUBROUTINE MZOSC_CLEAR
+    ! ----------------------
+    INTEGER            :: r
+    INTEGER,INTENT(IN) :: osno
+    ! ----------------------
+    r=INT(REAL(N_WVT,RKIND)*REAL(osno-1,RKIND)/REAL(N_OSC,RKIND))+1
+  END FUNCTION WvtNmbr
 
-  SUBROUTINE MZOSC_INIT(ABINITIO,WVNAME,ASMPR,PHRND)
+  ELEMENTAL FUNCTION OscNmbr(wtno) RESULT(r)
     IMPLICIT NONE
-    ! --- DUMMY ARGS ---
-    LOGICAL          :: ABINITIO
-    CHARACTER(LEN=*) :: WVNAME
-    INTEGER          :: ASMPR
-    LOGICAL          :: PHRND
-    INTENT(IN) :: ABINITIO, WVNAME, ASMPR
-    OPTIONAL   :: WVNAME, ASMPR, PHRND
-    ! --- PARAMETERS ---
-    CHARACTER(LEN=*),PARAMETER :: E00000='* ERROR (MZOSC_INIT): '
-    CHARACTER(LEN=*),PARAMETER :: ENOMEM=E00000//'MEMORY ALLOCATION FAILURE'
-    CHARACTER(LEN=*),PARAMETER :: EWDUMP=E00000//'CANNOT WRITE OSCILLATOR DUMP'
-    CHARACTER(LEN=*),PARAMETER :: EWSAVE=E00000//'CANNOT SAVE OSCILLATOR DATA'
-    CHARACTER(LEN=*),PARAMETER :: EWLOAD=E00000//'CANNOT LOAD OSCILLATOR DATA'
-    CHARACTER(LEN=*),PARAMETER :: EWSHRT=E00000//'SHORT OSCILLATOR DATA FILE'
-    ! --- VARIABLES ---
-    INTEGER :: K,MS
-    LOGICAL :: LPHRND
-    CHARACTER(LEN=:),ALLOCATABLE :: LWVNAME
-    ! --- EXTERNALS ---
-    INTERFACE
-       SUBROUTINE WVFSIN(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
-         IMPLICIT NONE
-         DOUBLE PRECISION IFWAVE,IFSMPL
-         INTEGER          IZOUTP
-         DOUBLE PRECISION OUTPUT(1:IZOUTP)
-         INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
-         INTENT(INOUT) :: OUTPUT
-       END SUBROUTINE WVFSIN
-       
-       SUBROUTINE WVFSQR(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
-         IMPLICIT NONE
-         DOUBLE PRECISION IFWAVE,IFSMPL
-         INTEGER          IZOUTP
-         DOUBLE PRECISION OUTPUT(1:IZOUTP)
-         INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
-         INTENT(INOUT) :: OUTPUT
-       END SUBROUTINE WVFSQR
+    ! ----------------------
+    INTEGER            :: r
+    INTEGER,INTENT(IN) :: wtno
+    ! ----------------------
+    r=INT(REAL(N_OSC,RKIND)*REAL(wtno,RKIND)/REAL(N_WVT,RKIND))
+  END FUNCTION OscNmbr
 
-       SUBROUTINE WVFSAW(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
-         IMPLICIT NONE
-         DOUBLE PRECISION IFWAVE,IFSMPL
-         INTEGER          IZOUTP
-         DOUBLE PRECISION OUTPUT(1:IZOUTP)
-         INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
-         INTENT(INOUT) :: OUTPUT
-       END SUBROUTINE WVFSAW
+  SUBROUTINE OscBank_Init(ob,sr,ra)
+    IMPLICIT NONE
+    ! --------------------------------
+    TYPE(OscBank),INTENT(INOUT) :: ob
+    INTEGER      ,INTENT(IN)    :: sr
+    LOGICAL      ,INTENT(IN)    :: ra ! TRUE => Randomize accumulators else zero
+    OPTIONAL :: sr,ra
+    ! --------------------------------
+    LOGICAL :: lra
+    INTEGER :: i,j,nseed,zseed,ms
+    REAL(KIND=RKIND),POINTER :: wts(:),wtr(:,:,:)
+    ! --------------------------------
+    ALLOCATE(wts(1:N_TIC_PER_CYC),wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI),STAT=ms)
+    IF (ms.NE.0) GOTO 900
 
-       SUBROUTINE WVFTRI(IFWAVE,IFSMPL,IZOUTP,OUTPUT)
-         IMPLICIT NONE
-         DOUBLE PRECISION IFWAVE,IFSMPL
-         INTEGER          IZOUTP
-         DOUBLE PRECISION OUTPUT(1:IZOUTP)
-         INTENT(IN)    :: IFWAVE,IFSMPL,IZOUTP
-         INTENT(INOUT) :: OUTPUT
-       END SUBROUTINE WVFTRI
-    END INTERFACE
-    ! --- EXE CODE ---
-    CALL MZOSC_CLEAR()
-    LPHRND=.TRUE.
-    IF (PRESENT(PHRND)) LPHRND=PHRND
+    IF (PFL_VERB) WRITE(*,700) 'Initializing oscillator bank'
+    lra=.FALSE.  ; IF (PRESENT(ra)) lra=ra
+    ob%smpr=DSMP ; IF(PRESENT(sr)) ob%smpr=sr
+
+    IF (lra) THEN
+       IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators randomized'    
+       CALL RANDOM_SEED(SIZE=zseed)
+       CALL RANDOM_SEED(PUT=(/(DRNS,NSEED=1,zseed)/))
+    END IF
     
-    ALLOCATE(OSC_FREQ(1:N_TIC_PER_CYC),         &
-             OSC_INCR(1:N_OSC),                 &
-             OSC_ACCM(1:N_OSC),                 & 
-             LKT_SINE(1:N_TIC_PER_CYC,1:N_OSC), &
-             LKT_SQWV(1:N_TIC_PER_CYC,1:N_OSC), &
-             LKT_SWTH(1:N_TIC_PER_CYC,1:N_OSC), &
-             LKT_TRNG(1:N_TIC_PER_CYC,1:N_OSC), STAT=MS)
-    IF (MS.NE.0) STOP ENOMEM
+    !$OMP PARALLEL DO
+    DO j=1,N_OSC
+       ob%freq(j)=OscFreq(j)
+       ob%incr(j)=OscIncr(OscFreq(j),ob%smpr)
+       ob%accm(j)=OscAccm(lra)
+       ob%wtno(j)=WvtNmbr(j)       
+    END DO
+    !$OMP END PARALLEL DO
+    IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'    
 
-    IF (PRESENT(WVNAME)) THEN
-       LWVNAME=WVNAME
-    ELSE
-       LWVNAME=OSC_D_WVNAME
-    END IF
+    IF (PFL_VERB) WRITE(*,700) 'Initializing wavetables'    
+    CALL WVFSIN(DBLE(ob%freq(1)),DBLE(ob%smpr),N_TIC_PER_CYC,WTS)
+    
+    !$OMP PARALLEL DO
+    DO j=1,N_WVT
+       ! WRITE(*,*) '-o-',j,OscNmbr(j),ob%freq(OscNmbr(j))
+       CALL WVFSQR(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
+            N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SQW))
+       CALL WVFSAW(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
+            N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SWT))
+       CALL WVFTRI(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
+            N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_TRI))
+    END DO
+    !$OMP END PARALLEL DO
+    ob%tsin=>wts
+    ob%tsqw=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW)
+    ob%tswt=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
+    ob%ttri=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
+    CALL OscBank_Updt(ob,(/(.TRUE.,I=1,N_OSC)/))
 
-    IF (PRESENT(ASMPR)) THEN
-       IF (ASMPR.LT.DSMP) GOTO 900
-       N_SMP_PER_SEC=ASMPR
-    END IF
+    IF (PFL_VERB) WRITE(*,700) 'Wavetables initialized'    
 
-    IF (ABINITIO) THEN
-       !$OMP PARALLEL DO SCHEDULE(DYNAMIC)
-       DO K=1,N_OSC
-          CALL OSCILLATOR_INIT(K)
-       END DO
-       !$OMP END PARALLEL DO
-       CALL OSCILLATOR_BANK_SAVE(LWVNAME)
-    ELSE
-       CALL OSCILLATOR_BANK_LOAD(LWVNAME)
-    END IF
-    IF (PFL_DBUG) CALL OSCILLATOR_BANK_DUMP()
-    RETURN
+    IF (PFL_VERB) WRITE(*,700) 'Done!'
+    
     ! --- END CODE ---
-800 FORMAT('!ERROR (MZOSC_INIT):',A,999(:,I0,A))
-900 WRITE(*,800) 'INVALID ASMPR',ASMPR,', MUST BE >= 44100' ; STOP
-   
+    RETURN
+700 FORMAT('OscBank_Init:',1x,A)
+800 FORMAT('* ERROR (OscBank_Init):',1x,A)
+900 WRITE(*,800) 'Out of memory' ; STOP
+    
   CONTAINS
 
-    ELEMENTAL FUNCTION OSCILLATOR_FREQ(OSCNO) RESULT(FREQ)
+    ELEMENTAL FUNCTION OscFreq(n) RESULT(f)
       IMPLICIT NONE
-      REAL(KIND=RKIND) :: FREQ
-      ! --- DUMMY ARGUMENTS ---
-      INTEGER :: OSCNO
-      INTENT(IN) :: OSCNO
-      ! --- VARIABLES       ---
-      REAL(KIND=RKIND) :: EXPO
-      ! --- EXE CODE        ---
-      EXPO=REAL(OSCNO-REFERENCE_SMT_NUM*N_OSC_PER_SMT,RKIND)/N_OSC_PER_OCT
-      FREQ=REAL(FRQ_REFERENCE_OSC,RKIND)*2.0_RKIND**EXPO
-      ! --- END CODE        ---
-    END FUNCTION OSCILLATOR_FREQ
+      ! ----------------------
+      REAL(KIND=RKIND)   :: f
+      INTEGER,INTENT(IN) :: n
+      ! ----------------------
+      REAL(KIND=RKIND)   :: x
+      ! ----------------------
+      x=REAL(n-REFERENCE_SMT_NUM*N_OSC_PER_SMT,RKIND)/N_OSC_PER_OCT
+      f=REAL(FRQ_REFERENCE_OSC,RKIND)*2.0_RKIND**x
+    END FUNCTION OscFreq
 
-    SUBROUTINE OSCILLATOR_INIT(OSCNO)
+    ELEMENTAL FUNCTION OscIncr(f,s) RESULT(i)
       IMPLICIT NONE
-      ! --- DUMMY ARGUMENTS ---
-      INTEGER              :: OSCNO
-      INTENT(IN)           :: OSCNO
-      ! --- VARIABLES ---
-      INTEGER :: NSEED,ZSEED
-      ! --- EXE CODE ---
-      OSC_FREQ(OSCNO)=OSCILLATOR_FREQ(OSCNO)
-      OSC_INCR(OSCNO)=REAL(N_TIC_PER_CYC,RKIND) * &
-           OSC_FREQ(OSCNO)/REAL(N_SMP_PER_SEC,RKIND)
-      IF (LPHRND) THEN
-         CALL RANDOM_SEED(SIZE=ZSEED)
-         CALL RANDOM_SEED(PUT=(/(DRNS,NSEED=1,ZSEED)/))
-         CALL RANDOM_NUMBER(OSC_ACCM(OSCNO))
-         OSC_ACCM(OSCNO)=OSC_ACCM(OSCNO)*REAL(N_TIC_PER_CYC,RKIND)
+      ! ------------------------------
+      REAL(KIND=RKIND)            :: i
+      REAL(KIND=RKIND),INTENT(IN) :: f
+      INTEGER         ,INTENT(IN) :: s
+      ! ------------------------------
+      i=f*REAL(N_TIC_PER_CYC,RKIND)/REAL(s,RKIND)
+    END FUNCTION OscIncr
+
+    FUNCTION OscAccm(r) RESULT(a)
+      IMPLICIT NONE
+      ! ------------------------------
+      REAL(KIND=RKIND)   :: a
+      LOGICAL,INTENT(IN) :: r
+      ! ------------------------------
+      IF (r) THEN
+         CALL RANDOM_NUMBER(a)
+         a=a*REAL(N_TIC_PER_CYC,RKIND)
       ELSE
-         OSC_ACCM(OSCNO)=0
-      END IF
-      
-      IF (PFL_VERB) WRITE(*,700) 'PRIME OSCILLATOR NO.', OSCNO, &
-           'FREQ IN CPS =', OSCILLATOR_FREQ(OSCNO)
-      
-      CALL WVFSIN(DBLE(OSC_FREQ(OSCNO)),DBLE(N_SMP_PER_SEC), &
-                       N_TIC_PER_CYC,LKT_SINE(:,OSCNO))
+         a=0
+      END IF      
+    END FUNCTION OscAccm
 
-      CALL WVFSQR(DBLE(OSC_FREQ(OSCNO)),DBLE(N_SMP_PER_SEC), &
-                       N_TIC_PER_CYC,LKT_SQWV(:,OSCNO))
+  END SUBROUTINE OscBank_Init
 
-      CALL WVFSAW(DBLE(OSC_FREQ(OSCNO)),DBLE(N_SMP_PER_SEC), &
-                       N_TIC_PER_CYC,LKT_SWTH(:,OSCNO))
-
-      CALL WVFTRI(DBLE(OSC_FREQ(OSCNO)),DBLE(N_SMP_PER_SEC), &
-                       N_TIC_PER_CYC,LKT_TRNG(:,OSCNO))
-      ! --- END CODE ---
-      RETURN
-700   FORMAT('MZSYNTH OSCILLATOR_INIT:',999(:,1X,A,:,1X,G12.7))
-    END SUBROUTINE OSCILLATOR_INIT
-
-    SUBROUTINE OSCILLATOR_BANK_SAVE(OFN)
-      IMPLICIT NONE
-      ! --- DUMMY ARGUMENTS ---
-      CHARACTER(LEN=*) :: OFN
-      INTENT(IN) :: OFN
-      ! --- EXE CODE ---
-      IF (PFL_VERB) WRITE(*,700) 'SAVING OSCILLATOR BANK TO '//TRIM(OFN)
-      OPEN(UNIT=OFU,FILE=OFN,ACCESS='SEQUENTIAL',ACTION='READWRITE', &
-           STATUS='REPLACE',FORM='UNFORMATTED',ERR=900)
-      REWIND(OFU)
-      WRITE(UNIT=OFU,ERR=900) OSC_FREQ(:),   &
-                              OSC_INCR(:),   &
-                              OSC_ACCM(:),   &
-                              LKT_SINE(:,:), &
-                              LKT_SQWV(:,:), &
-                              LKT_SWTH(:,:), &
-                              LKT_TRNG(:,:)
-      ENDFILE(UNIT=OFU); CLOSE(UNIT=OFU)
-      ! --- END CODE ---
-      RETURN
-700   FORMAT('MZSYNTH OSCILLATOR_BANK_SAVE:',1X,A)
-900   WRITE(*,'(A)') EWSAVE//' '//TRIM(OFN) ; STOP
-    END SUBROUTINE OSCILLATOR_BANK_SAVE
-
-    SUBROUTINE OSCILLATOR_BANK_LOAD(IFN)
-      IMPLICIT NONE
-      ! --- DUMMY ARGUMENTS ---
-      CHARACTER(LEN=*) :: IFN
-      INTENT(IN) :: IFN
-      ! --- EXE CODE ---
-      IF (PFL_VERB) WRITE(*,700) 'LOADING OSCILLATOR BANK FROM '//TRIM(IFN)
-      OPEN(UNIT=IFU,FILE=IFN,ACCESS='SEQUENTIAL',ACTION='READ', &
-           STATUS='OLD',FORM='UNFORMATTED',ERR=900)
-      REWIND(IFU)
-      READ(UNIT=IFU,ERR=900,END=910) OSC_FREQ(:),   &
-                                     OSC_INCR(:),   &
-                                     OSC_ACCM(:),   &
-                                     LKT_SINE(:,:), &
-                                     LKT_SQWV(:,:), &
-                                     LKT_SWTH(:,:), &
-                                     LKT_TRNG(:,:)
-                                     
-      CLOSE(UNIT=IFU)
-      ! --- END CODE ---
-      RETURN
-700   FORMAT('MZSYNTH OSCILLATOR_BANK_LOAD:',1X,A)
-900   WRITE(*,'(A)') EWLOAD//' '//TRIM(IFN) ; STOP
-910   WRITE(*,'(A)') EWSHRT//' '//TRIM(IFN) ; STOP
-    END SUBROUTINE OSCILLATOR_BANK_LOAD
-
-    SUBROUTINE OSCILLATOR_BANK_DUMP()
-      IMPLICIT NONE
-      ! --- PARAMETERS ---      
-      ! --- VARIABLES ---
-      INTEGER           :: J
-      CHARACTER(LEN=16) :: TDFN
-      ! --- EXE CODE ---
-      DO J=1,N_OSC
-         WRITE(TDFN,600) J
-         IF (PFL_VERB) WRITE(*,700) 'DUMPING OSCILLATOR '//TDFN ;
-         CALL OSCILLATOR_DUMP(J,TDFN)
-      END DO
-      ! --- END CODE ---
-600   FORMAT('oscl',I4.4,'.txt')
-700   FORMAT('! OSCILLATOR_BANK_DUMP:',1X,(A))
-    END SUBROUTINE OSCILLATOR_BANK_DUMP
-
-    SUBROUTINE OSCILLATOR_DUMP(IOSCNO,DFN)
-      IMPLICIT NONE
-      ! --- DUMMY ARGUMENTS ---
-      INTEGER          :: IOSCNO
-      CHARACTER(LEN=*) :: DFN
-      INTENT(IN) :: IOSCNO, DFN
-      ! --- VARIABLES ---
-      INTEGER :: J
-      ! --- EXE CODE ---
-      OPEN(UNIT=OFU,FILE=DFN,ACCESS='SEQUENTIAL',ACTION='READWRITE', &
-           STATUS='REPLACE',ERR=900)
-      REWIND(OFU)
-      WRITE(OFU,700,ERR=900)
-      WRITE(OFU,710,ERR=900) 'OSCILLATOR NUMBER',IOSCNO
-      WRITE(OFU,711,ERR=900) 'FREQUENCY IN CPS:',OSC_FREQ(IOSCNO)
-      WRITE(OFU,710,ERR=900) 'CYCLE INCREMENT: ',OSC_INCR(IOSCNO)
-      WRITE(OFU,710,ERR=900) 'ACCUMULATOR VAL: ',OSC_ACCM(IOSCNO)
-      WRITE(OFU,712,ERR=900) 'POINT.NO','VAL.SINE','VAL.SQWV','VAL.SWTH', &
-                             'VAL.TRNG'
-      WRITE(OFU,712,ERR=900) '--------','--------','--------','--------', &
-                             '--------'
-      DO J=1,N_TIC_PER_CYC
-         WRITE(OFU,713,ERR=900) J,                                      &
-                                LKT_SINE(J,IOSCNO), LKT_SQWV(J,IOSCNO), &
-                                LKT_SWTH(J,IOSCNO), LKT_TRNG(J,IOSCNO)
-      END DO
-      ENDFILE(OFU) ; CLOSE(OFU)
-      ! --- END CODE ---
-      RETURN
-700   FORMAT('!',79('-'))
-710   FORMAT('!',1X,A,1X,I6)
-711   FORMAT('!',1X,A,1X,G12.5)
-712   FORMAT('!',5(1X,A14))
-713   FORMAT( 1X,5(1X,G14.5))
-900   WRITE(*,'(A)') EWDUMP//' '//TRIM(DFN) ; STOP
-    END SUBROUTINE OSCILLATOR_DUMP
-    
-  END SUBROUTINE MZOSC_INIT
-
-  SUBROUTINE MZOSC_TICK(MSK)
+  SUBROUTINE OscBank_Updt(ob,msk)
     IMPLICIT NONE
-    ! --- DUMMY ARGS ---
-    LOGICAL,OPTIONAL :: MSK(1:N_OSC)
-    ! --- VARIABLES ---
-    INTEGER :: K
-    LOGICAL :: LMSK(1:N_OSC)
-    ! --- EXE CODE ---
-    LMSK=.TRUE.
-    IF (PRESENT(MSK)) LMSK=MSK
-    !$OMP PARALLEL WORKSHARE    
-    FORALL (K=1:N_OSC,LMSK(K)) OSC_ACCM(K)=OSC_ACCM(K)+OSC_INCR(K)
-    WHERE(LMSK.AND.OSC_ACCM.GT.N_TIC_PER_CYC) OSC_ACCM=OSC_ACCM-N_TIC_PER_CYC
+    ! ------------------------------------------
+    TYPE(OscBank),INTENT(INOUT) :: ob
+    LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
+    ! ------------------------------------------
+    INTEGER          :: j,x0,x1
+    REAL(KIND=RKIND) :: y0,y1
+    ! ------------------------------------------
+    !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
+    DO j=1,N_OSC
+       IF (msk(j)) THEN
+          x0=INT(ob%accm(j))
+          x1=TRANSFER(MERGE((/1/),(/x0+1/),(/x0+1.GT.N_TIC_PER_CYC/)),x1)
+          ! ...................................................................
+          y0=ob%tsin(x0) ; y1=ob%tsin(x1)
+          ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+          ! ...................................................................
+          y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
+          ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+          ! ...................................................................
+          y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
+          ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+          ! ...................................................................
+          y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
+          ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
+       END IF
+    END DO
+    !$OMP END PARALLEL DO
+
+  CONTAINS
+
+    ELEMENTAL FUNCTION Yli(x0,x1,y0,y1,x) RESULT(y)
+      IMPLICIT NONE
+      ! ------------------------------------------
+      REAL(KIND=RKIND)            :: y
+      REAL(KIND=RKIND),INTENT(IN) :: x0,x1,y0,y1,x
+      ! ------------------------------------------
+      REAL(KIND=RKIND) :: m,c
+      ! ------------------------------------------
+      m=(y1-y0)/(x1-x0)
+      c=y1-m*x1
+      y=m*x+c
+    END FUNCTION Yli    
+  END SUBROUTINE OscBank_Updt
+
+  SUBROUTINE OscBank_Tick(ob,msk)
+    IMPLICIT NONE
+    ! ------------------------------------------
+    TYPE(OscBank),INTENT(INOUT) :: ob
+    LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
+    OPTIONAL :: msk
+    ! ------------------------------------------
+    LOGICAL :: lmsk(1:N_OSC)
+    ! ------------------------------------------
+    lmsk=.TRUE. ; IF (PRESENT(msk)) lmsk=msk
+    !$OMP PARALLEL WORKSHARE
+    WHERE(lmsk) ob%accm=ob%accm+ob%incr
+    WHERE(lmsk.AND.ob%accm.GT.N_TIC_PER_CYC) ob%accm=ob%accm-N_TIC_PER_CYC
     !$OMP END PARALLEL WORKSHARE
-    ! --- END CODE ---
-  END SUBROUTINE MZOSC_TICK
+    CALL OscBank_Updt(ob,lmsk)
+  END SUBROUTINE OscBank_Tick
     
-END MODULE MZOSC
+END MODULE MZOsc

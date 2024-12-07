@@ -59,17 +59,12 @@ The following options are available (case insensitive):
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
 |-r ftr    | -transition ftr          | Set transition fraction (of column) to ftr      |
 |-s spr    | -sampling-rate spr       | Set sampling-rate in c.p.s                      |
-|-t wvt    | -wave-table wvt          | Use wavetable in file wvt (generate if absent)  |
 
 ## NOTE
-
-The wavetable used will be generated based on the sampling rate.  Take care that any
-wave-table used was generated with the sampling rate being used.
 
 ## DEFAULTS
 
 - Input file: input.ppm
-- Wave table: /usr/lib/mz2wave.tbl
 - Output file: output.au
 - Channels:  sine:square:sawtooth:triangle = R:G:B:L
 - Volume multiplier:  1.0
@@ -81,13 +76,12 @@ wave-table used was generated with the sampling rate being used.
 ## USAGE EXAMPLES
 
 - Generate file **track01.au** from input **track01.ppm**, advancing
-  at 12 columns per second, using a wavetable **wt48000.tbl** to be
-  generated for a sampling frequency of 48000 c.p.s.  Enable dynamic
+  at 12 columns per second, at a sampling rate of 48000 c.p.s.  Enable dynamic
   compression, overwriting of output if it exists and verbose textual
   output.
 
   ``mz2 -verbose -overwrite -output-file track01.au
-        -dynamic-compression -wave-table wt48000.tbl -sampling-rate 48000
+        -dynamic-compression -sampling-rate 48000
         track01.ppm``
 
 - As above, but play real-time through the SOX *play* program with
@@ -102,6 +96,6 @@ wave-table used was generated with the sampling rate being used.
   - In a separate terminal enter:
     
   ``mz2 -verbose -overwrite -output-file fifo -dynamic-compression
-  -wave-table wt48000.tbl -sampling-rate 48000 track01.ppm``
+   -sampling-rate 48000 track01.ppm``
 
   The *play* process will block until mz2 starts generating output.

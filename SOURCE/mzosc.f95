@@ -106,7 +106,8 @@ CONTAINS
     INTEGER :: i,j,nseed,zseed,ms
     REAL(KIND=RKIND),POINTER :: wts(:),wtr(:,:,:)
     ! --------------------------------
-    ALLOCATE(wts(1:N_TIC_PER_CYC),wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI),STAT=ms)
+    ALLOCATE(wts(1:N_TIC_PER_CYC), &
+             wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI),STAT=ms)
     IF (ms.NE.0) GOTO 900
 
     IF (PFL_VERB) WRITE(*,700) 'Initializing oscillator bank'

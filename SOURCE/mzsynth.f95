@@ -291,17 +291,19 @@ CONTAINS
     CALL MZPNL_TICK()    
     CALL OscBank_Tick(ob,(/(FXPH.OR.WSINE(K).NE.0.OR.WSQWV(K).NE.0.OR. &
                             WSWTH(K).NE.0.OR.WTRNG(K).NE.0,K=1,N_OSC)/))
-    CALL OscBank_Update(ob,WSINE.NE.0,V_SIN)
-    CALL OscBank_Update(ob,WSQWV.NE.0,V_SQW)
-    CALL OscBank_Update(ob,WSWTH.NE.0,V_SWT)
-    CALL OscBank_Update(ob,WTRNG.NE.0,V_TRI)
-    !$OMP PARALLEL WORKSHARE
-    TDATA=VMUL*(                            &
-         SUM(WSINE*ob%vval(1:N_OSC,V_SIN))+ &
-         SUM(WSQWV*ob%vval(1:N_OSC,V_SQW))+ &
-         SUM(WSWTH*ob%vval(1:N_OSC,V_SWT))+ &
-         SUM(WTRNG*ob%vval(1:N_OSC,V_TRI)) )
-    !$OMP END PARALLEL WORKSHARE
+    CALL OscBank_Update(ob,WSINE.GT.0,V_SIN)
+    CALL OscBank_Update(ob,WSQWV.GT.0,V_SQW)
+    CALL OscBank_Update(ob,WSWTH.GT.0,V_SWT)
+    CALL OscBank_Update(ob,WTRNG.GT.0,V_TRI)
+    TDATA=0
+    !$OMP PARALLEL DO REDUCTION(+:TDATA)
+    DO J=1,N_OSC
+       IF (WSINE(J).GT.0) TDATA=TDATA+WSINE(J)*ob%vval(J,V_SIN)
+       IF (WSQWV(J).GT.0) TDATA=TDATA+WSQWV(J)*ob%vval(J,V_SQW)
+       IF (WSWTH(J).GT.0) TDATA=TDATA+WSWTH(J)*ob%vval(J,V_SWT)
+       IF (WTRNG(J).GT.0) TDATA=TDATA+WTRNG(J)*ob%vval(J,V_TRI)       
+    END DO
+    TDATA=VMUL*TDATA
     IF (CMPR) TDATA=MZSYNTH_CLIP(TDATA)
     CALL AU_WRTSMP(OFU,REAL((/TDATA,TDATA/),C_FLOAT),MCBE,FS)
     IF (FS.NE.0) GOTO 900

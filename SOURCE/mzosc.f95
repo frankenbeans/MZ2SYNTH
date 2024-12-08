@@ -303,13 +303,17 @@ CONTAINS
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
     OPTIONAL :: msk
     ! ------------------------------------------
+    INTEGER :: j
     LOGICAL :: lmsk(1:N_OSC)
     ! ------------------------------------------
     lmsk=.TRUE. ; IF (PRESENT(msk)) lmsk=msk
-    !$OMP PARALLEL WORKSHARE
-    WHERE(lmsk) ob%accm=MERGE(ob%accm+ob%incr-N_TIC_PER_CYC,ob%accm+ob%incr, &
-                              ob%accm+ob%incr.GT.N_TIC_PER_CYC)
-    !$OMP END PARALLEL WORKSHARE
+    !$OMP PARALLEL DO
+    DO j=1,N_OSC
+       IF (.NOT.lmsk(j)) CYCLE
+       ob%accm(j)=ob%accm(j)+ob%incr(j)
+       IF (ob%accm(j).GT.N_TIC_PER_CYC) ob%accm(j)=ob%accm(j)-N_TIC_PER_CYC
+    END DO
+    !$OMP END PARALLEL DO
   END SUBROUTINE OscBank_Tick
     
 END MODULE MZOsc

@@ -9,6 +9,8 @@
 ## MEDIUM TERM
 - Tidy up source code
   - lots of styles, lots of header formats, etc.
+- Improve byte-swapping routines in mzaufile.f95 - arguably they should be optimized for use with
+  a little-endian machine since a PC is probably the likeliest platform.
 - Write proper documentation (manual page + tutorial information)
 - Supply template files and examples [*** DONE: 1 example ***]
 - Support Intel Fortran

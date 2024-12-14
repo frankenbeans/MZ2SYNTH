@@ -30,18 +30,12 @@
 !|                                                                            |
 !| Changing ncols or nrows is not safe.                                       |
 !|                                                                            |
-!| SUPPORTED PLATFORMS:  Fortran 2003 (for stream I/O);  preprocessing by the |
-!| -------------------   C preprocessor is required in order to resolve the   |
-!|                       portability macros as indicated below.               |
+!| SUPPORTED PLATFORMS:  Fortran 2003 (for stream I/O);                       |
 !|                                                                            |
 !| BUGS AND LIMITATIONS:                                                      |
 !| --------------------                                                       |
-!|                   (i) Only single-layer formats are supported.             |
 !|                                                                            |
-!|                  (ii) Am pretty sure that the portability macros are not   |
-!|                       required with current versions of GFortran.  Should  |
-!|                       seriously look at removing this ugly kludge.         |
-!|                       (PRI=MED)                                            |
+!| (i) Only single-layer PPM and PGM formats are supported.                   |
 !|                                                                            |
 !| Copyright (C) 2024 by E. Lamprecht.  All rights reserved.                  |
 !+============================================================================+

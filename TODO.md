@@ -24,12 +24,13 @@
   the sine wave oscillator could consist of only one element that can be sampled at all
   frequencies.  This could have been done long ago, but I forgot about it...
 - Also in MZOSC, look at the possibility of changing the way that wavetables are done to
-  save space. This will allow small platforms (e.g., Raspberry Pi) to be supported in future.
-  
-  Avenues to consider:
-  - [*** DONE ***] Make one wavetable for every OCTAVE (nyquist = max frequency / 2) instead of for every TONE
-  - Make wavetables substantially narrower and use a sensible interpolation scheme instead of a
-    brute lookup.
+  save space. This will allow small platforms (e.g., Raspberry Pi) to be supported in future.  
+  Avenues to consider:  
   - Currently the mechanism for changing form RKIND=8 to RKIND=4 is broken because of the F77 code
     that is used to initialize oscillators in MZOSC.  Eliminating the F77 code and just putting those
     functions in the MZOSC module will fix the problem.
+- Linear interpolation within wavetables has been implemented, and this works well enough on a PC, but
+  clips in which many oscillators are active at any given moment can lead to latency when generating
+  audio in real-time.  Need to find ways to improve performance further in order to support small
+  platforms like Raspberry Pi.
+- Support GPU computation (LOW priority)

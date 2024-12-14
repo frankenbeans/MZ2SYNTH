@@ -18,7 +18,8 @@
 ## LONG TERM
 - Establish a FIFO for interprocess communication that will allow at least the
   rate of advance to be changed during execution to allow for limited live
-  performance.
+  performance.  ALTERNATIVELY, a means of putting column-number based triggers in command-line
+  options with one-shot or retriggerable behaviour.
 - [*** DONE ***] In MZOSC, the sine-wave oscillator is profligate its use of RAM.  Unlike the other voices,
   where in principle the number of Fourier components present change through the octaves,
   the sine wave oscillator could consist of only one element that can be sampled at all

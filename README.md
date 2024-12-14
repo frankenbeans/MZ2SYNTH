@@ -62,7 +62,7 @@ The following options are available (case insensitive):
 
 ## NOTE
 
-## DEFAULTS
+### DEFAULTS
 
 - Input file: input.ppm
 - Output file: output.au
@@ -73,7 +73,7 @@ The following options are available (case insensitive):
 - Fixed phase:  off
 - Zero phase:   off (i.e., phases are randomized at start by default)
 
-## USAGE EXAMPLES
+### USAGE EXAMPLES
 
 - Generate file **track01.au** from input **track01.ppm**, advancing
   at 12 columns per second, at a sampling rate of 48000 c.p.s.  Enable dynamic

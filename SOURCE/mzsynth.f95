@@ -248,7 +248,6 @@ CONTAINS
     WRITE(*,700) ''
     WRITE(*,700) '* Default input  file is    '//TRIM(DIFN)
     WRITE(*,700) '* Default output file is    '//TRIM(DOFN)
-    WRITE(*,700) '* NB NB NB: wavetable must match current sampling-rate'
     WRITE(*,700) ''
         
 700 FORMAT(A)

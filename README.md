@@ -99,3 +99,9 @@ The following options are available (case insensitive):
    -sampling-rate 48000 track01.ppm``
 
   The *play* process will block until mz2 starts generating output.
+  
+  **WARNING:** This synthesizer can generate very loud and very high-pitched
+  sounds.  Playing unknown inputs through powerful speakers or earphones
+  can result in pain or hearing loss, so set your volumes low to start with,
+  and beware of using volume multipliers larger than 0.01 or so until you
+  become familiar with the audio that your input files generate.

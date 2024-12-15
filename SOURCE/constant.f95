@@ -126,5 +126,5 @@ MODULE CONSTANT
   INTEGER            ,PARAMETER :: DWWW = CONST_DWWW ! Width of wavetable window
   INTEGER            ,PARAMETER :: DRNS = CONST_DRNS ! Random seed for phase ini
   LOGICAL            ,PARAMETER :: DFXP = CONST_DFXP ! Fixed phase mode
-  LOGICAL            ,PARAMETER :: DZRP = CONST_DZRP ! Initialize phases with zero
+  LOGICAL            ,PARAMETER :: DZRP = CONST_DZRP ! Initialize phases to zero
 END MODULE CONSTANT

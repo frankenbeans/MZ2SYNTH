@@ -207,7 +207,7 @@ CONTAINS
     INTENT(IN) :: OMEGA,T,K
     ! --- EXE CODE ---
     IF (MOD(K,2).EQ.0) THEN
-       FGNSQR=0D0
+       FGNSQR=0
     ELSE
        FGNSQR=SIN(REAL(K,RKIND)*OMEGA*T)/REAL(K,RKIND)
     END IF

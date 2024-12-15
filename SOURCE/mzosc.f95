@@ -100,14 +100,14 @@ CONTAINS
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'    
 
     IF (PFL_VERB) WRITE(*,700) 'Initializing wavetables'    
-    CALL WVFSIN(DBLE(ob%freq(1)),DBLE(ob%smpr),N_TIC_PER_CYC,WTS)    
+    CALL WVFSIN(ob%freq(1),REAL(ob%smpr,RKIND),N_TIC_PER_CYC,WTS)    
     !$OMP PARALLEL DO
     DO j=1,N_WVT
-       CALL WVFSQR(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
+       CALL WVFSQR(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SQW))
-       CALL WVFSAW(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
+       CALL WVFSAW(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SWT))
-       CALL WVFTRI(ob%freq(OscNmbr(j)), DBLE(ob%smpr), &
+       CALL WVFTRI(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_TRI))
     END DO
     !$OMP END PARALLEL DO

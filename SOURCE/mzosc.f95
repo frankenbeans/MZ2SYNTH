@@ -82,7 +82,9 @@ CONTAINS
     INTEGER            :: r
     INTEGER,INTENT(IN) :: osno
     ! ----------------------
-    r=INT(REAL(N_WVT,RKIND)*REAL(osno-1,RKIND)/REAL(N_OSC,RKIND))+1
+    REAL(RKIND),PARAMETER :: rdenom=1.0_RKIND/REAL(N_OSC,RKIND)
+    ! ----------------------
+    r=INT(REAL(N_WVT,RKIND)*REAL(osno-1,RKIND)*rdenom)+1
   END FUNCTION WvtNmbr
 
   ELEMENTAL FUNCTION OscNmbr(wtno) RESULT(r)
@@ -91,7 +93,9 @@ CONTAINS
     INTEGER            :: r
     INTEGER,INTENT(IN) :: wtno
     ! ----------------------
-    r=INT(REAL(N_OSC,RKIND)*REAL(wtno,RKIND)/REAL(N_WVT,RKIND))
+    REAL(RKIND),PARAMETER :: rdenom=1.0_RKIND/REAL(N_WVT,RKIND)
+    ! ----------------------    
+    r=INT(REAL(N_OSC,RKIND)*REAL(wtno,RKIND)*rdenom)
   END FUNCTION OscNmbr
 
   SUBROUTINE OscBank_Init(ob,sr,ra)
@@ -104,6 +108,7 @@ CONTAINS
     ! --------------------------------
     LOGICAL :: lra
     INTEGER :: i,j,nseed,zseed,ms
+    REAL(KIND=RKIND) :: fc1
     REAL(KIND=RKIND),POINTER :: wts(:),wtr(:,:,:)
     ! --------------------------------
     ALLOCATE(wts(1:N_TIC_PER_CYC), &
@@ -119,11 +124,12 @@ CONTAINS
        CALL RANDOM_SEED(SIZE=zseed)
        CALL RANDOM_SEED(PUT=(/(DRNS,NSEED=1,zseed)/))
     END IF
-    
+
+    fc1=REAL(N_TIC_PER_CYC,RKIND)/REAL(ob%smpr,RKIND)
     !$OMP PARALLEL DO
     DO j=1,N_OSC
        ob%freq(j)=OscFreq(j)
-       ob%incr(j)=OscIncr(OscFreq(j),ob%smpr)
+       ob%incr(j)=fc1*ob%freq(j)
        ob%accm(j)=OscAccm(lra)
        ob%wtno(j)=WvtNmbr(j)       
     END DO
@@ -167,21 +173,12 @@ CONTAINS
       REAL(KIND=RKIND)   :: f
       INTEGER,INTENT(IN) :: n
       ! ----------------------
+      REAL(KIND=RKIND),PARAMETER :: rdenom=1.0_RKIND/REAL(N_OSC_PER_OCT,RKIND)
       REAL(KIND=RKIND)   :: x
       ! ----------------------
-      x=REAL(n-REFERENCE_SMT_NUM*N_OSC_PER_SMT,RKIND)/N_OSC_PER_OCT
+      x=REAL(n-REFERENCE_SMT_NUM*N_OSC_PER_SMT,RKIND)*rdenom
       f=REAL(FRQ_REFERENCE_OSC,RKIND)*2.0_RKIND**x
     END FUNCTION OscFreq
-
-    ELEMENTAL FUNCTION OscIncr(f,s) RESULT(i)
-      IMPLICIT NONE
-      ! ------------------------------
-      REAL(KIND=RKIND)            :: i
-      REAL(KIND=RKIND),INTENT(IN) :: f
-      INTEGER         ,INTENT(IN) :: s
-      ! ------------------------------
-      i=f*REAL(N_TIC_PER_CYC,RKIND)/REAL(s,RKIND)
-    END FUNCTION OscIncr
 
     FUNCTION OscAccm(r) RESULT(a)
       IMPLICIT NONE
@@ -225,11 +222,10 @@ CONTAINS
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=INT(ob%accm(j))
-             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
-             ! ...................................................................
+             ! .................................................................
              y0=ob%tsin(x0) ; y1=ob%tsin(x1)
-             ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-             ! ...................................................................
+             ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+             ! .................................................................
           END IF
        END DO
        !$OMP END PARALLEL DO
@@ -238,11 +234,10 @@ CONTAINS
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=INT(ob%accm(j))
-             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
-             ! ...................................................................
+             ! .................................................................
              y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
-             ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-             ! ...................................................................
+             ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+             ! .................................................................
           END IF
        END DO
        !$OMP END PARALLEL DO       
@@ -251,11 +246,10 @@ CONTAINS
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=INT(ob%accm(j))
-             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
-             ! ...................................................................
+             ! .................................................................
              y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
-             ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-             ! ...................................................................
+             ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+             ! .................................................................
           END IF
        END DO
        !$OMP END PARALLEL DO
@@ -264,11 +258,10 @@ CONTAINS
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=INT(ob%accm(j))
-             x1=MERGE(1,x0+1,x0+1.GT.N_TIC_PER_CYC)
-             ! ...................................................................
+             ! .................................................................
              y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
-             ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),REAL(x1,RKIND),y0,y1,ob%accm(j))
-             ! ...................................................................             
+             ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+             ! .................................................................
           END IF
        END DO
        !$OMP END PARALLEL DO       
@@ -281,19 +274,20 @@ CONTAINS
 900 WRITE(*,800) 'Invalid voice number' ; STOP
     
   CONTAINS
-
-    ELEMENTAL FUNCTION Yli(x0,x1,y0,y1,x) RESULT(y)
+    
+    ELEMENTAL FUNCTION Yli(x0,x,y0,y1) RESULT(y)
       IMPLICIT NONE
       ! ------------------------------------------
       REAL(KIND=RKIND)            :: y
-      REAL(KIND=RKIND),INTENT(IN) :: x0,x1,y0,y1,x
+      REAL(KIND=RKIND),INTENT(IN) :: x0,x,y0,y1
       ! ------------------------------------------
+      REAL(KIND=RKIND),PARAMETER :: rdenom=1.0_RKIND/REAL(N_TIC_PER_CYC,RKIND)
       REAL(KIND=RKIND) :: m,c
       ! ------------------------------------------
-      m=(y1-y0)/(x1-x0)
-      c=y1-m*x1
+      m=(y1-y0)*rdenom ! Avoids expensive division
+      c=y0-m*x0
       y=m*x+c
-    END FUNCTION Yli    
+    END FUNCTION Yli
   END SUBROUTINE OscBank_Update
 
   SUBROUTINE OscBank_Tick(ob,msk)

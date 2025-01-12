@@ -1,5 +1,5 @@
 FC=gfortran
-CFLAGS=-cpp -Wall -O3 -fopenmp -flto
+CFLAGS=-cpp -Wall -Ofast -fopenmp -flto -fcheck=all
 EXE=mz2
 OBJ=constant.o caseconv.o logist.o wvecmp.o pflags.o sfrealcomp.o \
     fimagemod.o mzosc.o mzpnl.o mzaufile.o mzsynth.o

@@ -184,7 +184,8 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=INT(ob%accm(j))
+             x0=MAX(INT(ob%accm(j)),1)
+             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tsin(x0) ; y1=ob%tsin(x1)
              ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
@@ -196,7 +197,8 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=INT(ob%accm(j))
+             x0=MAX(INT(ob%accm(j)),1)
+             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
              ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
@@ -208,7 +210,8 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=INT(ob%accm(j))
+             x0=MAX(INT(ob%accm(j)),1)
+             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
              ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
@@ -220,7 +223,8 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=INT(ob%accm(j))
+             x0=MAX(INT(ob%accm(j)),1)
+             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
              ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)

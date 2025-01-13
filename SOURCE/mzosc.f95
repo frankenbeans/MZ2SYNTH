@@ -97,7 +97,15 @@ CONTAINS
        ob%wtno(j)=WvtNmbr(j)       
     END DO
     !$OMP END PARALLEL DO
-    IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'    
+    IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'
+    
+    IF (PFL_DBUG) THEN
+       WRITE(*,700) '*DEBUG* Oscillator no, freq, incr, accm, wtno'
+       DO j=1,N_OSC
+          WRITE(*,'(I3,1X,4(G12.7))') &
+               j,ob%freq(j),ob%incr(j),ob%accm(j),ob%wtno(j)
+       END DO
+    END IF  
 
     IF (PFL_VERB) WRITE(*,700) 'Initializing wavetables'    
     CALL WVFSIN(ob%freq(1),REAL(ob%smpr,RKIND),N_TIC_PER_CYC,WTS)    
@@ -184,7 +192,7 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=MAX(INT(ob%accm(j)),1)
+             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tsin(x0) ; y1=ob%tsin(x1)
@@ -197,7 +205,7 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=MAX(INT(ob%accm(j)),1)
+             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
@@ -210,7 +218,7 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=MAX(INT(ob%accm(j)),1)
+             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
@@ -223,7 +231,7 @@ CONTAINS
        !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
-             x0=MAX(INT(ob%accm(j)),1)
+             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
@@ -272,7 +280,9 @@ CONTAINS
     DO j=1,N_OSC
        IF (.NOT.lmsk(j)) CYCLE
        ob%accm(j)=ob%accm(j)+ob%incr(j)
-       IF (ob%accm(j).GT.N_TIC_PER_CYC) ob%accm(j)=ob%accm(j)-N_TIC_PER_CYC
+       IF (ob%accm(j).GT.N_TIC_PER_CYC) THEN
+          ob%accm(j)=MAX(ob%accm(j)-N_TIC_PER_CYC,0.0_RKIND)
+       END IF
     END DO
     !$OMP END PARALLEL DO
   END SUBROUTINE OscBank_Tick

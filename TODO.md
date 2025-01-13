@@ -30,7 +30,7 @@
   - Currently the mechanism for changing form RKIND=8 to RKIND=4 is broken because of the F77 code
     that is used to initialize oscillators in MZOSC.  Eliminating the F77 code and just putting those
     functions in the MZOSC module will fix the problem.
-- [*** DONE, but test on RPI is outstanding ***]
+- [*** DONE, but test on RPI is still to be done ***]
   Linear interpolation within wavetables has been implemented, and this works well enough on a PC, but
   clips in which many oscillators are active at any given moment can lead to latency when generating
   audio in real-time.  Need to find ways to improve performance further in order to support small

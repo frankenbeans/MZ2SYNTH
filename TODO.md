@@ -12,7 +12,7 @@
 - Improve byte-swapping routines in mzaufile.f95 - arguably they should be optimized for use with
   a little-endian machine since a PC is probably the likeliest platform.
 - Write proper documentation (manual page + tutorial information)
-- Supply template files and examples [*** DONE: 1 example ***]
+- Supply template files and examples [*** DONE: 2 examples provided ***]
 - Support Intel Fortran
 
 ## LONG TERM

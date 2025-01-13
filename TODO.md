@@ -24,7 +24,7 @@
   where in principle the number of Fourier components present change through the octaves,
   the sine wave oscillator could consist of only one element that can be sampled at all
   frequencies.  This could have been done long ago, but I forgot about it...
-- Also in MZOSC, look at the possibility of changing the way that wavetables are done to
+- [*** DONE ***] Also in MZOSC, look at the possibility of changing the way that wavetables are done to
   save space. This will allow small platforms (e.g., Raspberry Pi) to be supported in future.  
   Avenues to consider:  
   - Currently the mechanism for changing form RKIND=8 to RKIND=4 is broken because of the F77 code

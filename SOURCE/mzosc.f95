@@ -280,9 +280,9 @@ CONTAINS
     DO j=1,N_OSC
        IF (.NOT.lmsk(j)) CYCLE
        ob%accm(j)=ob%accm(j)+ob%incr(j)
-       IF (ob%accm(j).GT.N_TIC_PER_CYC) THEN
-          ob%accm(j)=MAX(ob%accm(j)-N_TIC_PER_CYC,0.0_RKIND)
-       END IF
+       DO WHILE(ob%accm(j).GT.N_TIC_PER_CYC)
+          ob%accm(j)=ob%accm(j)-N_TIC_PER_CYC
+       END DO
     END DO
     !$OMP END PARALLEL DO
   END SUBROUTINE OscBank_Tick

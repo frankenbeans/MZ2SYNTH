@@ -1,6 +1,6 @@
 # README for MZ2SYNTH
 
-Copyright (c) 2024 by E. Lamprecht.  All rights reserved.  See
+Copyright (c) 2025 by E. Lamprecht.  All rights reserved.  See
 LICENSE.md for licensing terms and TODO.md for notes on the current
 development status.
 
@@ -57,7 +57,7 @@ The following options are available (case insensitive):
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M)                                |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
-|-r ftr    | -transition ftr          | Set transition fraction (of column) to ftr      |
+|-r ftr    | -transition ftr          | Set transition TC (as fraction of <s>) to ftr   |
 |-s spr    | -sampling-rate spr       | Set sampling-rate in c.p.s                      |
 
 ## NOTE

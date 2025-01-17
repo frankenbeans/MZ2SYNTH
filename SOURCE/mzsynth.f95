@@ -14,7 +14,7 @@ PROGRAM MZSYNTH
   USE Constant
   USE PFlags
   USE MZOSC
-  USE MZPNL
+  USE MZ2PNL
   USE MZAUFILE
   IMPLICIT NONE
 
@@ -36,7 +36,8 @@ PROGRAM MZSYNTH
   LOGICAL             :: MCBE
 
   ! VARIABLES
-  TYPE(OscBank) :: OB
+  TYPE(OscBank)  :: OB
+  TYPE(MZ2Panel) :: PN
 
   ! --- EXE CODE ---
   CALL MZSYN_MAIN()
@@ -244,7 +245,7 @@ CONTAINS
     WRITE(*,710) '-s','-sampling-rate','<s>',             &
          'Set sampling rate to <s> c.p.s.','44100'    
     WRITE(*,710) '-r','-transition','<t>',                &
-         'Set transition factor to <t>','0.333'
+         'Set transition TC to <t> (frac. of <s>)','0.01'
     WRITE(*,700) ''
     WRITE(*,700) '* Default input  file is    '//TRIM(DIFN)
     WRITE(*,700) '* Default output file is    '//TRIM(DOFN)
@@ -260,10 +261,10 @@ CONTAINS
     INTEGER :: FS
     ! --- EXE CODE ---
     CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
-    CALL MZPNL_LOAD(PIFN,VCHS,AFTRZ=TRZF,ANCLPS=ACPS,ANSMPR=SMPR)
+    CALL MZ2PNL_LOAD(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
     CALL AU_WRTHDR(POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,MCBE,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900
-    ZDATA=NC*N_SMP_PER_COL
+    ZDATA=PN%PI%NCOLS * NINT(PN%SMPLRT / PN%SCANRT) ! SMPL = COL * SMPL/S * S/COL
     IF (PFL_VERB) WRITE(*,'(A,1X,I0)') 'NUMBER OF SAMPLES TO GENERATE:',ZDATA
     ! --- END CODE ---
     RETURN
@@ -274,6 +275,7 @@ CONTAINS
   SUBROUTINE MZSYN_GENERATE()
     IMPLICIT NONE
     ! --- VARIABLES ---
+    LOGICAL :: DONE
     INTEGER :: J,K,FS
     REAL(KIND=RKIND) :: TDATA
     ! --- EXE CODE  ---
@@ -287,20 +289,20 @@ CONTAINS
             '; %COMPLETE=',100.0*REAL(J)/REAL(ZDATA), &
             '; TIME/S=',REAL(J) / ob%smpr
     END IF
-    CALL MZPNL_TICK()    
-    CALL OscBank_Tick(ob,(/(FXPH.OR.WSINE(K).NE.0.OR.WSQWV(K).NE.0.OR. &
-                            WSWTH(K).NE.0.OR.WTRNG(K).NE.0,K=1,N_OSC)/))
-    CALL OscBank_Update(ob,WSINE.GT.0,V_SIN)
-    CALL OscBank_Update(ob,WSQWV.GT.0,V_SQW)
-    CALL OscBank_Update(ob,WSWTH.GT.0,V_SWT)
-    CALL OscBank_Update(ob,WTRNG.GT.0,V_TRI)
+    CALL MZ2PNL_TICK(PN,DONE) ; IF (DONE) GOTO 20
+    CALL OscBank_Tick(ob,(/(FXPH.OR.PN%WSINE(K).NE.0.OR.PN%WSQWV(K).NE.0.OR. &
+                            PN%WSWTH(K).NE.0.OR.PN%WTRNG(K).NE.0,K=1,N_OSC)/))
+    CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
+    CALL OscBank_Update(ob,PN%WSQWV.GT.0,V_SQW)
+    CALL OscBank_Update(ob,PN%WSWTH.GT.0,V_SWT)
+    CALL OscBank_Update(ob,PN%WTRNG.GT.0,V_TRI)
     TDATA=0
     !$OMP PARALLEL DO REDUCTION(+:TDATA)
     DO J=1,N_OSC
-       IF (WSINE(J).GT.0) TDATA=TDATA+WSINE(J)*ob%vval(J,V_SIN)
-       IF (WSQWV(J).GT.0) TDATA=TDATA+WSQWV(J)*ob%vval(J,V_SQW)
-       IF (WSWTH(J).GT.0) TDATA=TDATA+WSWTH(J)*ob%vval(J,V_SWT)
-       IF (WTRNG(J).GT.0) TDATA=TDATA+WTRNG(J)*ob%vval(J,V_TRI)       
+       IF (PN%WSINE(J).GT.0) TDATA=TDATA+PN%WSINE(J)*ob%vval(J,V_SIN)
+       IF (PN%WSQWV(J).GT.0) TDATA=TDATA+PN%WSQWV(J)*ob%vval(J,V_SQW)
+       IF (PN%WSWTH(J).GT.0) TDATA=TDATA+PN%WSWTH(J)*ob%vval(J,V_SWT)
+       IF (PN%WTRNG(J).GT.0) TDATA=TDATA+PN%WTRNG(J)*ob%vval(J,V_TRI)       
     END DO
     TDATA=VMUL*TDATA
     IF (CMPR) TDATA=MZSYNTH_CLIP(TDATA)
@@ -310,7 +312,7 @@ CONTAINS
     ! --------------+
     ! END MAIN LOOP |
     ! ..........................................................................
-    CALL AU_CLOSE(OFU,STAT=FS)
+20 CALL AU_CLOSE(OFU,STAT=FS)
     IF (FS.NE.0) GOTO 900
     RETURN
     ! --- END CODE  ---

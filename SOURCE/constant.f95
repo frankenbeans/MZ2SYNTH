@@ -67,7 +67,7 @@
 #endif
 
 #ifndef CONST_DFTZ
-#define CONST_DFTZ (1.0_RKIND/3.0_RKIND)
+#define CONST_DFTZ 0.01_RKIND
 #endif
 
 #ifndef CONST_DSMP

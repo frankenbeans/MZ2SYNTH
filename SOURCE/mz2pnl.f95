@@ -17,9 +17,9 @@ MODULE MZ2Pnl
      INTEGER                  :: CS=0
      TYPE(FImage)             :: PI
      REAL(KIND=RKIND)         :: VZERO=1.0_RKIND/(2**16)
-     REAL(KIND=RKIND)         :: SCANRT=1.0_RKIND     ! TODO: fix to default
-     REAL(KIND=RKIND)         :: SMPLRT=48000.0_RKIND ! TODO: fix to default
-     REAL(KIND=RKIND)         :: RMCNST     =1.0_RKIND/(48000.0_RKIND/100)
+     REAL(KIND=RKIND)         :: SCANRT=DADV
+     REAL(KIND=RKIND)         :: SMPLRT=DSMP
+     REAL(KIND=RKIND)         :: RMCNST     =1.0_RKIND/(DFTZ*DSMP)
      REAL(KIND=RKIND),POINTER :: DTSINE(:,:)=>NULL()
      REAL(KIND=RKIND),POINTER :: DTSQWV(:,:)=>NULL()
      REAL(KIND=RKIND),POINTER :: DTSWTH(:,:)=>NULL()

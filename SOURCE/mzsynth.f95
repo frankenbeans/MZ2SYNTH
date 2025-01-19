@@ -293,15 +293,16 @@ CONTAINS
     ! BEGIN MAIN LOOP |
     ! ----------------+
 10  J=J+1
+    CALL Mz2Pnl_Tick(PN,DONE)
+    IF (DONE) GOTO 20
     IF (PFL_VERB) THEN
        IF (J.GE.JP) THEN
           WRITE(*,700) 'SMPL=',J,  &
-               '; %COMPLETE=',100.0*REAL(J)/REAL(ZDATA), &
-               '; TIME/S=',REAL(J) / ob%smpr
+               '; %COMPLETE=',100.0_RKIND*REAL(J,RKIND)/REAL(ZDATA,RKIND), &
+               '; TIME/S=',REAL(J,RKIND) / ob%smpr
           JP=JP+SMPR
        END IF
     END IF
-    CALL Mz2Pnl_Tick(PN,DONE) ; IF (DONE) GOTO 20
     CALL OscBank_Tick(ob,(FXPH.OR.PN%WSINE.GT.0.OR.PN%WSQWV.GT.0.OR. &
                           PN%WSWTH.NE.0.OR.PN%WTRNG.NE.0))
     CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
@@ -327,7 +328,7 @@ CONTAINS
     ! ..........................................................................
 20  RETURN
     ! --- END CODE  ---
-700 FORMAT('MZSYN_GENERATE:',1X,999(:,A,G12.5))
+700 FORMAT('MZSYN_GENERATE:',1X,A,1X,I10,1X,A,G12.5,A,G12.5)
 800 FORMAT('MZSYN_GENERATE: ERROR WRITING OUTPUT FILE',1X,A,1X,'TO UNIT',1X,I0)
 900 WRITE(*,800) TRIM(POFN),OFU ; STOP    
   END SUBROUTINE MZSYN_GENERATE

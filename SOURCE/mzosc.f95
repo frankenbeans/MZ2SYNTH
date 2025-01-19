@@ -31,10 +31,12 @@ MODULE MZOsc
      REAL(KIND=RKIND) :: accm(1:N_OSC)=0
      INTEGER          :: wtno(1:N_OSC)=0
      REAL(KIND=RKIND) :: vval(1:N_OSC,1:N_VOC)=0 ! VOICE E {SIN,SQW,SWT,TRI}
-     REAL(KIND=RKIND),POINTER :: tsin(:)  =>NULL()
-     REAL(KIND=RKIND),POINTER :: tsqw(:,:)=>NULL()
-     REAL(KIND=RKIND),POINTER :: tswt(:,:)=>NULL()
-     REAL(KIND=RKIND),POINTER :: ttri(:,:)=>NULL()
+     REAL(KIND=RKIND),POINTER :: wts(:)     =>NULL()
+     REAL(KIND=RKIND),POINTER :: wtr(:,:,:) =>NULL()
+     REAL(KIND=RKIND),POINTER :: tsin(:)    =>NULL()
+     REAL(KIND=RKIND),POINTER :: tsqw(:,:)  =>NULL()
+     REAL(KIND=RKIND),POINTER :: tswt(:,:)  =>NULL()
+     REAL(KIND=RKIND),POINTER :: ttri(:,:)  =>NULL()
   END TYPE OscBank
 
 CONTAINS
@@ -72,10 +74,9 @@ CONTAINS
     LOGICAL :: lra
     INTEGER :: i,j,nseed,zseed,ms
     REAL(KIND=RKIND) :: fc1
-    REAL(KIND=RKIND),POINTER :: wts(:),wtr(:,:,:)
     ! --------------------------------
-    ALLOCATE(wts(1:N_TIC_PER_CYC), &
-             wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI),STAT=ms)
+    ALLOCATE(ob%wts(1:N_TIC_PER_CYC), &
+             ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI),STAT=ms)
     IF (ms.NE.0) GOTO 900
 
     IF (PFL_VERB) WRITE(*,700) 'Initializing oscillator bank'
@@ -107,22 +108,23 @@ CONTAINS
        END DO
     END IF  
 
-    IF (PFL_VERB) WRITE(*,700) 'Initializing wavetables'    
-    CALL WVFSIN(ob%freq(1),REAL(ob%smpr,RKIND),N_TIC_PER_CYC,WTS)    
+    IF (PFL_VERB) WRITE(*,700) 'Initializing wavetables'
+
+    ob%tsin=>ob%wts
+    ob%tsqw=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW)
+    ob%tswt=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
+    ob%ttri=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
+    CALL WVFSIN(ob%freq(1),REAL(ob%smpr,RKIND),N_TIC_PER_CYC,ob%tsin)    
     !$OMP PARALLEL DO
     DO j=1,N_WVT
        CALL WVFSQR(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
-            N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SQW))
+            N_TIC_PER_CYC,ob%tsqw)
        CALL WVFSAW(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
-            N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_SWT))
+            N_TIC_PER_CYC,ob%tswt)
        CALL WVFTRI(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
-            N_TIC_PER_CYC,wtr(1:N_TIC_PER_CYC,j,V_TRI))
+            N_TIC_PER_CYC,ob%ttri)
     END DO
     !$OMP END PARALLEL DO
-    ob%tsin=>wts
-    ob%tsqw=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW)
-    ob%tswt=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
-    ob%ttri=>wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
     CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SIN)
     CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SQW)
     CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SWT)
@@ -171,10 +173,8 @@ CONTAINS
     ! --------------------------------
     TYPE(OscBank),INTENT(INOUT) :: ob
     ! --------------------------------
-    IF (ASSOCIATED(ob%tsin)) DEALLOCATE(ob%tsin)
-    IF (ASSOCIATED(ob%tsqw)) DEALLOCATE(ob%tsqw)
-    IF (ASSOCIATED(ob%tswt)) DEALLOCATE(ob%tswt)
-    IF (ASSOCIATED(ob%ttri)) DEALLOCATE(ob%ttri)
+    IF (ASSOCIATED(ob%wts)) DEALLOCATE(ob%wts)
+    IF (ASSOCIATED(ob%wtr)) DEALLOCATE(ob%wtr)
     ob=OscBank()
   END SUBROUTINE OscBank_Clear
 

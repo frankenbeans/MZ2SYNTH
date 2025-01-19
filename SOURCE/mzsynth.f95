@@ -3,11 +3,11 @@
 !
 ! MZ2 MAIN SUBROUTINES
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2025 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2024-12-15'
+#define PROGVERS '0.1/2025-01-19'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM MZSYNTH  
@@ -40,20 +40,14 @@ PROGRAM MZSYNTH
   TYPE(MZ2Panel) :: PN
 
   ! --- EXE CODE ---
-  CALL MZSYN_MAIN()
+  CALL MZSYN_CMDLINE()
+  CALL MZSYN_INIT()
+  CALL MZSYN_GENERATE()
+  CALL MZSYN_TIDY()
   ! --- END CODE ---
-
+  
 CONTAINS
 
-  SUBROUTINE MZSYN_MAIN()
-    IMPLICIT NONE
-    ! --- EXE CODE ---
-    CALL MZSYN_CMDLINE()
-    CALL MZSYN_INITSYN()
-    CALL MZSYN_GENERATE()    
-    ! --- END CODE ---
-  END SUBROUTINE MZSYN_MAIN
-  
   SUBROUTINE MZSYN_CMDLINE()
     IMPLICIT NONE
     ! --- VARIABLES ---
@@ -255,43 +249,61 @@ CONTAINS
 710 FORMAT(2X,A,T5,'|',A,T25,A,T32,A,T73,'[',A,']')
   END SUBROUTINE MZSYN_HELP
 
-  SUBROUTINE MZSYN_INITSYN()
+  SUBROUTINE MZSYN_INIT()
     IMPLICIT NONE
     ! --- VARIABLES ---
     INTEGER :: FS
     ! --- EXE CODE ---
     CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
-    CALL MZ2PNL_LOAD(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
+    CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
     CALL AU_WRTHDR(POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,MCBE,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900
-    ZDATA=PN%PI%NCOLS * NINT(PN%SMPLRT / PN%SCANRT) ! SMPL = COL * SMPL/S * S/COL
+    ZDATA=PN%PI%NCOLS*NINT(PN%SMPLRT/PN%SCANRT) ! SMPL = COL * SMPL/S * S/COL
     IF (PFL_VERB) WRITE(*,'(A,1X,I0)') 'NUMBER OF SAMPLES TO GENERATE:',ZDATA
     ! --- END CODE ---
     RETURN
 800 FORMAT('!ERROR:',999(:,1X,A))
 900 WRITE(*,800) 'FILE OUTPUT ERROR WHILE WRITING '//TRIM(POFN) ; STOP    
-  END SUBROUTINE MZSYN_INITSYN
+  END SUBROUTINE MZSYN_INIT
+
+  SUBROUTINE MZSYN_TIDY()
+    IMPLICIT NONE
+    ! --- VARIABLES ---
+    INTEGER :: FST
+    ! --- EXE CODE ---
+    CALL AU_CLOSE(OFU,FST) ; IF (FST.NE.0) GOTO 900
+    CALL Mz2Pnl_Clear(PN)
+    CALL OscBank_Clear(OB)
+    RETURN
+    ! --- END CODE ---
+800 FORMAT('!ERROR:',999(:,1X,A))
+900 WRITE(*,800) 'FILE OUTPUT ERROR WHILE WRITING '//TRIM(POFN) ; STOP        
+  END SUBROUTINE MZSYN_TIDY
 
   SUBROUTINE MZSYN_GENERATE()
     IMPLICIT NONE
     ! --- VARIABLES ---
     LOGICAL :: DONE
-    INTEGER :: J,K,FS
+    INTEGER :: J,JP,FS
     REAL(KIND=RKIND) :: TDATA
     ! --- EXE CODE  ---
     J=0
+    JP=SMPR
     ! ..........................................................................
     ! BEGIN MAIN LOOP |
     ! ----------------+
 10  J=J+1
     IF (PFL_VERB) THEN
-       IF (MOD(J,SMPR).EQ.0) WRITE(*,700) 'SMPL=',J,  &
-            '; %COMPLETE=',100.0*REAL(J)/REAL(ZDATA), &
-            '; TIME/S=',REAL(J) / ob%smpr
+       IF (J.GE.JP) THEN
+          WRITE(*,700) 'SMPL=',J,  &
+               '; %COMPLETE=',100.0*REAL(J)/REAL(ZDATA), &
+               '; TIME/S=',REAL(J) / ob%smpr
+          JP=JP+SMPR
+       END IF
     END IF
-    CALL MZ2PNL_TICK(PN,DONE) ; IF (DONE) GOTO 20
-    CALL OscBank_Tick(ob,(/(FXPH.OR.PN%WSINE(K).NE.0.OR.PN%WSQWV(K).NE.0.OR. &
-                            PN%WSWTH(K).NE.0.OR.PN%WTRNG(K).NE.0,K=1,N_OSC)/))
+    CALL Mz2Pnl_Tick(PN,DONE) ; IF (DONE) GOTO 20
+    CALL OscBank_Tick(ob,(FXPH.OR.PN%WSINE.GT.0.OR.PN%WSQWV.GT.0.OR. &
+                          PN%WSWTH.NE.0.OR.PN%WTRNG.NE.0))
     CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
     CALL OscBank_Update(ob,PN%WSQWV.GT.0,V_SQW)
     CALL OscBank_Update(ob,PN%WSWTH.GT.0,V_SWT)
@@ -304,17 +316,16 @@ CONTAINS
        IF (PN%WSWTH(J).GT.0) TDATA=TDATA+PN%WSWTH(J)*ob%vval(J,V_SWT)
        IF (PN%WTRNG(J).GT.0) TDATA=TDATA+PN%WTRNG(J)*ob%vval(J,V_TRI)       
     END DO
+    !$OMP END PARALLEL DO
     TDATA=VMUL*TDATA
     IF (CMPR) TDATA=MZSYNTH_CLIP(TDATA)
     CALL AU_WRTSMP(OFU,REAL((/TDATA,TDATA/),C_FLOAT),MCBE,FS)
     IF (FS.NE.0) GOTO 900
-    IF (J.LT.ZDATA) GOTO 10
+    GOTO 10
     ! --------------+
     ! END MAIN LOOP |
     ! ..........................................................................
-20 CALL AU_CLOSE(OFU,STAT=FS)
-    IF (FS.NE.0) GOTO 900
-    RETURN
+20  RETURN
     ! --- END CODE  ---
 700 FORMAT('MZSYN_GENERATE:',1X,999(:,A,G12.5))
 800 FORMAT('MZSYN_GENERATE: ERROR WRITING OUTPUT FILE',1X,A,1X,'TO UNIT',1X,I0)

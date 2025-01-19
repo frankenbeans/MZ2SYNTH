@@ -75,8 +75,10 @@ CONTAINS
     INTEGER :: i,j,nseed,zseed,ms
     REAL(KIND=RKIND) :: fc1
     ! --------------------------------
-    ALLOCATE(ob%wts(1:N_TIC_PER_CYC), &
-             ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI),STAT=ms)
+    ALLOCATE(ob%wts(1:N_TIC_PER_CYC),SOURCE=0.0_RKIND,STAT=MS)
+    IF (MS.NE.0) GOTO 900
+    ALLOCATE(ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI), &
+         SOURCE=0.0_RKIND,STAT=ms)
     IF (ms.NE.0) GOTO 900
 
     IF (PFL_VERB) WRITE(*,700) 'Initializing oscillator bank'
@@ -118,11 +120,11 @@ CONTAINS
     !$OMP PARALLEL DO
     DO j=1,N_WVT
        CALL WVFSQR(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
-            N_TIC_PER_CYC,ob%tsqw)
+            N_TIC_PER_CYC,ob%tsqw(:,j))
        CALL WVFSAW(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
-            N_TIC_PER_CYC,ob%tswt)
+            N_TIC_PER_CYC,ob%tswt(:,j))
        CALL WVFTRI(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
-            N_TIC_PER_CYC,ob%ttri)
+            N_TIC_PER_CYC,ob%ttri(:,j))
     END DO
     !$OMP END PARALLEL DO
     CALL OscBank_Update(ob,(/(.TRUE.,I=1,N_OSC)/),V_SIN)

@@ -22,7 +22,5 @@ jobs:
     - name: Change directory and build project
       run: |
              cd SOURCE ; 
-             make -f Makefile.gfortran all ;
-             cp mz2 ..\WINEXE ;
-             make -f Makefile.gfortran veryclean ;
-                         
+             make -f Makefile.gfortran all clean ;
+             move mz2.exe ..\WINEXE ;                         

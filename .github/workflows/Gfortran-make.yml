@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Windows Makefile CI
 
 on:
   push:
@@ -26,5 +26,5 @@ jobs:
             git config user.name github-actions ;
             git config user.email github-actions@github.com ;
             git add --all
-            git commit -m "Windows executable generated" ;
+            git commit -m "Yay, windows executable generated" ;
             git push ;

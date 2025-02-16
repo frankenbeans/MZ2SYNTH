@@ -16,5 +16,9 @@ jobs:
 
     - name: Change directory
       run: cd ./SOURCE
+
+    - name: Print working directory
+      run:  pwd
+      
     - name: Make all
       run: make -f Makefile.gfortran all clean

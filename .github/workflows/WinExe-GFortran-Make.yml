@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Change directory and build project
+    - name: Change directory, build project and run with -help
       run: |             
              cd SOURCE ;
              gcc --version ;
@@ -22,6 +22,7 @@ jobs:
              rm ..\WINEXE\*.exe
              mv mz2.exe ..\WINEXE ;
              dir ..\WINEXE ;
+             echo ;
              ..\WINEXE\mz2 -help ;
 
     - name: Commit changes

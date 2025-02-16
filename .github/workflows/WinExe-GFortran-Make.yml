@@ -22,7 +22,7 @@ jobs:
              rm ..\WINEXE\*.exe
              mv mz2.exe ..\WINEXE ;
              dir ..\WINEXE ;
-             ..\WINEXE\mz2 --help ;
+             ..\WINEXE\mz2 -help ;
 
     - name: Commit changes
       run: |

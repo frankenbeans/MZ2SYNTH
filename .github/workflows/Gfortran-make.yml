@@ -14,5 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: List directory contents
+    - name: Show working directory and contents
       run: pwd ; ls ;
+
+    - name: Change directory and build project
+      run: cd SOURCE ; make -f Makefile.gfortran all clean ;

@@ -18,4 +18,5 @@ jobs:
       run: |
              cd SOURCE ; 
              make -f Makefile.gfortran all clean ;
-             mv mz2.exe ..\WINEXE ;                         
+             mv mz2.exe ..\WINEXE ;
+             dir ..\WINEXE ;

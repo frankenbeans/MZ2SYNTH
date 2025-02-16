@@ -67,8 +67,8 @@ The following options are available (case insensitive):
 - Input file: input.ppm
 - Output file: output.au
 - Channels:  sine:square:sawtooth:triangle = R:G:B:L
-- Volume multiplier:  1.0
-- Transition fraction: 0.333 (also the maximum)
+- Volume multiplier:  0.1
+- Transition fraction: 0.01
 - Sampling rate: 44100 c.p.s.
 - Fixed phase:  off
 - Zero phase:   off (i.e., phases are randomized at start by default)

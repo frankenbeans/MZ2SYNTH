@@ -9,16 +9,20 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Show working directory and contents
-      run: pwd ; ls ;
+      run: |
+             pwd ; 
+             ls ;
 
     - name: Change directory and build project
-      run: cd SOURCE ; make -f Makefile.gfortran all clean ;
-
-    - name: Generate audio (example 2)
-      run: cd EXAMPLES ; ../SOURCE/mz2 -v -w -a 4 -x -o example-02.au example-02.ppm
+      run: |
+             cd SOURCE ; 
+             make -f Makefile.gfortran all ;
+             cp mz2 ..\WINEXE ;
+             make -f Makefile.gfortran veryclean ;
+                         

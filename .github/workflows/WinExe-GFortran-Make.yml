@@ -16,7 +16,6 @@ jobs:
     
     - name: Change directory and build project
       run: |             
-             export PATH="/c/mingw64/bin:$PATH" ;
              cd SOURCE ; 
              make -f Makefile.gfortran all clean ;
              rm ..\WINEXE\*.exe

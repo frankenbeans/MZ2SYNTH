@@ -209,6 +209,8 @@ CONTAINS
          'Print help-screen and halt processing','off'
     WRITE(*,710) '-v','-verbose','',                      &
          'Toggle verbose text output mode','off'
+    WRITE(*,710) '-w','-overwrite','',                    &
+         'Toggle overwrite output mode','off'
     WRITE(*,710) '-d','-debug','',                        &
          'Toggle debugging output mode','off'
     WRITE(*,710) '-p','-dynamic-compression','',          &

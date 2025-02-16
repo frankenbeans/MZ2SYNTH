@@ -15,6 +15,6 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Change directory
-      run: cd ./SOURCES
+      run: cd ./SOURCE
     - name: Make all
       run: make -f Makefile.gfortran all clean

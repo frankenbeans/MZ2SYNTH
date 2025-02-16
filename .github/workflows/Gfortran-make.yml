@@ -21,4 +21,4 @@ jobs:
       run: cd SOURCE ; make -f Makefile.gfortran all clean ;
 
     - name: Generate audio (example 2)
-    - run: cd EXAMPLES ; ../SOURCE/mz2 -v -w -a 4 -x -o example-02.au example-02.ppm
+      run: cd EXAMPLES ; ../SOURCE/mz2 -v -w -a 4 -x -o example-02.au example-02.ppm

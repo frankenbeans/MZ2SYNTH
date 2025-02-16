@@ -14,8 +14,5 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: configure
-      run: ./configure
-
     - name: Make all
       run: make -f Makefile.gfortran all clean

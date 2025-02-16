@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2025-01-19'
+#define PROGVERS '0.1/2025-02-16'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM MZSYNTH  
@@ -222,7 +222,7 @@ CONTAINS
     WRITE(*,710) '-c','-channel-select','<sqwt>',         &
          'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBL'
     WRITE(*,710) '-m','-volume-multiplier','<m>',         &
-         'Set volume multiplier (m > 0)','1.0'
+         'Set volume multiplier (m > 0)','0.1'
     WRITE(*,710) '-o','-output-file','<ofn>',             &
          'Write output to file <ofn>','note *'
     WRITE(*,710) '-s','-sampling-rate','<s>',             &

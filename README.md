@@ -112,7 +112,7 @@ The following options are available (case insensitive):
   (e.g., software as a service) this may introduce security vulnerabilities
   if there are signficant bugs.
 
-  **NOTE:** Intel Fortran (fx (IFX) 2025.0.4 20241205) executables cannot
+  **NOTE:** Intel Fortran (ifx (IFX) 2025.0.4 20241205) executables cannot
   write to named pipes as noted above, for reasons currently not known.
   There is a work-around:
   

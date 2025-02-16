@@ -1,5 +1,5 @@
 ! ------------------------------------------------------------------------------
-! PFLAGS.F95
+! PFLAGS.F90
 !
 ! PROGRAM-WIDE FLAGS FOR MZ2 SYNTHESIZER
 !

@@ -14,8 +14,8 @@ OBJ=constant.o caseconv.o wvecmp.o pflags.o sfrealcomp.o \
 $(EXE) : $(OBJ)
 	$(FC) $(CFLAGS) -o $(EXE) $(OBJ)
 
-%.o : %.f95
-	$(FC) $(CFLAGS) -fpp -c -Tf $<
+%.o : %.f90
+	$(FC) $(CFLAGS) -fpp -c $<
 
 all : $(EXE)
 

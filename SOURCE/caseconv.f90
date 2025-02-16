@@ -1,5 +1,5 @@
 ! ----------------------------------------------------------------------
-! CASECONV.F95
+! CASECONV.F90
 !
 ! FORTRAN ROUTINES FOR CONVERTING STRINGS TO UPPERCASE OR LOWERCASE.
 !

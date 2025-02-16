@@ -1,5 +1,5 @@
 ! ------------------------------------------------------------------------------
-! SFREALCOMP.F95
+! SFREALCOMP.F90
 !
 ! PRACTICAL REAL NUMBER COMPARISON FUNCTIONS (ORIGINALLY FOR SFDEFLIC PROJECT)
 !

@@ -1,5 +1,5 @@
 ! ------------------------------------------------------------------------------
-! MZOSC.F95
+! MZOSC.F90
 !
 ! SIMULATED OSCILLATOR BANK (SINE,SQUARE,SAWTOOTH,TRIANGLE) FOR MZ2 SYNTHESIZER
 !

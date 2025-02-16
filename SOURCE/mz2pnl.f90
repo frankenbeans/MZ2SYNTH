@@ -1,5 +1,5 @@
 ! ------------------------------------------------------------------------------
-! MZ2PNL.F95
+! MZ2PNL.F90
 ! Graphical input panel data structures subroutines for MZ2SYNTH.
 ! Copyright (C) 2025 by E. Lamprecht - All rights reserved.  
 ! ------------------------------------------------------------------------------

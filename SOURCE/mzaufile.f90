@@ -1,5 +1,5 @@
 ! ------------------------------------------------------------------------------
-! MZAUFILE.F95
+! MZAUFILE.F90
 !
 ! SUN AUDIO FILE FORMAT HANDLING SUBROUTINES FOR MZ2
 !

@@ -1,5 +1,5 @@
 !+============================================================================+
-!| FIMAGEMOD.F95                                                              |
+!| FIMAGEMOD.F90                                                              |
 !|                                                                            |
 !| FORTRAN 2003 routines for reading and writing binary or plain PGM and PPM  |
 !| image files.  Both 8-bit and 16-bit variants of the PGM and PPM formats    |

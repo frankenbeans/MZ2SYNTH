@@ -1,5 +1,5 @@
 ! ==========================================================================
-! WVECMP.F95 - FOURIER SYNTHESIS OF COMMON MUSICAL SYNTHESIZER WAVEFORMS
+! WVECMP.F90 - FOURIER SYNTHESIS OF COMMON MUSICAL SYNTHESIZER WAVEFORMS
 ! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ==========================================================================
 

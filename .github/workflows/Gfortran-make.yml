@@ -14,11 +14,5 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Change directory
-      run: cd ./SOURCE
-
-    - name: Print working directory
-      run:  pwd
-      
-    - name: Make all
-      run: make -f Makefile.gfortran all clean
+    - name: List directory contents
+      run: pwd ; ls ;

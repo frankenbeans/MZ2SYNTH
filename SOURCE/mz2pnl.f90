@@ -1,7 +1,9 @@
 ! ------------------------------------------------------------------------------
 ! MZ2PNL.F90
-! Graphical input panel data structures subroutines for MZ2SYNTH.
-! Copyright (C) 2025 by E. Lamprecht - All rights reserved.  
+!
+! GRAPHICAL INPUT PANEL DATA STRUCTURES SUBROUTINES FOR MZ2SYNTH.
+!
+! COPYRIGHT (C) 2025 BY E. LAMPRECHT - ALL RIGHTS RESERVED.  
 ! ------------------------------------------------------------------------------
 
 MODULE MZ2Pnl
@@ -74,19 +76,6 @@ CONTAINS
     IF (PFL_VERB) WRITE(*,600) 'Executing flip across horizontal line...'
     CALL FIM_stf_hflip(P%PI)
     IF (PFL_VERB) WRITE(*,600) 'Done!'
-    ALLOCATE(P%ASINE(1:P%PI%NROWS),P%ASQWV(1:P%PI%NROWS), &
-             P%ASWTH(1:P%PI%NROWS),P%ATRNG(1:P%PI%NROWS), &
-             P%WSINE(1:P%PI%NROWS),P%WSQWV(1:P%PI%NROWS), &
-             P%WSWTH(1:P%PI%NROWS),P%WTRNG(1:P%PI%NROWS), &
-             STAT=MS)
-    IF (MS.NE.0) GOTO 910
-    IF (PFL_VERB) WRITE(*,600) 'Memory allocated andbeing initialized...'
-    !$OMP PARALLEL
-    P%ASINE=0 ; P%ASQWV=0 ; P%ASWTH=0 ; P%ATRNG=0
-    P%WSINE=0 ; P%WSQWV=0 ; P%WSWTH=0 ; P%WTRNG=0
-    !$OMP END PARALLEL
-    IF (PFL_VERB) WRITE(*,600) 'Done!'
-    IF (MS.NE.0) GOTO 910
     DLUM=>NULL()
     SELECT CASE(CHS(1:1))       
     CASE('R')
@@ -196,6 +185,40 @@ CONTAINS
     CASE DEFAULT
        GOTO 920
     END SELECT
+    ! --------------------------------------------------------------------------
+    ! Based on the allocation status of P%DT*, allocate P%W* and P%A* and
+    ! and initialize
+    ! --------------------------------------------------------------------------
+    IF (PFL_VERB) WRITE(*,600) 'Memory allocation and initialization ...'
+    IF (ASSOCIATED(P%DTSINE)) THEN
+       ALLOCATE(P%ASINE(1:P%PI%NROWS),P%WSINE(1:P%PI%NROWS),STAT=MS)
+       IF (MS.NE.0) GOTO 910
+       !$OMP PARALLEL
+       P%ASINE=0 ; P%WSINE=0 ;
+       !$OMP END PARALLEL
+    END IF
+    IF (ASSOCIATED(P%DTSQWV)) THEN
+       ALLOCATE(P%ASQWV(1:P%PI%NROWS),P%WSQWV(1:P%PI%NROWS),STAT=MS)
+       IF (MS.NE.0) GOTO 910
+       !$OMP PARALLEL
+       P%ASQWV=0 ; P%WSQWV=0 ;
+       !$OMP END PARALLEL
+    END IF
+    IF (ASSOCIATED(P%DTSWTH)) THEN
+       ALLOCATE(P%ASWTH(1:P%PI%NROWS),P%WSWTH(1:P%PI%NROWS),STAT=MS)
+       IF (MS.NE.0) GOTO 910
+       !$OMP PARALLEL
+       P%ASWTH=0 ; P%WSWTH=0 ;
+       !$OMP END PARALLEL
+    END IF
+    IF (ASSOCIATED(P%DTTRNG)) THEN
+       ALLOCATE(P%ATRNG(1:P%PI%NROWS),P%WTRNG(1:P%PI%NROWS),STAT=MS)
+       IF (MS.NE.0) GOTO 910
+       !$OMP PARALLEL
+       P%ATRNG=0 ; P%WTRNG=0 ;
+       !$OMP END PARALLEL
+    END IF
+    IF (PFL_VERB) WRITE(*,600) 'Done!'
     IF (TCFRAC.LE.0.0_RKIND.OR.TCFRAC.GT.0.5_RKIND) GOTO 930
     P%RMCNST=1.0_RKIND/(TCFRAC*P%SMPLRT)
     ! --- END CODE ---

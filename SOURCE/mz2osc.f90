@@ -1,12 +1,12 @@
 ! ------------------------------------------------------------------------------
-! MZOSC.F90
+! MZ2OSC.F90
 !
 ! SIMULATED OSCILLATOR BANK (SINE,SQUARE,SAWTOOTH,TRIANGLE) FOR MZ2 SYNTHESIZER
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED
+! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
-MODULE MZOsc
+MODULE Mz2Osc
   USE Constant
   USE PFlags
   USE WveCmp
@@ -30,7 +30,7 @@ MODULE MZOsc
      REAL(KIND=RKIND) :: incr(1:N_OSC)=0
      REAL(KIND=RKIND) :: accm(1:N_OSC)=0
      INTEGER          :: wtno(1:N_OSC)=0
-     REAL(KIND=RKIND) :: vval(1:N_OSC,1:N_VOC)=0 ! VOICE E {SIN,SQW,SWT,TRI}
+     REAL(KIND=RKIND) :: vval(1:N_OSC,1:N_VOC)=0 ! VOICE in {SIN,SQW,SWT,TRI}
      REAL(KIND=RKIND),POINTER :: wts(:)     =>NULL()
      REAL(KIND=RKIND),POINTER :: wtr(:,:,:) =>NULL()
      REAL(KIND=RKIND),POINTER :: tsin(:)    =>NULL()
@@ -290,4 +290,4 @@ CONTAINS
     !$OMP END PARALLEL DO
   END SUBROUTINE OscBank_Tick
     
-END MODULE MZOsc
+END MODULE Mz2Osc

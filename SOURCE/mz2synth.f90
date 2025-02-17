@@ -1,5 +1,5 @@
 ! ------------------------------------------------------------------------------
-! MZSYNTH.F90
+! MZ2SYNTH.F90
 !
 ! MZ2 MAIN SUBROUTINES
 !
@@ -7,18 +7,18 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2025-02-16'
+#define PROGVERS '0.1/2025-02-17'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
-PROGRAM MZSYNTH  
+PROGRAM Mz2Synth  
   USE Constant
   USE CaseConv
   USE PFlags
-  USE MZOSC
-  USE MZ2PNL
-  USE MZAUFILE
+  USE Mz2Osc
+  USE Mz2Pnl
+  USE Mz2AuFile
   IMPLICIT NONE
-  ! INPUT PARAMETERS
+  ! --- INPUT PARAMETERS ---
   INTEGER,PARAMETER   :: ZARG=ZSTR
   CHARACTER(LEN=ZARG) :: PIFN=DIFN
   CHARACTER(LEN=ZARG) :: POFN=DOFN
@@ -30,22 +30,21 @@ PROGRAM MZSYNTH
   LOGICAL             :: FXPH=DFXP
   LOGICAL             :: ZRPH=DZRP
   INTEGER             :: SMPR=DSMP
-  ! DERIVED PARAMETERS
+  ! --- VARIABLES ---
   INTEGER             :: ZDATA
   LOGICAL             :: MCBE
-  ! VARIABLES
-  TYPE(OscBank)  :: OB
-  TYPE(MZ2Panel) :: PN
+  TYPE(OscBank)       :: OB
+  TYPE(MZ2Panel)      :: PN
   ! --- EXE CODE ---
-  CALL MZSYN_CMDLINE()
-  CALL MZSYN_INIT()
-  CALL MZSYN_GENERATE()
-  CALL MZSYN_TIDY()
+  CALL Mz2Syn_CmdLine()
+  CALL Mz2Syn_Init()
+  CALL Mz2Syn_Generate()
+  CALL Mz2Syn_Tidy()
   ! --- END CODE ---
   
 CONTAINS
 
-  SUBROUTINE MZSYN_CMDLINE()
+  SUBROUTINE Mz2Syn_CmdLine()
     IMPLICIT NONE
     ! --- VARIABLES ---
     CHARACTER(LEN=ZARG) :: CARG='',RARG=''
@@ -176,13 +175,13 @@ CONTAINS
     END DO
     ! If in help-mode, just print a help-screen and halt execution.
     IF (HLPX) THEN
-       CALL MZSYN_HELP()
+       CALL Mz2Syn_Help()
        STOP
     END IF
     ! --- END CODE  ---
     RETURN
-700 FORMAT('MZSYNTH:',999(:,1X,A))
-710 FORMAT('MZSYNTH:',999(:,1X,A,:,1X,G13.6))
+700 FORMAT('Mz2Synth:',999(:,1X,A))
+710 FORMAT('Mz2Synth:',999(:,1X,A,:,1X,G13.6))
 800 FORMAT('!ERROR:',999(:,1X,A))
 900 WRITE(*,800) 'ADVANCE RATE MUST BE PRESENT AND >= 1'         ; STOP
 910 WRITE(*,800) 'CHANNEL MULTIPLIER MUST BE FOUR OF [RGBLM]'    ; STOP
@@ -194,9 +193,9 @@ CONTAINS
 950 WRITE(*,800) 'MISSING OR BAD TRANSITION FRACTION < 0 OR > 1' ; STOP
 960 WRITE(*,800) 'CANNOT READ INPUT FILE',TRIM(PIFN)             ; STOP
 990 WRITE(*,800) 'INVALID COMMAND LINE OPTION',TRIM(CARG)        ; STOP
-  END SUBROUTINE MZSYN_CMDLINE
+  END SUBROUTINE Mz2Syn_CmdLine
 
-  SUBROUTINE MZSYN_HELP()
+  SUBROUTINE Mz2Syn_Help()
     IMPLICIT NONE
     WRITE(*,700) PROGNAME//' '//PROGVERS
     WRITE(*,700) PROGCOPY
@@ -238,16 +237,16 @@ CONTAINS
         
 700 FORMAT(A)
 710 FORMAT(2X,A,T5,'|',A,T25,A,T32,A,T73,'[',A,']')
-  END SUBROUTINE MZSYN_HELP
+  END SUBROUTINE Mz2Syn_Help
 
-  SUBROUTINE MZSYN_INIT()
+  SUBROUTINE Mz2Syn_Init()
     IMPLICIT NONE
     ! --- VARIABLES ---
     INTEGER :: FS
     ! --- EXE CODE ---
     CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
     CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
-    CALL AU_WRTHDR(POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,MCBE,PFL_OVWT,FS)
+    CALL Au_WrtHdr(POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,MCBE,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900
     ZDATA=PN%PI%NCOLS*NINT(PN%SMPLRT/PN%SCANRT) ! SMPL = COL * SMPL/S * S/COL
     IF (PFL_VERB) WRITE(*,'(A,1X,I0)') 'NUMBER OF SAMPLES TO GENERATE:',ZDATA
@@ -255,28 +254,29 @@ CONTAINS
     RETURN
 800 FORMAT('!ERROR:',999(:,1X,A))
 900 WRITE(*,800) 'FILE OUTPUT ERROR WHILE WRITING '//TRIM(POFN) ; STOP    
-  END SUBROUTINE MZSYN_INIT
+  END SUBROUTINE Mz2Syn_Init
 
-  SUBROUTINE MZSYN_TIDY()
+  SUBROUTINE Mz2Syn_Tidy()
     IMPLICIT NONE
     ! --- VARIABLES ---
     INTEGER :: FST
     ! --- EXE CODE ---
-    CALL AU_CLOSE(OFU,FST) ; IF (FST.NE.0) GOTO 900
+    CALL Au_Close(OFU,FST) ; IF (FST.NE.0) GOTO 900
     CALL Mz2Pnl_Clear(PN)
     CALL OscBank_Clear(OB)
     RETURN
     ! --- END CODE ---
 800 FORMAT('!ERROR:',999(:,1X,A))
 900 WRITE(*,800) 'FILE OUTPUT ERROR WHILE WRITING '//TRIM(POFN) ; STOP        
-  END SUBROUTINE MZSYN_TIDY
+  END SUBROUTINE Mz2Syn_Tidy
 
-  SUBROUTINE MZSYN_GENERATE()
+  SUBROUTINE Mz2Syn_Generate()
     IMPLICIT NONE
     ! --- VARIABLES ---
     LOGICAL :: DONE
     INTEGER :: J,JP,FS
-    REAL(KIND=RKIND) :: TDATA
+    REAL(KIND=RKIND) :: TDATA,TDATA1,TDATA2,TDATA3,TDATA4
+    LOGICAL :: OTICK(1:N_OSC)
     ! --- EXE CODE  ---
     J=0
     JP=SMPR
@@ -294,24 +294,71 @@ CONTAINS
           JP=JP+SMPR
        END IF
     END IF
-    CALL OscBank_Tick(ob,(FXPH.OR.PN%WSINE.GT.0.OR.PN%WSQWV.GT.0.OR. &
-                          PN%WSWTH.NE.0.OR.PN%WTRNG.NE.0))
-    CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
-    CALL OscBank_Update(ob,PN%WSQWV.GT.0,V_SQW)
-    CALL OscBank_Update(ob,PN%WSWTH.GT.0,V_SWT)
-    CALL OscBank_Update(ob,PN%WTRNG.GT.0,V_TRI)
-    TDATA=0
-    !$OMP PARALLEL DO REDUCTION(+:TDATA)
-    DO J=1,N_OSC
-       IF (PN%WSINE(J).GT.0) TDATA=TDATA+PN%WSINE(J)*ob%vval(J,V_SIN)
-       IF (PN%WSQWV(J).GT.0) TDATA=TDATA+PN%WSQWV(J)*ob%vval(J,V_SQW)
-       IF (PN%WSWTH(J).GT.0) TDATA=TDATA+PN%WSWTH(J)*ob%vval(J,V_SWT)
-       IF (PN%WTRNG(J).GT.0) TDATA=TDATA+PN%WTRNG(J)*ob%vval(J,V_TRI)       
-    END DO
-    !$OMP END PARALLEL DO
-    TDATA=VMUL*TDATA
-    IF (CMPR) TDATA=MZSYNTH_CLIP(TDATA)
-    CALL AU_WRTSMP(OFU,REAL((/TDATA,TDATA/),C_FLOAT),MCBE,FS)
+    ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ! Decide which oscillators in the oscillator banks need to be ticked.
+    ! In fixed-phase mode, all of them do, but otherwise only those for whom
+    ! there would be a nonzero weight in the panel do.  Then tick 'em.
+    !
+    IF (FXPH) THEN
+       !$OMP PARALLEL
+       OTICK=.TRUE.
+       !$OMP END PARALLEL
+    ELSE
+       !$OMP PARALLEL
+       OTICK=.FALSE.
+       !$OMP END PARALLEL
+       IF (ASSOCIATED(PN%DTSINE)) THEN
+          !$OMP PARALLEL
+          OTICK=OTICK.OR.PN%WSINE.GT.0
+          !$OMP END PARALLEL
+       END IF
+       IF (ASSOCIATED(PN%DTSQWV)) THEN
+          !$OMP PARALLEL
+          OTICK=OTICK.OR.PN%WSQWV.GT.0
+          !$OMP END PARALLEL
+       END IF
+       IF (ASSOCIATED(PN%DTSWTH)) THEN
+          !$OMP PARALLEL
+          OTICK=OTICK.OR.PN%WSWTH.GT.0
+          !$OMP END PARALLEL
+       END IF
+       IF (ASSOCIATED(PN%DTTRNG)) THEN
+          !$OMP PARALLEL
+          OTICK=OTICK.OR.PN%WTRNG.GT.0
+          !$OMP END PARALLEL
+       END IF
+    END IF
+    CALL OscBank_Tick(ob,OTICK)
+    !
+    ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    TDATA=0 ; TDATA1=0 ; TDATA2=0 ; TDATA3=0 ; TDATA4=0
+    IF (ASSOCIATED(PN%DTSINE)) THEN
+       CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
+       !$OMP PARALLEL
+       TDATA1=SUM(PN%WSINE*ob%vval(:,V_SIN),PN%WSINE.GT.0)
+       !$OMP END PARALLEL
+    END IF
+    IF (ASSOCIATED(PN%DTSQWV)) THEN
+       CALL OscBank_Update(ob,PN%WSQWV.GT.0,V_SQW)
+       !$OMP PARALLEL
+       TDATA2=SUM(PN%WSQWV*ob%vval(:,V_SQW),PN%WSQWV.GT.0)
+       !$OMP END PARALLEL
+    END IF
+    IF (ASSOCIATED(PN%DTSWTH)) THEN
+       CALL OscBank_Update(ob,PN%WSWTH.GT.0,V_SWT)
+       !$OMP PARALLEL
+       TDATA3=SUM(PN%WSWTH*ob%vval(:,V_SWT),PN%WSWTH.GT.0)
+       !$OMP END PARALLEL       
+    END IF
+    IF (ASSOCIATED(PN%DTTRNG)) THEN
+       CALL OscBank_Update(ob,PN%WTRNG.GT.0,V_TRI)
+       !$OMP PARALLEL
+       TDATA4=SUM(PN%WTRNG*ob%vval(:,V_TRI),PN%WTRNG.GT.0)
+       !$OMP END PARALLEL       
+    END IF    
+    TDATA=VMUL*(TDATA1+TDATA2+TDATA3+TDATA4)
+    IF (CMPR) TDATA=Mz2Syn_Clip(TDATA)
+    CALL Au_WrtSmp(OFU,REAL((/TDATA,TDATA/),C_FLOAT),MCBE,FS)
     IF (FS.NE.0) GOTO 900
     GOTO 10
     ! --------------+
@@ -319,12 +366,12 @@ CONTAINS
     ! ..........................................................................
 20  RETURN
     ! --- END CODE  ---
-700 FORMAT('MZSYN_GENERATE:',1X,A,1X,I10,1X,A,G12.5,A,G12.5)
-800 FORMAT('MZSYN_GENERATE: ERROR WRITING OUTPUT FILE',1X,A,1X,'TO UNIT',1X,I0)
+700 FORMAT('Mz2_Generate:',1X,A,1X,I10,1X,A,G12.5,A,G12.5)
+800 FORMAT('Mz2_Generate: ERROR WRITING OUTPUT FILE',1X,A,1X,'TO UNIT',1X,I0)
 900 WRITE(*,800) TRIM(POFN),OFU ; STOP    
-  END SUBROUTINE MZSYN_GENERATE
+  END SUBROUTINE Mz2Syn_Generate
 
-  ELEMENTAL FUNCTION MZSYNTH_CLIP(X)
+  ELEMENTAL FUNCTION Mz2Syn_Clip(X)
     ! +------------------------------------------------------------------------+
     ! | REFERENCE:  Fabián Esqueda, Stefan Bilbao & Vesa Välimäki;             |
     ! |            "Antialiased soft clipping using a polynomial approximation |
@@ -343,15 +390,15 @@ CONTAINS
     ! |            US Patent 5,570,424, 29 Oct. 1996                           |
     ! +------------------------------------------------------------------------+
     IMPLICIT NONE
-    REAL(KIND=RKIND) :: MZSYNTH_CLIP
+    REAL(KIND=RKIND) :: Mz2Syn_Clip
     ! --- DUMMIES ---
     REAL(KIND=RKIND), INTENT(IN) :: X
     ! --- EXE CODE ---
     IF (ABS(X).LT.1) THEN
-       MZSYNTH_CLIP=0.5_RKIND*(3.0_RKIND*X-X**3)
+       Mz2Syn_Clip=0.5_RKIND*(3.0_RKIND*X-X**3)
     ELSE
-       MZSYNTH_CLIP=SIGN(1.0_RKIND,X) ! VALUE OF 1.0_R WITH SIGN OF X
+       Mz2Syn_Clip=SIGN(1.0_RKIND,X) ! VALUE OF 1.0_R WITH SIGN OF X
     END IF
     ! --- END CODE ---
-  END FUNCTION MZSYNTH_CLIP
+  END FUNCTION Mz2Syn_Clip
 END PROGRAM

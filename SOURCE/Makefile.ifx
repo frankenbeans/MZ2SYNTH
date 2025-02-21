@@ -1,11 +1,10 @@
 FC=ifx
 CFLAGS=-warn all           \
        -O3 -ipo            \
-       -fiopenmp           \
        -fp-model fast -ftz \
        -flto               \
        -stand f03 -free    \
-#      -check bounds
+       -check bounds
 
 EXE=mz2
 OBJ=constant.o caseconv.o wvecmp.o pflags.o sfrealcomp.o \

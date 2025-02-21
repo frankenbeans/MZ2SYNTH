@@ -2,11 +2,7 @@
 
 ## SHORT TERM
 
-- MZ2SYNTH compiles on Win32 but the program performs abominably slowly.  The compiler
-  used was GFortran 2.10.0 (msys2-base-i686-20210705.sfx).
 - Support Intel Fortran on Windows
-- Test properly on native machine with Win64 to compare performance with my development
-  system
 - in verbose mode, put elementary clipping stats at the end of the run.
 
 ## MEDIUM TERM
@@ -28,4 +24,3 @@
   lead to latency when generating audio in real-time.  Need to find ways to improve
   performance further in order to support small platforms like Raspberry Pi.
   
-- Support GPU computation (LOW priority)

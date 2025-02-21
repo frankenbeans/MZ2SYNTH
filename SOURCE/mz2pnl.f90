@@ -44,7 +44,6 @@ CONTAINS
     IMPLICIT NONE
     ! --- DUMMY ARGS ---
     TYPE(MZ2Panel),INTENT(INOUT) :: P
-    ! --- VARIABLES ---
     ! --- EXE CODE ---
     FREE(P%DTSINE) ; FREE(P%DTSQWV) ;
     FREE(P%DTSWTH) ; FREE(P%DTTRNG) ;
@@ -91,10 +90,8 @@ CONTAINS
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          !$OMP PARALLEL
           DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
-          !$OMP END PARALLEL
        END IF
        P%DTSINE=>DLUM
        IF (PFL_VERB) WRITE(*,600) 'Associated sine oscillators with lum channel'
@@ -118,10 +115,8 @@ CONTAINS
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          !$OMP PARALLEL
           DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
-          !$OMP END PARALLEL
        END IF
        P%DTSQWV=>DLUM
        IF (PFL_VERB) WRITE(*,600) 'Associated sqwv oscillators with lum channel'
@@ -145,10 +140,8 @@ CONTAINS
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          !$OMP PARALLEL
           DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
-          !$OMP END PARALLEL
        END IF
        P%DTSWTH=>DLUM
        IF (PFL_VERB) WRITE(*,600) 'Associated swth oscillators with lum channel'
@@ -172,10 +165,8 @@ CONTAINS
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          !$OMP PARALLEL
           DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
-          !$OMP END PARALLEL
        END IF
        P%DTTRNG=>DLUM
        IF (PFL_VERB) WRITE(*,600) 'Associated trng oscillators with lum channel'
@@ -193,30 +184,22 @@ CONTAINS
     IF (ASSOCIATED(P%DTSINE)) THEN
        ALLOCATE(P%ASINE(1:P%PI%NROWS),P%WSINE(1:P%PI%NROWS),STAT=MS)
        IF (MS.NE.0) GOTO 910
-       !$OMP PARALLEL
        P%ASINE=0 ; P%WSINE=0 ;
-       !$OMP END PARALLEL
     END IF
     IF (ASSOCIATED(P%DTSQWV)) THEN
        ALLOCATE(P%ASQWV(1:P%PI%NROWS),P%WSQWV(1:P%PI%NROWS),STAT=MS)
        IF (MS.NE.0) GOTO 910
-       !$OMP PARALLEL
        P%ASQWV=0 ; P%WSQWV=0 ;
-       !$OMP END PARALLEL
     END IF
     IF (ASSOCIATED(P%DTSWTH)) THEN
        ALLOCATE(P%ASWTH(1:P%PI%NROWS),P%WSWTH(1:P%PI%NROWS),STAT=MS)
        IF (MS.NE.0) GOTO 910
-       !$OMP PARALLEL
        P%ASWTH=0 ; P%WSWTH=0 ;
-       !$OMP END PARALLEL
     END IF
     IF (ASSOCIATED(P%DTTRNG)) THEN
        ALLOCATE(P%ATRNG(1:P%PI%NROWS),P%WTRNG(1:P%PI%NROWS),STAT=MS)
        IF (MS.NE.0) GOTO 910
-       !$OMP PARALLEL
        P%ATRNG=0 ; P%WTRNG=0 ;
-       !$OMP END PARALLEL
     END IF
     IF (PFL_VERB) WRITE(*,600) 'Done!'
     IF (TCFRAC.LE.0.0_RKIND.OR.TCFRAC.GT.0.5_RKIND) GOTO 930
@@ -248,32 +231,24 @@ CONTAINS
     END IF
     P%CS=NS
     IF (ASSOCIATED(P%DTSINE)) THEN
-       !$OMP PARALLEL DO
        DO J=1,P%PI%NROWS
           CALL RM_TICK(P%ASINE(J),P%WSINE(J),P%RMCNST,P%DTSINE(CC,J),P%VZERO)
        END DO
-       !$OMP END PARALLEL DO
     END IF
     IF (ASSOCIATED(P%DTSQWV)) THEN
-       !$OMP PARALLEL DO
        DO J=1,P%PI%NROWS
           CALL RM_TICK(P%ASQWV(J),P%WSQWV(J),P%RMCNST,P%DTSQWV(CC,J),P%VZERO)
        END DO       
-       !$OMP END PARALLEL DO
     END IF
     IF (ASSOCIATED(P%DTSWTH)) THEN
-       !$OMP PARALLEL DO
        DO J=1,P%PI%NROWS
           CALL RM_TICK(P%ASWTH(J),P%WSWTH(J),P%RMCNST,P%DTSWTH(CC,J),P%VZERO)
        END DO       
-       !$OMP END PARALLEL DO
     END IF
     IF (ASSOCIATED(P%DTTRNG)) THEN
-       !$OMP PARALLEL DO
        DO J=1,P%PI%NROWS
           CALL RM_TICK(P%ATRNG(J),P%WTRNG(J),P%RMCNST,P%DTTRNG(CC,J),P%VZERO)
        END DO       
-       !$OMP END PARALLEL DO
     END IF    
     ! --- END CODE ---
     

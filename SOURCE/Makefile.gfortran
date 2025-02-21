@@ -1,11 +1,10 @@
 FC=gfortran
 CFLAGS=-Wall          \
        -O3            \
-       -fopenmp       \
        -ffast-math    \
        -flto          \
        -std=f2003     \
-#      -fcheck=bounds
+       -fcheck=bounds
 
 EXE=mz2
 OBJ=constant.o caseconv.o wvecmp.o pflags.o sfrealcomp.o \

@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2025-02-17'
+#define PROGVERS '0.1/2025-02-21'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  
@@ -32,9 +32,9 @@ PROGRAM Mz2Synth
   INTEGER             :: SMPR=DSMP
   ! --- VARIABLES ---
   INTEGER             :: ZDATA
-  LOGICAL             :: MCBE
   TYPE(OscBank)       :: OB
   TYPE(MZ2Panel)      :: PN
+  TYPE(SunAu)         :: AU
   ! --- EXE CODE ---
   CALL Mz2Syn_CmdLine()
   CALL Mz2Syn_Init()
@@ -246,7 +246,7 @@ CONTAINS
     ! --- EXE CODE ---
     CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
     CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
-    CALL Au_WrtHdr(POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,MCBE,PFL_OVWT,FS)
+    CALL Au_WrtHdr(AU,POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900
     ZDATA=PN%PI%NCOLS*NINT(PN%SMPLRT/PN%SCANRT) ! SMPL = COL * SMPL/S * S/COL
     IF (PFL_VERB) WRITE(*,'(A,1X,I0)') 'NUMBER OF SAMPLES TO GENERATE:',ZDATA
@@ -261,7 +261,7 @@ CONTAINS
     ! --- VARIABLES ---
     INTEGER :: FST
     ! --- EXE CODE ---
-    CALL Au_Close(OFU,FST) ; IF (FST.NE.0) GOTO 900
+    CALL Au_Close(AU,FST) ; IF (FST.NE.0) GOTO 900
     CALL Mz2Pnl_Clear(PN)
     CALL OscBank_Clear(OB)
     RETURN
@@ -300,32 +300,20 @@ CONTAINS
     ! there would be a nonzero weight in the panel do.  Then tick 'em.
     !
     IF (FXPH) THEN
-       !$OMP PARALLEL
        OTICK=.TRUE.
-       !$OMP END PARALLEL
     ELSE
-       !$OMP PARALLEL
        OTICK=.FALSE.
-       !$OMP END PARALLEL
        IF (ASSOCIATED(PN%DTSINE)) THEN
-          !$OMP PARALLEL
           OTICK=OTICK.OR.PN%WSINE.GT.0
-          !$OMP END PARALLEL
        END IF
        IF (ASSOCIATED(PN%DTSQWV)) THEN
-          !$OMP PARALLEL
           OTICK=OTICK.OR.PN%WSQWV.GT.0
-          !$OMP END PARALLEL
        END IF
        IF (ASSOCIATED(PN%DTSWTH)) THEN
-          !$OMP PARALLEL
           OTICK=OTICK.OR.PN%WSWTH.GT.0
-          !$OMP END PARALLEL
        END IF
        IF (ASSOCIATED(PN%DTTRNG)) THEN
-          !$OMP PARALLEL
           OTICK=OTICK.OR.PN%WTRNG.GT.0
-          !$OMP END PARALLEL
        END IF
     END IF
     CALL OscBank_Tick(ob,OTICK)
@@ -334,31 +322,23 @@ CONTAINS
     TDATA=0 ; TDATA1=0 ; TDATA2=0 ; TDATA3=0 ; TDATA4=0
     IF (ASSOCIATED(PN%DTSINE)) THEN
        CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
-       !$OMP PARALLEL
        TDATA1=SUM(PN%WSINE*ob%vval(:,V_SIN),PN%WSINE.GT.0)
-       !$OMP END PARALLEL
     END IF
     IF (ASSOCIATED(PN%DTSQWV)) THEN
        CALL OscBank_Update(ob,PN%WSQWV.GT.0,V_SQW)
-       !$OMP PARALLEL
        TDATA2=SUM(PN%WSQWV*ob%vval(:,V_SQW),PN%WSQWV.GT.0)
-       !$OMP END PARALLEL
     END IF
     IF (ASSOCIATED(PN%DTSWTH)) THEN
        CALL OscBank_Update(ob,PN%WSWTH.GT.0,V_SWT)
-       !$OMP PARALLEL
        TDATA3=SUM(PN%WSWTH*ob%vval(:,V_SWT),PN%WSWTH.GT.0)
-       !$OMP END PARALLEL       
     END IF
     IF (ASSOCIATED(PN%DTTRNG)) THEN
        CALL OscBank_Update(ob,PN%WTRNG.GT.0,V_TRI)
-       !$OMP PARALLEL
        TDATA4=SUM(PN%WTRNG*ob%vval(:,V_TRI),PN%WTRNG.GT.0)
-       !$OMP END PARALLEL       
     END IF    
     TDATA=VMUL*(TDATA1+TDATA2+TDATA3+TDATA4)
     IF (CMPR) TDATA=Mz2Syn_Clip(TDATA)
-    CALL Au_WrtSmp(OFU,REAL((/TDATA,TDATA/),C_FLOAT),MCBE,FS)
+    CALL Au_WrtSmp(AU,REAL((/TDATA,TDATA/),C_FLOAT),FS)
     IF (FS.NE.0) GOTO 900
     GOTO 10
     ! --------------+

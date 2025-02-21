@@ -92,14 +92,12 @@ CONTAINS
     END IF
 
     fc1=REAL(N_TIC_PER_CYC,RKIND)/REAL(ob%smpr,RKIND)
-    !$OMP PARALLEL DO
     DO j=1,N_OSC
        ob%freq(j)=OscFreq(j)
        ob%incr(j)=fc1*ob%freq(j)
        ob%accm(j)=OscAccm(lra)
        ob%wtno(j)=WvtNmbr(j)       
     END DO
-    !$OMP END PARALLEL DO
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'
     
     IF (PFL_DBUG) THEN
@@ -117,7 +115,6 @@ CONTAINS
     ob%tswt=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
     ob%ttri=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
     CALL WVFSIN(ob%freq(1),REAL(ob%smpr,RKIND),N_TIC_PER_CYC,ob%tsin)    
-    !$OMP PARALLEL DO SCHEDULE(DYNAMIC)
     DO j=1,N_WVT
        CALL WVFSQR(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,ob%tsqw(:,j))
@@ -126,7 +123,6 @@ CONTAINS
        CALL WVFTRI(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,ob%ttri(:,j))
     END DO
-    !$OMP END PARALLEL DO
     IF (PFL_VERB) WRITE(*,700) 'Wavetables initialized'
 
     IF (PFL_VERB) WRITE(*,700) 'Setting up oscillator banks'
@@ -192,7 +188,6 @@ CONTAINS
     REAL(KIND=RKIND) :: y0,y1
     ! ------------------------------------------
     IF (vce.EQ.V_SIN) THEN
-       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
@@ -203,9 +198,7 @@ CONTAINS
              ! .................................................................
           END IF
        END DO
-       !$OMP END PARALLEL DO
     ELSE IF (vce.EQ.V_SQW) THEN
-       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
@@ -216,9 +209,7 @@ CONTAINS
              ! .................................................................
           END IF
        END DO
-       !$OMP END PARALLEL DO       
     ELSE IF (vce.EQ.V_SWT) THEN
-       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
@@ -229,9 +220,7 @@ CONTAINS
              ! .................................................................
           END IF
        END DO
-       !$OMP END PARALLEL DO
     ELSE IF (vce.EQ.V_TRI) THEN
-       !$OMP PARALLEL DO PRIVATE(x0,x1,y0,y1)
        DO j=1,N_OSC
           IF (msk(j)) THEN
              x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
@@ -242,7 +231,6 @@ CONTAINS
              ! .................................................................
           END IF
        END DO
-       !$OMP END PARALLEL DO       
     ELSE
        GOTO 900
     END IF
@@ -279,7 +267,6 @@ CONTAINS
     LOGICAL :: lmsk(1:N_OSC)
     ! ------------------------------------------
     lmsk=.TRUE. ; IF (PRESENT(msk)) lmsk=msk
-    !$OMP PARALLEL DO
     DO j=1,N_OSC
        IF (.NOT.lmsk(j)) CYCLE
        ob%accm(j)=ob%accm(j)+ob%incr(j)
@@ -287,7 +274,6 @@ CONTAINS
           ob%accm(j)=ob%accm(j)-N_TIC_PER_CYC
        END DO
     END DO
-    !$OMP END PARALLEL DO
   END SUBROUTINE OscBank_Tick
     
 END MODULE Mz2Osc

@@ -188,6 +188,7 @@ CONTAINS
     INTEGER          :: j,x0,x1
     REAL(KIND=RKIND) :: y0,y1
     ! --- EXE CODE ---
+    ob%vval(:,vce)=0
     IF (vce.EQ.V_SIN) THEN
        DO j=1,N_OSC
           IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
@@ -198,8 +199,6 @@ CONTAINS
              y0=ob%tsin(x0) ; y1=ob%tsin(x1)
              ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
              ! .................................................................
-          ELSE
-             ob%vval(j,V_SIN)=0 ! Not strictly necessary
           END IF
        END DO
     ELSE IF (vce.EQ.V_SQW) THEN       
@@ -212,8 +211,6 @@ CONTAINS
              y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
              ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
              ! .................................................................
-          ELSE
-             ob%vval(j,V_SQW)=0 ! Not strictly necessary
           END IF
        END DO
     ELSE IF (vce.EQ.V_SWT) THEN
@@ -226,8 +223,6 @@ CONTAINS
              y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
              ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
              ! .................................................................
-          ELSE
-             ob%vval(j,V_SWT)=0 ! Not strictly necessary
           END IF
        END DO
     ELSE IF (vce.EQ.V_TRI) THEN
@@ -240,8 +235,6 @@ CONTAINS
              y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
              ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
              ! .................................................................
-          ELSE
-             ob%vval(j,V_TRI)=0 ! Not strictly necessary
           END IF
        END DO
     ELSE

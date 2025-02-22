@@ -1,1 +1,33 @@
+name: MacOS Makefile CI
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Change directory, build project and run with -help
+      run: |             
+             cd SOURCE ;
+             gcc --version ;
+             make -f Makefile.gfortran all clean ;
+             rm ../MACEXE/*.exe
+             mv mz2.exe ../MACEXE ;
+             ls ../MACEXE ;
+             echo '' ;
+             ../MACEXE/mz2 -help ;
+
+    - name: Commit changes
+      run: |
+            git config user.name github-actions ;
+            git config user.email github-actions@github.com ;
+            git add --all
+            git commit -m "Yay, MacOS executable generated" ;
+            git push ;
 

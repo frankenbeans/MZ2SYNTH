@@ -106,12 +106,6 @@ The following options are available (case insensitive):
   and beware of using volume multipliers larger than 0.01 or so until you
   become familiar with the audio that your input files generate.
 
-  **WARNING:** The makefiles provided, which support both GNU Fortran and
-  Intel IFX, do NOT include safety features such as array bounds-checking.
-  This means that certain errors go undetected and under certain situations
-  (e.g., software as a service) this may introduce security vulnerabilities
-  if there are signficant bugs.
-
   **NOTE:** Intel Fortran (ifx (IFX) 2025.0.4 20241205) executables cannot
   write to named pipes as noted above, for reasons currently not known.
   There is a work-around:

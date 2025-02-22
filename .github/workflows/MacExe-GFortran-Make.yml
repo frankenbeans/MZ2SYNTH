@@ -16,8 +16,8 @@ jobs:
              cd SOURCE ;
              gcc --version ;
              make FC=gfortran-13 -f Makefile.gfortran all clean ;
-             rm ../MACEXE/*.exe
-             mv mz2.exe ../MACEXE ;
+             rm ../MACEXE/*
+             mv mz2 ../MACEXE ;
              ls ../MACEXE ;
              echo '' ;
              ../MACEXE/mz2 -help ;

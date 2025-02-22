@@ -8,6 +8,7 @@
 
 MODULE Mz2AuFile
   USE ISO_C_BINDING
+  USE PFlags
   IMPLICIT NONE
 
   INTEGER(C_INT32_T),PARAMETER :: DFMAGIC=INT(Z'2E736E64',C_INT32_T)  ! AU TYPE
@@ -18,7 +19,7 @@ MODULE Mz2AuFile
   INTEGER,PARAMETER :: AUF_FLT_LINEAR_32B=6
   INTEGER,PARAMETER :: AUF_DEF_SAMPLERATE=44100
   INTEGER,PARAMETER :: AUF_DEF_NMCHANNELS=2
-  LOGICAL,PARAMETER :: AUF_DEF_ENDIANNESS=.TRUE.
+  LOGICAL,PARAMETER :: AUF_DEF_ENDIANNESS=.TRUE. ! Big-endian
 
   TYPE :: SunAu
      INTEGER            :: AUFU=0
@@ -66,8 +67,8 @@ CONTAINS
     CASE DEFAULT
        GOTO 900
     END SELECT
-    IF (SMPR.LT.8000.OR.SMPR.GT.48000)                             GOTO 910
-    IF (NCHN.LT.1.OR.NCHN.GT.2)                                    GOTO 920
+    IF (SMPR.LT.8000.OR.SMPR.GT.48000) GOTO 910
+    IF (NCHN.LT.1.OR.NCHN.GT.2)        GOTO 920
     SNAU%AUFU=AUFU
     SNAU%ENCD=ENCD
     SNAU%SMPR=SMPR
@@ -85,12 +86,21 @@ CONTAINS
     OPEN(FILE=AUFN,UNIT=SNAU%AUFU,FORM='UNFORMATTED',ACCESS='STREAM', &
          POSITION='REWIND',ACTION='WRITE',STATUS=FSTA,IOSTAT=STAT)
     IF (STAT.NE.0) RETURN
+    IF (PFL_VERB) WRITE(*,700) 'File '//TRIM(AUFN)//' opened in mode '&
+                                      //TRIM(FSTA)//' on unit',SNAU%AUFU
     WRITE(SNAU%AUFU,IOSTAT=STAT) &
          Nord_I32((/DFMAGIC,HDRSIZE,DATSIZE,ENCD,SMPR,NCHN,0/),SNAU%MCBE)
+    IF (PFL_VERB) THEN
+       IF (.NOT.SNAU%MCBE) THEN
+          WRITE(*,700) 'Hardware is little-endian so samples will be converted'
+       END IF
+       WRITE(*,700) 'Audio file header write status is',STAT
+    END IF
     RETURN
     ! --- END CODE  ---
-800 FORMAT('!ERR (Au_WrtHdr): INVALID',1X,A,1X,'=',I0)
-810 FORMAT('!ERR (Au_WrtHdr):',1X,A)
+700 FORMAT('*INF (Au_WrtHdr):',1X,A,:,999(1x,I0))
+800 FORMAT('*ERR (Au_WrtHdr): INVALID',1X,A,1X,'=',I0)
+810 FORMAT('*ERR (Au_WrtHdr):',1X,A)
 900 WRITE(*,800) 'ENCD',ENCD ; STOP    
 910 WRITE(*,800) 'SMPR',SMPR ; STOP
 920 WRITE(*,800) 'NCHN',NCHN ; STOP
@@ -156,21 +166,29 @@ CONTAINS
     IF (SNAU%BCUR.GT.1) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF(1:SNAU%BCUR-1)
        IF (STAT.NE.0) RETURN
+       IF (PFL_VERB) WRITE(*,700) 'Buffer flushed into unit',SNAU%AUFU
     END IF
     CLOSE(SNAU%AUFU,IOSTAT=STAT)
+    IF (PFL_VERB) THEN
+       WRITE(*,700) 'Closed file unit',SNAU%AUFU
+       WRITE(*,700) 'Status of operation is',STAT
+    END IF    
     IF (ASSOCIATED(SNAU%BUFF)) DEALLOCATE(SNAU%BUFF)
     SNAU=SunAu()
-    ! --- END CODE  ---    
+    IF (PFL_VERB) WRITE(*,700) 'Buffer deallocated'
+    RETURN
+    ! --- END CODE  ---
+700 FORMAT('*INF (Au_Close):',1X,A,:,999(1x,I0))
   END SUBROUTINE Au_Close
 
   PURE FUNCTION MachBE()
     IMPLICIT NONE
     LOGICAL :: MachBE
     ! --- VARIABLES ---
-    CHARACTER(KIND=C_CHAR) :: TC
+    INTEGER(KIND=C_INT8_T) :: TC(1:2)
     ! --- EXE CODE  ---
-    TC=TRANSFER(INT(1),TC)
-    MachBE=ICHAR(TC).EQ.0 ! .TRUE.=>BIG ENDIAN HARDWARE
+    TC=TRANSFER(INT(1,C_INT16_T),TC)
+    MachBE=TC(1).EQ.0 ! .TRUE.=>BIG ENDIAN HARDWARE
     ! --- END CODE  ---
   END FUNCTION MachBE
 

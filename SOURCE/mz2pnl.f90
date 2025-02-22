@@ -52,7 +52,10 @@ CONTAINS
     FREE(P%WSINE)  ; FREE(P%WSQWV)  ;
     FREE(P%WSWTH)  ; FREE(P%WTRNG)  ;
     P=MZ2Panel()
+    IF (PFL_VERB) WRITE(*,700) 'Panel memory deallocated and structure cleared.'
+    RETURN
     ! --- END CODE ---
+700 FORMAT('*INF (Mz2Pnl_Clear):',1X,A,999(:,1X,G12.5,1X,:,A))    
   END SUBROUTINE MZ2Pnl_Clear
 
   SUBROUTINE MZ2Pnl_Load(P,IFN,CHS,SCANRT,SMPLRT,TCFRAC)
@@ -68,24 +71,24 @@ CONTAINS
     ! --- EXE CODE ---
     P%SCANRT=SCANRT
     P%SMPLRT=SMPLRT
-    IF (PFL_VERB) WRITE(*,600) 'Reading input file '//TRIM(IFN)//'...'
+    IF (PFL_VERB) WRITE(*,700) 'Reading input file '//TRIM(IFN)//'...'
     CALL FIM_read(P%PI,IFN,IFU)
-    IF (PFL_VERB) WRITE(*,600) 'Done!'
+    IF (PFL_VERB) WRITE(*,700) 'Done!'
     IF (P%PI%ecode.NE.FIM_error_ok) GOTO 900
-    IF (PFL_VERB) WRITE(*,600) 'Executing flip across horizontal line...'
+    IF (PFL_VERB) WRITE(*,700) 'Executing flip across horizontal line...'
     CALL FIM_stf_hflip(P%PI)
-    IF (PFL_VERB) WRITE(*,600) 'Done!'
+    IF (PFL_VERB) WRITE(*,700) 'Done!'
     DLUM=>NULL()
     SELECT CASE(CHS(1:1))       
     CASE('R')
        P%DTSINE=>P%PI%DRED
-       IF (PFL_VERB) WRITE(*,600) 'Associated sine oscillators with red channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sine oscillators with red channel'
     CASE('G')
        P%DTSINE=>P%PI%DGRN
-       IF (PFL_VERB) WRITE(*,600) 'Associated sine oscillators with grn channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sine oscillators with grn channel'
     CASE('B')
        P%DTSINE=>P%PI%DBLU
-       IF (PFL_VERB) WRITE(*,600) 'Associated sine oscillators with blu channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sine oscillators with blu channel'
     CASE('L')
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
@@ -94,23 +97,23 @@ CONTAINS
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
        P%DTSINE=>DLUM
-       IF (PFL_VERB) WRITE(*,600) 'Associated sine oscillators with lum channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sine oscillators with lum channel'
     CASE('M')
        P%DTSINE=>NULL()
-       IF (PFL_VERB) WRITE(*,600) 'Sine oscillators are muted'
+       IF (PFL_VERB) WRITE(*,700) 'Sine oscillators are muted'
     CASE DEFAULT
        GOTO 920
     END SELECT
     SELECT CASE(CHS(2:2))
     CASE('R')
        P%DTSQWV=>P%PI%DRED
-       IF (PFL_VERB) WRITE(*,600) 'Associated sqwv oscillators with red channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sqwv oscillators with red channel'
     CASE('G')
        P%DTSQWV=>P%PI%DGRN
-       IF (PFL_VERB) WRITE(*,600) 'Associated sqwv oscillators with grn channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sqwv oscillators with grn channel'
     CASE('B')
        P%DTSQWV=>P%PI%DBLU
-       IF (PFL_VERB) WRITE(*,600) 'Associated sqwv oscillators with blu channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sqwv oscillators with blu channel'
     CASE('L')
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
@@ -119,23 +122,23 @@ CONTAINS
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
        P%DTSQWV=>DLUM
-       IF (PFL_VERB) WRITE(*,600) 'Associated sqwv oscillators with lum channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated sqwv oscillators with lum channel'
     CASE('M')
        P%DTSQWV=>NULL()
-       IF (PFL_VERB) WRITE(*,600) 'Sqwv oscillators are muted'
+       IF (PFL_VERB) WRITE(*,700) 'Sqwv oscillators are muted'
     CASE DEFAULT
        GOTO 920
     END SELECT
     SELECT CASE(CHS(3:3))
     CASE('R')
        P%DTSWTH=>P%PI%DRED
-       IF (PFL_VERB) WRITE(*,600) 'Associated swth oscillators with red channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated swth oscillators with red channel'
     CASE('G')
        P%DTSWTH=>P%PI%DGRN
-       IF (PFL_VERB) WRITE(*,600) 'Associated swth oscillators with grn channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated swth oscillators with grn channel'
     CASE('B')
        P%DTSWTH=>P%PI%DBLU
-       IF (PFL_VERB) WRITE(*,600) 'Associated swth oscillators with blu channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated swth oscillators with blu channel'
     CASE('L')
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
@@ -144,23 +147,23 @@ CONTAINS
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
        P%DTSWTH=>DLUM
-       IF (PFL_VERB) WRITE(*,600) 'Associated swth oscillators with lum channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated swth oscillators with lum channel'
     CASE('M')
        P%DTSWTH=>NULL()
-       IF (PFL_VERB) WRITE(*,600) 'Swth oscillators are muted'
+       IF (PFL_VERB) WRITE(*,700) 'Swth oscillators are muted'
     CASE DEFAULT
        GOTO 920
     END SELECT
     SELECT CASE(CHS(4:4))
     CASE('R')
        P%DTTRNG=>P%PI%DRED
-       IF (PFL_VERB) WRITE(*,600) 'Associated trng oscillators with red channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated trng oscillators with red channel'
     CASE('G')
        P%DTTRNG=>P%PI%DGRN
-       IF (PFL_VERB) WRITE(*,600) 'Associated trng oscillators with grn channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated trng oscillators with grn channel'
     CASE('B')
        P%DTTRNG=>P%PI%DBLU
-       IF (PFL_VERB) WRITE(*,600) 'Associated trng oscillators with blu channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated trng oscillators with blu channel'
     CASE('L')
        IF (.NOT.ASSOCIATED(DLUM)) THEN
           ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
@@ -169,10 +172,10 @@ CONTAINS
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
        P%DTTRNG=>DLUM
-       IF (PFL_VERB) WRITE(*,600) 'Associated trng oscillators with lum channel'
+       IF (PFL_VERB) WRITE(*,700) 'Associated trng oscillators with lum channel'
     CASE('M')
        P%DTTRNG=>NULL()
-       IF (PFL_VERB) WRITE(*,600) 'Trng oscillators are muted'
+       IF (PFL_VERB) WRITE(*,700) 'Trng oscillators are muted'
     CASE DEFAULT
        GOTO 920
     END SELECT
@@ -180,7 +183,7 @@ CONTAINS
     ! Based on the allocation status of P%DT*, allocate P%W* and P%A* and
     ! and initialize
     ! --------------------------------------------------------------------------
-    IF (PFL_VERB) WRITE(*,600) 'Memory allocation and initialization ...'
+    IF (PFL_VERB) WRITE(*,700) 'Memory allocation and initialization ...'
     IF (ASSOCIATED(P%DTSINE)) THEN
        ALLOCATE(P%ASINE(1:P%PI%NROWS),P%WSINE(1:P%PI%NROWS),STAT=MS)
        IF (MS.NE.0) GOTO 910
@@ -201,17 +204,17 @@ CONTAINS
        IF (MS.NE.0) GOTO 910
        P%ATRNG=0 ; P%WTRNG=0 ;
     END IF
-    IF (PFL_VERB) WRITE(*,600) 'Done!'
+    IF (PFL_VERB) WRITE(*,700) 'Done!'
     IF (TCFRAC.LE.0.0_RKIND.OR.TCFRAC.GT.0.5_RKIND) GOTO 930
     P%RMCNST=1.0_RKIND/(TCFRAC*P%SMPLRT)
-    ! --- END CODE ---
     RETURN
-600 FORMAT('! INFO(Mz2Pnl_Load):' ,1X,A,999(:,1X,G12.5,1X,:,A))
-700 FORMAT('! ERROR(Mz2Pnl_Load):',1X,A,999(:,1X,G12.5,1X,:,A))
-900 WRITE(*,700) 'Cannot read image file '//TRIM(IFN)                     ; STOP
-910 WRITE(*,700) 'Out of memory'                                          ; STOP
-920 WRITE(*,700) 'Invalid colour-channel mapping (expecting RGBLM)'       ; STOP
-930 WRITE(*,700) 'Invalid TCPERC'                                         ; STOP
+    ! --- END CODE ---
+700 FORMAT('*INF (Mz2Pnl_Load):',1X,A,999(:,1X,G12.5,1X,:,A))
+800 FORMAT('*ERR (Mz2Pnl_Load):',1X,A,999(:,1X,G12.5,1X,:,A))
+900 WRITE(*,800) 'Cannot read image file '//TRIM(IFN)                     ; STOP
+910 WRITE(*,800) 'Out of memory'                                          ; STOP
+920 WRITE(*,800) 'Invalid colour-channel mapping (expecting RGBLM)'       ; STOP
+930 WRITE(*,800) 'Invalid TCPERC'                                         ; STOP
   END SUBROUTINE MZ2Pnl_Load
 
   SUBROUTINE MZ2Pnl_Tick(P,DONE)

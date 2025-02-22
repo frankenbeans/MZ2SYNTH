@@ -13,10 +13,9 @@ jobs:
     
     - name: Change directory, build project and run with -help
       run: |             
-             alias gfortran="gfortran-12" ;
              cd SOURCE ;
              gcc --version ;
-             make -f Makefile.gfortran all clean ;
+             make FC=gfortran-13 -f Makefile.gfortran all clean ;
              rm ../MACEXE/*.exe
              mv mz2.exe ../MACEXE ;
              ls ../MACEXE ;

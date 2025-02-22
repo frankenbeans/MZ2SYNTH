@@ -13,6 +13,7 @@ jobs:
     
     - name: Change directory, build project and run with -help
       run: |             
+             alias gfortran="gfortran-12" ;
              cd SOURCE ;
              gcc --version ;
              make -f Makefile.gfortran all clean ;

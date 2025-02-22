@@ -1,9 +1,8 @@
 name: MacOS Makefile CI
 
 on:
-  schedule:
-    - cron: '33 * * * *'
-
+  workflow_dispatch
+  
 jobs:
   build:
 

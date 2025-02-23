@@ -30,6 +30,7 @@ PROGRAM Mz2Synth
   LOGICAL             :: FXPH=DFXP
   LOGICAL             :: ZRPH=DZRP
   INTEGER             :: SMPR=DSMP
+  REAL(KIND=RKIND)    :: LNCP=DLNP
   ! --- VARIABLES ---
   INTEGER             :: ZDATA
   TYPE(OscBank)       :: OB
@@ -150,6 +151,14 @@ CONTAINS
           INQUIRE(FILE=POFN,EXIST=FEX,WRITE=FMWT)
           IF (FEX.AND..NOT.PFL_OVWT) GOTO 945
           IF (FEX.AND.PFL_OVWT.AND.FMWT.EQ.'NO') GOTO 947
+       CASE('-L','-LANCZOS-P')
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET LANCZOS APX. EXPONNENT'
+          NARG=NARG+1
+          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 950
+          CALL GET_COMMAND_ARGUMENT(NARG,CARG)
+          READ(CARG,*,ERR=948) LNCP
+          IF (LNCP.LT.0) GOTO 949
+          IF (PFL_VERB) WRITE(*,710) 'LANCZOS APX. EXPONENT =',LNCP
        CASE('-R','-TRANSITION')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET TRANSITION FRACTION'
           NARG=NARG+1
@@ -192,6 +201,7 @@ CONTAINS
 945 WRITE(*,800) 'OUTPUT FILE EXISTS AND OVERWRITE MODE IS OFF'  ; STOP
 947 WRITE(*,800) 'OUTPUT FILE CANNOT BE OPENED IN WRITE MODE'    ; STOP
 948 WRITE(*,800) 'SAMPLING RATE MUST BE INT >=',NINT(DSMP)/2     ; STOP
+949 WRITE(*,800) 'LANCZOS APX. EXPONENT MUST BE REAL >',0        ; STOP
 950 WRITE(*,800) 'MISSING OR BAD TRANSITION FRACTION < 0 OR > 1' ; STOP
 960 WRITE(*,800) 'CANNOT READ INPUT FILE',TRIM(PIFN)             ; STOP
 990 WRITE(*,800) 'INVALID COMMAND LINE OPTION',TRIM(CARG)        ; STOP
@@ -224,6 +234,8 @@ CONTAINS
          'Set advance rate in cols/sec ','10'
     WRITE(*,710) '-c','-channel-select','<sqwt>',         &
          'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBL'
+    WRITE(*,710) '-l','-lanczos-p','<lncp>',              &
+         'Set exponent for Lanczos approximation','0.5'
     WRITE(*,710) '-m','-volume-multiplier','<m>',         &
          'Set volume multiplier (m > 0)','0.1'
     WRITE(*,710) '-o','-output-file','<ofn>',             &
@@ -246,7 +258,7 @@ CONTAINS
     ! --- VARIABLES ---
     INTEGER :: FS
     ! --- EXE CODE ---
-    CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
+    CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH,lp=LNCP)
     CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
     CALL Au_WrtHdr(AU,POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900

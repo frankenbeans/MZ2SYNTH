@@ -74,6 +74,10 @@
 #define CONST_DSMP 44100
 #endif
 
+#ifndef CONST_DLNP
+#define CONST_DLNP 0.5
+#endif
+
 #ifndef CONST_DNCH
 #define CONST_DNCH 2
 #endif
@@ -108,6 +112,8 @@ MODULE CONSTANT
   ! --- PROGRAM DEFAULT FILENAMES ---  
   CHARACTER(LEN=ZSTR),PARAMETER :: DIFN = CONST_DIFN ! Input image file name
   CHARACTER(LEN=ZSTR),PARAMETER :: DOFN = CONST_DOFN ! Output audio file name
+  ! --- MATHEMATICAL CONSTANTS ---
+  REAL(KIND=RKIND)   ,PARAMETER :: PI=(4.0_RKIND*ATAN(1.0_RKIND))
   ! --- MUSICAL PARAMETERS ---
   INTEGER            ,PARAMETER :: DNOC = CONST_DNOC ! Number of octaves in span
   INTEGER            ,PARAMETER :: DNWT = CONST_DNWT ! Number of octaves in span
@@ -122,6 +128,7 @@ MODULE CONSTANT
   REAL(KIND=RKIND)   ,PARAMETER :: DADV = CONST_DADV ! Advance rate (col/s)
   REAL(KIND=RKIND)   ,PARAMETER :: DFTZ = CONST_DFTZ ! Transition zone fraction
   REAL(KIND=RKIND)   ,PARAMETER :: DSMP = CONST_DSMP ! Sampling rate (c.p.s.)
+  REAL(KIND=RKIND)   ,PARAMETER :: DLNP = CONST_DLNP ! Lanczos apx. exponent
   INTEGER            ,PARAMETER :: DNCH = CONST_DNCH ! Number of output channels
   INTEGER            ,PARAMETER :: DWWW = CONST_DWWW ! Width of wavetable window
   INTEGER            ,PARAMETER :: DRNS = CONST_DRNS ! Random seed for phase ini

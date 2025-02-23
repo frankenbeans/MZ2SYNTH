@@ -6,8 +6,9 @@
 ! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
-#define PPI    (4.0_RKIND*ATAN(1.0_RKIND))
+#ifndef MXNCMP
 #define MXNCMP (128)
+#endif
 
 MODULE WveCmp
   USE Constant
@@ -102,7 +103,7 @@ CONTAINS
     ! --- DUMMIES ---
     REAL(KIND=RKIND),INTENT(IN) :: F
     ! --- EXE CODE ---
-    Omega=2*PPI*F
+    Omega=2*PI*F
     ! --- END CODE ---
   END FUNCTION Omega
 ! ------------------------------------------------------------------------------
@@ -120,7 +121,7 @@ CONTAINS
     ! --- DUMMIES ---
     INTEGER,INTENT(IN) :: GK,GMK
     ! --- EXE CODE ---
-    GPCoef=COS(REAL(GK-1,RKIND)*PPI/(2*REAL(GMK,RKIND)))**2
+    GPCoef=COS(REAL(GK-1,RKIND)*PI/(2*REAL(GMK,RKIND)))**2
     ! --- END CODE ---      
   END FUNCTION GPCoef
 ! ------------------------------------------------------------------------------

@@ -63,13 +63,15 @@ The following options are available (case insensitive):
 
 The value of lnp influences the extent to which the sine voices will
 roll in amplitude as frequency approaches the Nyquist frequency
-correponding to the selected sampling frequency.  Specificcally,
+correponding to the selected sampling frequency.  Specifically,
 - 0 means that there will no roll-off
 - between 0 and 1 will result in a steep roll-off beginning at higher
   frequencies but rolling off steeply, thus preserving more high
   frequencies
 - values greater than 1 will result in a gentle roll-off beginning at
   lower frequencies, thus tending to roll of more high frequencies.
+This is probably not mathematically perfect, but it works and a single
+parameter sets the extent of sine roll-off.
 
 ## NOTE
 

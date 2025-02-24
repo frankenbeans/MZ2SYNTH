@@ -6,13 +6,11 @@
 ! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
-#ifndef MXNCMP
-#define MXNCMP (128)
-#endif
-
 MODULE WveCmp
   USE Constant
   IMPLICIT NONE
+
+  INTEGER,PARAMETER :: MXNCMP=128
   
 CONTAINS
   

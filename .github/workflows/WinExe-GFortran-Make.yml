@@ -17,11 +17,11 @@ jobs:
              cd SOURCE ;
              gcc --version ;
              make -f Makefile.gfortran all clean ;
-             rm ..\WINEXE\*.exe
-             mv mz2.exe ..\WINEXE ;
-             dir ..\WINEXE ;
+             rm ..\BIN\WIN64\*.*
+             mv mz2.exe ..\BIN\WIN64 ;
+             dir ..\BIN\WIN64 ;
              echo '' ;
-             ..\WINEXE\mz2 -help ;
+             ..\BIN\WIN64\mz2 -help ;
 
     - name: Commit changes
       run: |

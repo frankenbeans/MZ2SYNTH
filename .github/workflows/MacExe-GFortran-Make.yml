@@ -17,11 +17,11 @@ jobs:
              cd SOURCE ;
              gcc --version ;
              make FC=gfortran-13 -f Makefile.gfortran all clean ;
-             rm ../MACEXE/mz2
-             mv mz2 ../MACEXE ;
-             ls ../MACEXE ;
+             rm ../BIN/MACOS/*
+             mv mz2 ../BIN/MACOS ;
+             ls ../BIN/MACOS ;
              echo '' ;
-             ../MACEXE/mz2 -help ;
+             ../BIN/MACOS/mz2 -help ;
 
     - name: Commit changes
       run: |

@@ -342,5 +342,24 @@ CONTAINS
     END DO
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
+
+!!$  SUBROUTINE OscBank_Dump(ob)    
+!!$    IMPLICIT NONE
+!!$    TYPE(OscBank),INTENT(INOUT) :: ob
+!!$    ! --- VARIABLES ---
+!!$    CHARACTER(LEN=*),PARAMETER   :: FNTMPL='WVTB####.TXT'
+!!$    CHARACTER(LEN=:),ALLOCATABLE :: FNWAVE
+!!$    CHARACTER(LEN=4)             :: WAVENO
+!!$    INTEGER                      :: W,I,HI
+!!$    ! --- EXE CODE ---
+!!$    
+!!$    ! *** TODO:   add wave-table dump AND link-in
+!!$
+!!$    RETURN
+!!$    ! --- END CODE ---
+!!$700 FORMAT('*INF (OscBank_Dump):',1x,A,:,'=',G12.5)
+!!$800 FORMAT('*ERR (OscBank_Dump):',1x,A)
+!!$900 WRITE(*,800) 'CANNOT WRITE TO DUMP FILE'
+!!$  END SUBROUTINE OscBank_Dump
     
 END MODULE Mz2Osc

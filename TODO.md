@@ -4,10 +4,9 @@
 
 - Support Intel Fortran on Windows
 - in verbose mode, put elementary clipping stats at the end of the run.
+- Provide debugging output for the wavetables (each in a separate file)
 
 ## MEDIUM TERM
-- Improve byte-swapping routines in mzaufile.f95 - arguably they should be optimized for
-  use with a little-endian machine since a PC is probably the likeliest platform.
 - Write proper documentation (manual page + tutorial information)
 - Supply template files and examples [*** DONE: 2 examples provided ***]
 

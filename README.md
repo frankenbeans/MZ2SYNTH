@@ -126,10 +126,9 @@ parameter sets the extent of sine roll-off.
   - In a terminal, start mz2 as explained in the second step  above, but
     writing to an ordinary disk file instead of a FIFO
     
-   >``mz2 -verbose -overwrite -advance 12 -output-file output.au
-          -dynamic-compression -sampling-rate 48000 track01.ppm``
+   >``mz2 -verbose -overwrite -advance 12 -output-file output.au -dynamic-compression -sampling-rate 48000 track01.ppm``
 
   - After file generation commences, enter the following command in a separate
     terminal to play the file in real-time:
 
-    >``cat output.au | play - reverb deemph``
+  >``cat output.au | play - reverb deemph``

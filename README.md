@@ -55,23 +55,10 @@ The following options are available (case insensitive):
 |-z        | -zero-phase              | Toggle on zero-phase mode (changes beat freq.s) |
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M)                                |
-|-l lnp    | -lanczos-p lnp           | Set Lanczos sine roll-off value to lnp \>= 0     |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
 |-r ftr    | -transition ftr          | Set transition TC (as fraction of <s>) to ftr   |
 |-s spr    | -sampling-rate spr       | Set sampling-rate in c.p.s                      |
-
-The value of lnp influences the extent to which the sine voices will
-roll in amplitude as frequency approaches the Nyquist frequency
-correponding to the selected sampling frequency.  Specifically,
-- 0 means that there will no roll-off
-- between 0 and 1 will result in a steep roll-off beginning at higher
-  frequencies but rolling off steeply, thus preserving more high
-  frequencies
-- values greater than 1 will result in a gentle roll-off beginning at
-  lower frequencies, thus tending to roll of more high frequencies.
-This is probably not mathematically perfect, but it works and a single
-parameter sets the extent of sine roll-off.
 
 ## NOTE
 

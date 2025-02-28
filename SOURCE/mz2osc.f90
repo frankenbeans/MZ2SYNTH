@@ -26,49 +26,19 @@ MODULE Mz2Osc
 
   TYPE :: OscBank
      INTEGER                  :: smpr=DSMP
-     REAL(KIND=RKIND)         :: lncp       =DLNP
      REAL(KIND=RKIND),POINTER :: freq(:)    =>NULL() ! Frequency of oscillator
      REAL(KIND=RKIND),POINTER :: incr(:)    =>NULL() ! Oscillator increment
      REAL(KIND=RKIND),POINTER :: accm(:)    =>NULL() ! Oscillator accumulator
      INTEGER         ,POINTER :: wtno(:)    =>NULL() ! Wavetable idx for oscil.
      REAL(KIND=RKIND),POINTER :: vval(:,:)  =>NULL() ! DIM2={SIN,SQW,SWT,TRI}
-     REAL(KIND=RKIND),POINTER :: gpc(:)     =>NULL() ! GPCoef rolloffs for sine
-     REAL(KIND=RKIND),POINTER :: wts(:)     =>NULL() ! Sine voice wavetable
      REAL(KIND=RKIND),POINTER :: wtr(:,:,:) =>NULL() ! Rest of voices' tables
-     REAL(KIND=RKIND),POINTER :: tsin(:)    =>NULL() ! Do not deallocate this!
+     REAL(KIND=RKIND),POINTER :: tsin(:,:)  =>NULL() ! Do not deallocate this!
      REAL(KIND=RKIND),POINTER :: tsqw(:,:)  =>NULL() ! Do not deallocate this!
      REAL(KIND=RKIND),POINTER :: tswt(:,:)  =>NULL() ! Do not deallocate this!
      REAL(KIND=RKIND),POINTER :: ttri(:,:)  =>NULL() ! Do not deallocate this!
   END TYPE OscBank
 
 CONTAINS
-
-  PURE FUNCTION SINC(X)
-    IMPLICIT NONE
-    REAL(RKIND)            :: SINC
-    REAL(RKIND),INTENT(IN) :: X
-    ! --- EXE CODE ---
-    SINC=SIN(PI*X)/(PI*X)
-    ! --- END C0DE ---
-  END FUNCTION Sinc
-
-  PURE FUNCTION Sigma(K,MAXK,P)
-    ! --------------------------------------------------------------------------
-    ! Lanczos sigma factor for rolling off sine magnitudes with increasing
-    ! frequency.  We are not using this quite in line with theory, but the
-    ! function is useful anyway because a single parameter controls the
-    ! extent of roll-off.  Eventually this function may replace GPCOEF in
-    ! wvecmp.f90.
-    !
-    ! REFERENCE:  https://en.wikipedia.org/wiki/Sigma_approximation
-    ! --------------------------------------------------------------------------
-    IMPLICIT NONE
-    REAL(RKIND)            :: Sigma
-    REAL(RKIND),INTENT(IN) :: K,MAXK,P
-    ! --- EXE CODE ---
-    Sigma=SINC(K/MAXK)**P
-    ! --- END CODE ---
-  END FUNCTION Sigma
 
   ELEMENTAL FUNCTION WvtNmbr(osno) RESULT(r)
     IMPLICIT NONE
@@ -92,12 +62,11 @@ CONTAINS
     ! --- END CODE ---
   END FUNCTION OscNmbr
 
-  SUBROUTINE OscBank_Init(ob,sr,ra,lp)
+  SUBROUTINE OscBank_Init(ob,sr,ra)
     IMPLICIT NONE
     TYPE(OscBank),INTENT(INOUT) :: ob
     INTEGER      ,INTENT(IN)    :: sr
     LOGICAL      ,INTENT(IN)    :: ra ! TRUE => Randomize accumulators else zero
-    REAL(KIND=RKIND),INTENT(IN) :: lp
     OPTIONAL :: sr,ra
     ! --- VARIABLES ---
     LOGICAL :: lra
@@ -110,11 +79,7 @@ CONTAINS
     ALLOCATE(ob%wtno(1:N_OSC),SOURCE=0        ,STAT=MS) ; IF (MS.NE.0) GOTO 900
     ALLOCATE(ob%vval(1:N_OSC,1:N_VOC),SOURCE=0.0_RKIND,STAT=MS)
     IF (MS.NE.0) GOTO 900
-    ALLOCATE(ob%gpc(1:N_OSC),SOURCE=0.0_RKIND,STAT=MS)
-    IF (MS.NE.0) GOTO 900
-    ALLOCATE(ob%wts(1:N_TIC_PER_CYC),SOURCE=0.0_RKIND,STAT=MS)
-    IF (MS.NE.0) GOTO 900   
-    ALLOCATE(ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW:V_TRI), &
+    ALLOCATE(ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SIN:V_TRI), &
          SOURCE=0.0_RKIND,STAT=ms)
     IF (ms.NE.0) GOTO 900
 
@@ -148,28 +113,20 @@ CONTAINS
     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! Note:  These are just convenient handles to array sections.
     ! ----   Don't deallocate them separately or you will be sorry.
-    ob%tsin=>ob%wts
+    ob%tsin=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SIN)
     ob%tsqw=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SQW)
     ob%tswt=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
     ob%ttri=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    CALL WVFSIN(ob%freq(1),REAL(ob%smpr,RKIND),N_TIC_PER_CYC,ob%tsin)    
     DO j=1,N_WVT
+       CALL WVFSIN(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
+            N_TIC_PER_CYC,ob%tsin(:,j))
        CALL WVFSQR(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,ob%tsqw(:,j))
        CALL WVFSAW(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,ob%tswt(:,j))
        CALL WVFTRI(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,ob%ttri(:,j))
-    END DO
-    IF (lp.LT.0) GOTO 910
-    ob%lncp=lp
-    DO j=1,N_OSC
-       IF (ob%freq(j).GE.REAL(ob%smpr,RKIND)/2) THEN
-          ob%gpc(j)=0
-       ELSE
-          ob%gpc(j)=Sigma(ob%freq(j),REAL(ob%smpr,RKIND)/2,ob%lncp)
-       END IF
     END DO
     IF (PFL_VERB) WRITE(*,700) 'Wavetables initialized'
 
@@ -185,7 +142,6 @@ CONTAINS
 710 FORMAT('*INF (OscBank_Init):',1x,I3,1X,3(ES12.4),I3)
 800 FORMAT('*ERR (OscBank_Init):',1x,A)
 900 WRITE(*,800) 'Out of memory'                                   ; STOP
-910 WRITE(*,800) 'Invalid value in argument lp: expecting lp >= 0' ; STOP
 
   CONTAINS
 
@@ -226,8 +182,6 @@ CONTAINS
     IF (ASSOCIATED(ob%accm)) DEALLOCATE(ob%accm)
     IF (ASSOCIATED(ob%wtno)) DEALLOCATE(ob%wtno)
     IF (ASSOCIATED(ob%vval)) DEALLOCATE(ob%vval)
-    IF (ASSOCIATED(ob%gpc))  DEALLOCATE(ob%gpc)
-    IF (ASSOCIATED(ob%wts))  DEALLOCATE(ob%wts)
     IF (ASSOCIATED(ob%wtr))  DEALLOCATE(ob%wtr)
     ! ---------------------------------------------------------------------
     ! NB:  Do not deallocate ob%tsin..ob%ttri as those are just handles to
@@ -257,8 +211,8 @@ CONTAINS
              x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
-             y0=ob%tsin(x0) ; y1=ob%tsin(x1)
-             ob%vval(j,V_SIN)=ob%gpc(j)*Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+             y0=ob%tsin(x0,ob%wtno(j)) ; y1=ob%tsin(x1,ob%wtno(j))
+             ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
              ! .................................................................
           END IF
        END DO

@@ -3,7 +3,7 @@
 !
 ! FOURIER SYNTHESIS OF COMMON MUSICAL SYNTHESIZER WAVEFORMS
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2025 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 MODULE WveCmp
@@ -105,6 +105,17 @@ CONTAINS
     ! --- END CODE ---
   END FUNCTION Omega
 ! ------------------------------------------------------------------------------
+  PURE FUNCTION Sinc(X)
+    IMPLICIT NONE
+    REAL(KIND=RKIND) :: Sinc
+    ! --- DUMMIES ---
+    REAL(KIND=RKIND),INTENT(IN) :: X
+    ! --- EXE CODE ---
+    Sinc=1.0_RKIND
+    IF (X.NE.0) Sinc=SIN(PI*X)/(PI*X)
+    ! --- END CODE ---    
+  END FUNCTION Sinc
+! ------------------------------------------------------------------------------
   PURE FUNCTION GPCoef(GK,GMK)
     ! Calculates low-pass filter coefficient to reduce the amplitudes
     ! of the high-frequency Fourier components as these approach the
@@ -112,14 +123,17 @@ CONTAINS
     ! that this coefficient will be used with, and GMK is the maximum
     ! K that we will reach before exceeding the Nyquist Frequency.
     !
-    ! REFERENCE:  "Bandlimited Wavetable Synthesis"
-    ! http://hackmeopen.com/2010/11/bandlimited-wavetable-synthesis/
+    ! REFERENCE:  Sigma Approximation
+    !             https://en.wikipedia.org/wiki/Sigma_approximation
     IMPLICIT NONE
     REAL(KIND=RKIND) :: GPCoef
     ! --- DUMMIES ---
     INTEGER,INTENT(IN) :: GK,GMK
+    ! --- VARIABLES ---
+    REAL(KIND=RKIND)   :: Q
     ! --- EXE CODE ---
-    GPCoef=COS(REAL(GK-1,RKIND)*PI/(2*REAL(GMK,RKIND)))**2
+    Q=REAL(GK,KIND=RKIND)/REAL(GMK+1,KIND=RKIND)
+    GPCoef=Sinc(Q)
     ! --- END CODE ---      
   END FUNCTION GPCoef
 ! ------------------------------------------------------------------------------
@@ -168,18 +182,19 @@ CONTAINS
     ! of the highest frequency Fourier component that should appear in
     ! OUTPUT.
     ! ..........................................................................
-    MAXK=MIN(INT(IFSMPL/(2*IFWAVE)),MXNITR)
+    MAXK=MIN(INT(IFSMPL/(2*IFWAVE)),MXNCMP)
     ! DO FOURIER SUMMATION FOR THIS WAVEFORM
-    DO K=1,MAXK
+    DO K=1,MIN(MXNITR,MAXK)
        DO J=1,IZOUTP
           T=REAL(J-1,RKIND)/REAL(IZOUTP,RKIND)
           OUTPUT(J)=OUTPUT(J)+GPCoef(K,MAXK)*WVFUNC(Omega(FCFREQ),T,K)
        END DO
     END DO
     ! .........................................................................
-    ! Find amplitude of output waveform section and normalize to UNITY.
+    ! Find amplitude of output waveform section and normalize to UNITY if the
+    ! waveform exceeds the maximum permissible value of UNITY anywhere.
     ABSAMP=MAXVAL(ABS(OUTPUT))
-    IF (ABSAMP.NE.0) OUTPUT=OUTPUT/ABSAMP
+    IF (ABSAMP.GT.1) OUTPUT=OUTPUT/ABSAMP
     ! ..........................................................................
     ! --- END CODE ---
   END SUBROUTINE Wvf000

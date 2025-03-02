@@ -297,23 +297,38 @@ CONTAINS
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 
-!!$  SUBROUTINE OscBank_Dump(ob)    
-!!$    IMPLICIT NONE
-!!$    TYPE(OscBank),INTENT(INOUT) :: ob
-!!$    ! --- VARIABLES ---
-!!$    CHARACTER(LEN=*),PARAMETER   :: FNTMPL='WVTB####.TXT'
-!!$    CHARACTER(LEN=:),ALLOCATABLE :: FNWAVE
-!!$    CHARACTER(LEN=4)             :: WAVENO
-!!$    INTEGER                      :: W,I,HI
-!!$    ! --- EXE CODE ---
-!!$    
-!!$    ! *** TODO:   add wave-table dump AND link-in
-!!$
-!!$    RETURN
-!!$    ! --- END CODE ---
-!!$700 FORMAT('*INF (OscBank_Dump):',1x,A,:,'=',G12.5)
-!!$800 FORMAT('*ERR (OscBank_Dump):',1x,A)
-!!$900 WRITE(*,800) 'CANNOT WRITE TO DUMP FILE'
-!!$  END SUBROUTINE OscBank_Dump
+  SUBROUTINE OscBank_Dump(ob)    
+    IMPLICIT NONE
+    TYPE(OscBank),INTENT(INOUT) :: ob
+    ! --- VARIABLES ---
+    CHARACTER(LEN=12) :: FNWAVE
+    INTEGER           :: W,E
+    ! --- EXE CODE ---
+    IF (PFL_VERB) WRITE(*,700) 'Dumping oscillator banks...'
+    DO W=1,N_OSC
+       WRITE(UNIT=FNWAVE,FMT=600) W
+       OPEN(UNIT=DFU,FILE=FNWAVE,FORM='FORMATTED',ACCESS='SEQUENTIAL', &
+            ACTION='WRITE',STATUS='REPLACE',POSITION='REWIND',ERR=900)
+       IF (PFL_VERB) WRITE(*,700) 'Writing wavetable dump file '//TRIM(FNWAVE)
+       WRITE(UNIT=DFU,FMT=610,ERR=900) &
+            W,ob%freq(W),ob%incr(W),ob%wtno(W),N_TIC_PER_CYC
+       WRITE(UNIT=DFU,FMT=620,ERR=900) 'ENTRY.NO','SINE','SQWV','SWTH','TRNG'
+       DO E=1,N_TIC_PER_CYC
+          WRITE(UNIT=DFU,FMT=630,ERR=900) E,ob%wtr(E,ob%wtno(W),V_SIN:V_TRI)
+       END DO
+       ENDFILE(UNIT=DFU,ERR=900)
+       CLOSE(UNIT=DFU,ERR=900)
+    END DO
+    IF (PFL_VERB) WRITE(*,700) 'Done!'
+    RETURN
+    ! --- END CODE ---
+600 FORMAT('WTBL',I4.4,'.TXT')
+610 FORMAT('#OSC No. ',I0,' FQC/Hz=',G12.5,' INC=',G12.5,' TBL=',I6, 'WID=',I6)
+620 FORMAT('#',A11,4(1X,A12))
+630 FORMAT(I12,4(1X,E12.5))
+700 FORMAT('*INF (OscBank_Dump):',1x,A,:,'=',G12.5)
+800 FORMAT('*ERR (OscBank_Dump):',1x,A)
+900 WRITE(*,800) 'CANNOT WRITE TO DUMP FILE '//TRIM(FNWAVE)
+  END SUBROUTINE OscBank_Dump
     
 END MODULE Mz2Osc

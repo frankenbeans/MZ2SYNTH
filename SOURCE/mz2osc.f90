@@ -323,7 +323,7 @@ CONTAINS
     RETURN
     ! --- END CODE ---
 600 FORMAT('WTBL',I4.4,'.TXT')
-610 FORMAT('#OSC No. ',I0,' FQC/Hz=',G12.5,' INC=',G12.5,' TBL=',I6, 'WID=',I6)
+610 FORMAT('#OSC No. ',I0,' FQC/Hz=',G12.5,' INC=',G12.5,' TBL=',I6, ' WID=',I6)
 620 FORMAT('#',A11,4(1X,A12))
 630 FORMAT(I12,4(1X,E12.5))
 700 FORMAT('*INF (OscBank_Dump):',1x,A,:,'=',G12.5)

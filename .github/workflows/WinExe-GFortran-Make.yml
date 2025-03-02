@@ -28,5 +28,5 @@ jobs:
             git config user.name github-actions ;
             git config user.email github-actions@github.com ;
             git add --all
-            git commit -m "Yay, Windows executable generated" ;
+            git commit -a -m "Yay, Windows executable generated" ;
             git push ;

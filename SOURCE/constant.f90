@@ -3,7 +3,7 @@
 !
 ! PROGRAM-WIDE CONSTANTS FOR MZ2
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2025 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 #ifndef CONST_RKIND

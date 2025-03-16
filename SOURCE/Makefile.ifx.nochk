@@ -1,0 +1,25 @@
+FC=ifx
+CFLAGS=-warn all           \
+       -O3 -ipo            \
+       -fp-model fast -ftz \
+       -flto               \
+       -stand f03 -free    \
+#      -check bounds
+
+EXE=mz2
+OBJ=constant.o caseconv.o wvecmp.o pflags.o sfrealcomp.o \
+    fimagemod.o mz2osc.o mz2pnl.o mz2aufile.o mz2synth.o
+
+$(EXE) : $(OBJ)
+	$(FC) $(CFLAGS) -o $(EXE) $(OBJ)
+
+%.o : %.f90
+	$(FC) $(CFLAGS) -fpp -c $<
+
+all : $(EXE)
+
+clean :
+	rm *.o *.mod
+
+veryclean :
+	rm *.o *.mod $(EXE)

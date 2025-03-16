@@ -1,0 +1,25 @@
+FC=gfortran
+CFLAGS=-Wall          \
+       -O3            \
+       -ffast-math    \
+       -flto          \
+       -std=f2003     \
+#      -fcheck=bounds
+
+EXE=mz2
+OBJ=constant.o caseconv.o wvecmp.o pflags.o sfrealcomp.o \
+    fimagemod.o mz2osc.o mz2pnl.o mz2aufile.o mz2synth.o
+
+$(EXE) : $(OBJ)
+	$(FC) $(CFLAGS) -o $(EXE) $(OBJ)
+
+%.o : %.f90
+	$(FC) $(CFLAGS) -cpp -c $<
+
+all : $(EXE)
+
+clean :
+	rm *.o *.mod
+
+veryclean :
+	rm *.o *.mod $(EXE)

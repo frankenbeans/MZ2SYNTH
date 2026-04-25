@@ -3,6 +3,7 @@
 ## SHORT TERM
 
 - Support Intel Fortran on Windows
+- Add installation guide to README.md
 - in verbose mode, put elementary clipping stats at the end of the run.
 - Provide debugging output for the wavetables (each in a separate file)
 - There is horrible code in the "destructor" code in MZ2Pnl.f90 - it directly deallocates the red, green and blue channel data pointers but these actually point into the FImage record's data arrays.  The deallocation should be done simply by closing the image.  Only the luminance channel data needs to be deallocated directly.

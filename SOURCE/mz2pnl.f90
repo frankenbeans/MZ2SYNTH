@@ -45,8 +45,15 @@ CONTAINS
     ! --- DUMMY ARGS ---
     TYPE(MZ2Panel),INTENT(INOUT) :: P
     ! --- EXE CODE ---
+    ! First free image PI if it exists - it will just ignore if not associated.
+    CALL FIM_clear(P%PI)
+    IF (PFL_VERB) WRITE(*,700) 'Closed graphic input file.'
+    ! Then try to dellocate all data - this is in case a channel had been
+    ! linked to luminance, which would have its own data allocated aside from
+    ! that in the image.
     FREE(P%DTSINE) ; FREE(P%DTSQWV) ;
     FREE(P%DTSWTH) ; FREE(P%DTTRNG) ;
+    ! The rest is obvious - this is all just data allocated in the MZ2Panel.
     FREE(P%ASINE)  ; FREE(P%ASQWV)  ;
     FREE(P%ASWTH)  ; FREE(P%ATRNG)  ;
     FREE(P%WSINE)  ; FREE(P%WSQWV)  ;

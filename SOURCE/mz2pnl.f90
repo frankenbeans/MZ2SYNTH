@@ -22,6 +22,7 @@ MODULE MZ2Pnl
      REAL(KIND=RKIND)         :: SCANRT=DADV
      REAL(KIND=RKIND)         :: SMPLRT=DSMP
      REAL(KIND=RKIND)         :: RMCNST     =1.0_RKIND/(DFTZ*DSMP)
+     REAL(KIND=RKIND),POINTER :: DLUM(:,:)=>NULL()
      REAL(KIND=RKIND),POINTER :: DTSINE(:,:)=>NULL()
      REAL(KIND=RKIND),POINTER :: DTSQWV(:,:)=>NULL()
      REAL(KIND=RKIND),POINTER :: DTSWTH(:,:)=>NULL()
@@ -48,11 +49,10 @@ CONTAINS
     ! First free image PI if it exists - it will just ignore if not associated.
     CALL FIM_clear(P%PI)
     IF (PFL_VERB) WRITE(*,700) 'Closed graphic input file.'
-    ! Then try to dellocate all data - this is in case a channel had been
+    ! Then try to dellocate LUM data - this is in case a channel had been
     ! linked to luminance, which would have its own data allocated aside from
-    ! that in the image.
-    FREE(P%DTSINE) ; FREE(P%DTSQWV) ;
-    FREE(P%DTSWTH) ; FREE(P%DTTRNG) ;
+    ! that in the image. 
+    FREE(P%DLUM) ;
     ! The rest is obvious - this is all just data allocated in the MZ2Panel.
     FREE(P%ASINE)  ; FREE(P%ASQWV)  ;
     FREE(P%ASWTH)  ; FREE(P%ATRNG)  ;
@@ -73,7 +73,6 @@ CONTAINS
     CHARACTER(LEN=4),INTENT(IN)    :: CHS    
     REAL(KIND=RKIND),INTENT(IN)    :: SCANRT,SMPLRT,TCFRAC
     ! --- VARIABLES ---
-    REAL(KIND=RKIND),POINTER :: DLUM(:,:)
     INTEGER :: MS
     ! --- EXE CODE ---
     P%SCANRT=SCANRT
@@ -85,7 +84,6 @@ CONTAINS
     IF (PFL_VERB) WRITE(*,700) 'Executing flip across horizontal line...'
     CALL FIM_stf_hflip(P%PI)
     IF (PFL_VERB) WRITE(*,700) 'Done!'
-    DLUM=>NULL()
     SELECT CASE(CHS(1:1))       
     CASE('R')
        P%DTSINE=>P%PI%DRED
@@ -97,13 +95,13 @@ CONTAINS
        P%DTSINE=>P%PI%DBLU
        IF (PFL_VERB) WRITE(*,700) 'Associated sine oscillators with blu channel'
     CASE('L')
-       IF (.NOT.ASSOCIATED(DLUM)) THEN
-          ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
+       IF (.NOT.ASSOCIATED(P%DLUM)) THEN
+          ALLOCATE(P%DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
+          P%DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
-       P%DTSINE=>DLUM
+       P%DTSINE=>P%DLUM
        IF (PFL_VERB) WRITE(*,700) 'Associated sine oscillators with lum channel'
     CASE('M')
        P%DTSINE=>NULL()
@@ -122,13 +120,13 @@ CONTAINS
        P%DTSQWV=>P%PI%DBLU
        IF (PFL_VERB) WRITE(*,700) 'Associated sqwv oscillators with blu channel'
     CASE('L')
-       IF (.NOT.ASSOCIATED(DLUM)) THEN
-          ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
+       IF (.NOT.ASSOCIATED(P%DLUM)) THEN
+          ALLOCATE(P%DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
+          P%DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
-       P%DTSQWV=>DLUM
+       P%DTSQWV=>P%DLUM
        IF (PFL_VERB) WRITE(*,700) 'Associated sqwv oscillators with lum channel'
     CASE('M')
        P%DTSQWV=>NULL()
@@ -147,13 +145,13 @@ CONTAINS
        P%DTSWTH=>P%PI%DBLU
        IF (PFL_VERB) WRITE(*,700) 'Associated swth oscillators with blu channel'
     CASE('L')
-       IF (.NOT.ASSOCIATED(DLUM)) THEN
-          ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
+       IF (.NOT.ASSOCIATED(P%DLUM)) THEN
+          ALLOCATE(P%DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
+          P%DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
-       P%DTSWTH=>DLUM
+       P%DTSWTH=>P%DLUM
        IF (PFL_VERB) WRITE(*,700) 'Associated swth oscillators with lum channel'
     CASE('M')
        P%DTSWTH=>NULL()
@@ -172,13 +170,13 @@ CONTAINS
        P%DTTRNG=>P%PI%DBLU
        IF (PFL_VERB) WRITE(*,700) 'Associated trng oscillators with blu channel'
     CASE('L')
-       IF (.NOT.ASSOCIATED(DLUM)) THEN
-          ALLOCATE(DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
+       IF (.NOT.ASSOCIATED(P%DLUM)) THEN
+          ALLOCATE(P%DLUM(1:P%PI%NCOLS,1:P%PI%NROWS),STAT=MS)
           IF (MS.NE.0) GOTO 910
-          DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
+          P%DLUM=MERGE(Luminance(P%PI%DRED,P%PI%DGRN,P%PI%DBLU),0.0_RKIND, &
                      P%PI%DRED.GT.0.OR.P%PI%DGRN.GT.0.OR.P%PI%DBLU.GT.0)
        END IF
-       P%DTTRNG=>DLUM
+       P%DTTRNG=>P%DLUM
        IF (PFL_VERB) WRITE(*,700) 'Associated trng oscillators with lum channel'
     CASE('M')
        P%DTTRNG=>NULL()

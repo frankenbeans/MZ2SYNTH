@@ -57,7 +57,7 @@ The following options are available (case insensitive):
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M)                                |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
-|-r ftr    | -transition ftr          | Set transition TC (as fraction of <s>) to ftr   |
+|-r ftr    | -transition ftr          | Set transition TC (as fraction of spr) to ftr   |
 |-s spr    | -sampling-rate spr       | Set sampling-rate in c.p.s                      |
 
 ## NOTE

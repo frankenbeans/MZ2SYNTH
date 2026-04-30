@@ -10,6 +10,7 @@
 
 ## MEDIUM TERM
 - Write proper documentation (manual page + tutorial information)
+- Sort out Sun Audio to actually be able to output 32 bit PCM - everything is set up except the subroutine and interface for thus type of file.
 - Supply template files and examples [*** DONE: 2 examples provided ***]
 
 ## LONG TERM

@@ -29,7 +29,7 @@ frequency would be silent.
 
 Input takes the form of a PPM graphics file with 720 rows and as many
 columns as desired.  MZ2SYNTH begins at the leftmost column and
-advances, column by column at the desired rate.  By default, the
+advances, column by column at the desired rate. Pitch goes from bass to treble from the bottom row of the image (as it would appear on screen) to the top. By default, the
 amplitude of the sine, square, sawtooth and triangle wave channels is
 multiplied by the red, green, blue and luminance channel values at
 each instant within the run, but the specific channels can be linked

@@ -1,8 +1,6 @@
 name: MacOS Makefile CI
 
-on:
-  schedule:
-    - cron: '0 3 * * *'
+on: [push]
   
 jobs:
   build:

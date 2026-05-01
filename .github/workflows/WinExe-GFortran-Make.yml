@@ -1,7 +1,9 @@
 name: Windows Makefile CI
 
-on: [push]
-
+on:
+  schedule:
+    # Run at 03:00 UTC every day
+    - cron: '0 3 * * *'
 jobs:
   build:
     if: github.actor != 'github-actions[bot]'

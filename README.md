@@ -186,9 +186,10 @@ second with fixed phase relationships and an audio sampling rate of
 48000 c.p.s, with verbose text output mode on (as a sort of progress
 indicator).  We want to link the sine wave voice to the luminance
 channel of the input image and mute the other voices.
-
-`../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000
--output-file example-02.au -channel-select LMMM example-02.ppm`
+```
+../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000
+-output-file example-02.au -channel-select LMMM example-02.ppm
+```
 
 **NOTE** that the command above runs on continuously without a line-break.
 
@@ -245,9 +246,9 @@ This will take a few minutes.
 (5) We can now use the SoX (Sound eXchange) system to convert the Sun
 Audio output file to an Ogg Vorbis audio file, while at the same time
 applying an 8 kHz low-pass filter, a chorus and a reverb.
-
-`sox example-02.au example-02.ogg lowpass -1 8000 chorus 0.7 0.9 55
-0.4 0.25 2 -t reverb 75 75 100 deemph`
+```
+sox example-02.au example-02.ogg lowpass -1 8000 chorus 0.7 0.9 55 0.4 0.25 2 -t reverb 75 75 100 deemph
+```
 
 (6) You can please the executable, **mz2**, from the SOURCES folder,
 somewhere in your executable search path if you like, e.g., in

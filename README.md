@@ -134,8 +134,9 @@ shall assume that you have GCC installed on your system.
 For simplicity I shall assume that we are working in our home directory.
 
 (1)  Let us first clone the Github repository:
-
-`git clone https://github.com/frankenbeans/MZ2SYNTH.git`
+```
+git clone https://github.com/frankenbeans/MZ2SYNTH.git`
+```
 
 (2)  Next, we will change directory to the **MZSYNTH/SOURCE** subdirectory
      and build our executable using **make**:
@@ -145,8 +146,8 @@ make -f Makefile.gfortran all clean
 ```
 
 (3) Now that our executable is compiled, we will go to the
-**MZSYNTH/EXAMPLES** subdirectory from where we are now, and run the
-executable from there without arguments just to check that it works.
+    **MZSYNTH/EXAMPLES** subdirectory from where we are now, and run the
+    executable from there without arguments just to check that it works.
 ```
 cd ../EXAMPLES
 ../SOURCE/mz2

@@ -5,8 +5,7 @@ on:
     # Run at 02:00 UTC every day
     - cron: '0 2 * * *'  
 jobs:
-  build:
-    if: github.actor != 'github-actions[bot]'
+  build:    
     runs-on: macos-latest
     steps:
     - name: Delay for 60 seconds to avoid clashing with Windows runner

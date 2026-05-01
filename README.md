@@ -93,14 +93,14 @@ The following options are available (case insensitive):
   some effects, via a named pipe called *fifo*
 
   - In one terminal enter:  
-  ```
-  mkfifo fifo
-  play --buffer 16384 fifo reverb deemph
-  ```
+    ```
+    mkfifo fifo
+    play --buffer 16384 fifo reverb deemph
+    ```
   - In a separate terminal enter:
-  ```  
-  mz2 -verbose -overwrite -advance 12 -output-file fifo -dynamic-compression -sampling-rate 48000 track01.ppm
-  ```
+    ```  
+    mz2 -verbose -overwrite -advance 12 -output-file fifo -dynamic-compression -sampling-rate 48000 track01.ppm
+    ```
   The *play* process will block until mz2 starts generating output.
   
   **WARNING:** This synthesizer can generate very loud and very high-pitched
@@ -264,3 +264,5 @@ After installing Homebrew, the package can be installed using:
 brew install gcc@13
 ```
 the included binary executable will run as expected.
+
+**EOF**

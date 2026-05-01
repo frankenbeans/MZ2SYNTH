@@ -214,7 +214,16 @@ We will see output that looks like this:
 *INF (Mz2Syn_Init): Number of samples to generate: 15360000 (Num channels=  2 )
 *INF (Mz2_Generate): SMPL=    48000 ; %DONE = 0.31250    ; TIME/S=  1.0000    
 *INF (Mz2_Generate): SMPL=    96000 ; %DONE = 0.62500    ; TIME/S=  2.0000    
-*INF (Mz2_Generate): SMPL=   144000 ; %DONE = 0.93750    ; TIME/S=  3.0000  
+*INF (Mz2_Generate): SMPL=   144000 ; %DONE = 0.93750    ; TIME/S=  3.0000
+...
+*INF (Au_Close): Buffer flushed into unit 22
+*INF (Au_Close): Closed file unit 22
+*INF (Au_Close): Status of operation is 0
+*INF (Au_Close): Buffer deallocated
+*INF (Mz2Pnl_Clear): Closed graphic input file.
+*INF (Mz2Pnl_Clear): Panel memory deallocated and structure cleared.
+*INF (OscBank_Clear): Oscillator banks deallocated cleared
+*INF (Mz2Synth):  -*- END OF STATEMENTS -*- 
 ```
 
 This will take a few minutes.

@@ -7,7 +7,8 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Check out repository
+      uses: actions/checkout@v4
     
     - name: Change directory, build project and run with -help
       run: |             

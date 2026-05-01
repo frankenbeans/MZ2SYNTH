@@ -22,6 +22,7 @@ jobs:
 
     - name: Commit changes
       run: |
+            sleep(60) ; # To avoid clashing with MACOS build
             git config user.name github-actions ;
             git config user.email github-actions@github.com ;
             git add --all

@@ -155,7 +155,7 @@ cd ../EXAMPLES
 
 We should see a help screen like this:
 ```
-MZ2SYNTH 0.1/2026-04-30
+MZ2SYNTH 0.1/2026-05-01
 Copyright (C) by E. Lamprecht.   All rights reserved.
 
 SYNOPSIS:  mz2 [options...] [input_filename]
@@ -169,7 +169,7 @@ OPTIONS:
   -x|-fixed-phase              Toggle fixed phase mode                  [off]
   -z|-zero-phase               Toggle zero phase mode                   [off]
   -a|-advance           <r>    Set advance rate in cols/sec             [10]
-  -c|-channel-select    <sqwt> Set (s)in,s(q)r,sa(w),(t)riangle colours [RGBL]
+  -c|-channel-select    <sqwt> Set (s)in,s(q)r,sa(w),(t)riangle colours [RGBLM]
   -m|-volume-multiplier <m>    Set volume multiplier (m > 0)            [0.1]
   -o|-output-file       <ofn>  Write output to file <ofn>               [note *]
   -s|-sampling-rate     <s>    Set sampling rate to <s> c.p.s.          [44100]

@@ -1,7 +1,9 @@
 name: MacOS Makefile CI
 
-on: [push]
-  
+on:
+  schedule:
+    # Run at 02:00 UTC every day
+    - cron: '0 2 * * *'  
 jobs:
   build:
     if: github.actor != 'github-actions[bot]'

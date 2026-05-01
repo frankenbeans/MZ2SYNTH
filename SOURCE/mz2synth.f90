@@ -206,31 +206,31 @@ CONTAINS
     WRITE(*,700) ''
     WRITE(*,700) 'OPTIONS:'
     ! --- Unary options ---
-    WRITE(*,710) '-h','-help','',                         &
+    WRITE(*,710) '-h','-help','',                          &
          'Print help-screen and halt processing','off'
-    WRITE(*,710) '-v','-verbose','',                      &
+    WRITE(*,710) '-v','-verbose','',                       &
          'Toggle verbose text output mode','off'
-    WRITE(*,710) '-w','-overwrite','',                    &
+    WRITE(*,710) '-w','-overwrite','',                     &
          'Toggle overwrite output mode','off'
-    WRITE(*,710) '-d','-debug','',                        &
+    WRITE(*,710) '-d','-debug','',                         &
          'Toggle debugging output mode','off'
-    WRITE(*,710) '-p','-dynamic-compression','',          &
+    WRITE(*,710) '-p','-dynamic-compression','',           &
          'Toggle dynamic compression','off'
-    WRITE(*,710) '-x','-fixed-phase','',                  &
+    WRITE(*,710) '-x','-fixed-phase','',                   &
          'Toggle fixed phase mode','off'
-    WRITE(*,710) '-z','-zero-phase','',                   &
+    WRITE(*,710) '-z','-zero-phase','',                    &
          'Toggle zero phase mode','off'
-    WRITE(*,710) '-a','-advance','<r>',                   &
+    WRITE(*,710) '-a','-advance','<r>',                    &
          'Set advance rate in cols/sec ','10'
-    WRITE(*,710) '-c','-channel-select','<sqwt>',         &
-         'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBL'
-    WRITE(*,710) '-m','-volume-multiplier','<m>',         &
+    WRITE(*,710) '-c','-channel-select','<sqwt>',          &
+         'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBLM'
+    WRITE(*,710) '-m','-volume-multiplier','<m>',          &
          'Set volume multiplier (m > 0)','0.1'
-    WRITE(*,710) '-o','-output-file','<ofn>',             &
+    WRITE(*,710) '-o','-output-file','<ofn>',              &
          'Write output to file <ofn>','note *'
-    WRITE(*,710) '-s','-sampling-rate','<s>',             &
+    WRITE(*,710) '-s','-sampling-rate','<s>',              &
          'Set sampling rate to <s> c.p.s.','44100'    
-    WRITE(*,710) '-r','-transition','<t>',                &
+    WRITE(*,710) '-r','-transition','<t>',                 &
          'Set transition TC to <t> (frac. of <s>)','0.01'
     WRITE(*,700) ''
     WRITE(*,700) '* Default input  file is    '//TRIM(DIFN)

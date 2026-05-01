@@ -7,10 +7,10 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: macos-latest
     steps:
-    -name: Delay for 60 seconds to avoid clashing with Windows runner
-     run: |
-            echo 'Sleeping for 60 seconds...' ;
-            sleep 60 ;
+    - name: Delay for 60 seconds to avoid clashing with Windows runner
+      run: |
+             echo 'Sleeping for 60 seconds...' ;
+             sleep 60 ;
             
     - name: Check out repository
       uses: actions/checkout@v4

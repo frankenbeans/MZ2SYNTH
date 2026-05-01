@@ -140,16 +140,18 @@ For simplicity I shall assume that we are working in our home directory.
 
 (2)  Next, we will change directory to the **MZSYNTH/SOURCE** subdirectory
      and build our executable using **make**:
-
-`cd MZ2SYNTH/SOURCE/`
-`make -f Makefile.gfortran all clean`
+```
+cd MZ2SYNTH/SOURCE/
+make -f Makefile.gfortran all clean
+```
 
 (3) Now that our executable is compiled, we will go to the
 **MZSYNTH/EXAMPLES** subdirectory from where we are now, and run the
 executable from there without arguments just to check that it works.
-
-`cd ../EXAMPLES`
-`../SOURCE/mz2`
+```
+cd ../EXAMPLES
+../SOURCE/mz2
+```
 
 We should see a help screen like this:
 ```

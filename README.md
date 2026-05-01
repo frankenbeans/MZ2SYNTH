@@ -252,7 +252,7 @@ somewhere in your executable search path if you like, e.g., in
 mz2synth a lot.  Just remember to update it if you recompile!
 
 **NOTE:** User **scruss** has kindly provided good information for
-  information for MACOS users.  Herewith, a summary:
+  MACOS users.  Herewith, a summary:
 
 If [Homebrew](https://brew.sh/)'s `gcc@13` package is not installed,
 the included binary fails.

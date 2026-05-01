@@ -56,7 +56,7 @@ The following options are available (case insensitive):
 |-x        | -fixed-phase             | Toggle on fixed-phase mode (slower, accurate)   |
 |-z        | -zero-phase              | Toggle on zero-phase mode (changes beat freq.s) |
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
-|-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M)                                |
+|-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M), in order for sin/sqw/swt/tri  |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
 |-r ftr    | -transition ftr          | Set transition TC (as frac. of (spr*1s)) to ftr |

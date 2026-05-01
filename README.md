@@ -179,41 +179,43 @@ channel of the input image and mute the other voices.
 **NOTE** that the command above runs on continuously without a line-break.
 
 We will see output that looks like this:
-
-> MZSYNTH: -VERBOSE : VERBOSE MODE ON 
-> MZSYNTH: -ADVANCE : SET ADVANCE RATE 
-> MZSYNTH: ADVANCE RATE =   4.00000     COL/S 
-> MZSYNTH: -FIXED-PHASE : FIXED PHASE MODE ON 
-> MZSYNTH: -SAMPLING-RATE : SET SAMPLING RATE 
-> MZSYNTH: SAMPLING RATE =         48000 
-> MZSYNTH: -OUTPUT-FILE : SET OUTPUT FILE 
-> MZSYNTH: OUTPUT FILE IS example-02.au 
-> MZSYNTH: -CHANNEL-SELECT : SET CHANNEL DEFINITIONS 
-> MZSYNTH: CHANNEL SELECTOR = LMMM 
-> MZSYNTH: INPUT FILE IS example-02.ppm 
-> OscBank_Init: Initializing oscillator bank 
-> OscBank_Init: Oscillator accumulators randomized 
-> OscBank_Init: Oscillator accumulators initialized 
-> OscBank_Init: Initializing wavetables 
-> OscBank_Init: Wavetables initialized 
-> OscBank_Init: Setting up oscillator banks 
-> OscBank_Init: Done! 
-> ! INFO(Mz2Pnl_Load): Reading input file example-02.ppm... 
-> ! INFO(Mz2Pnl_Load): Done! 
-> ! INFO(Mz2Pnl_Load): Executing flip across horizontal line... 
-> ! INFO(Mz2Pnl_Load): Done! 
-> ! INFO(Mz2Pnl_Load): Memory allocated andbeing initialized... 
-> ! INFO(Mz2Pnl_Load): Done! 
-> ! INFO(Mz2Pnl_Load): Associated sine oscillators with lum channel 
-> ! INFO(Mz2Pnl_Load): Sqwv oscillators are muted 
-> ! INFO(Mz2Pnl_Load): Swth oscillators are muted 
-> ! INFO(Mz2Pnl_Load): Trng oscillators are muted 
-> NUMBER OF SAMPLES TO GENERATE: 15360000 
-> MZSYN_GENERATE: SMPL=      48000 ; %COMPLETE= 0.31250    ; TIME/S=  1.0000    
-> MZSYN_GENERATE: SMPL=      96000 ; %COMPLETE= 0.62500    ; TIME/S=  2.0000    
-> MZSYN_GENERATE: SMPL=     144000 ; %COMPLETE= 0.93750    ; TIME/S=  3.0000    
-> MZSYN_GENERATE: SMPL=     192000 ; %COMPLETE=  1.2500    ; TIME/S=  4.0000  
-> ...
+```
+*INF (Mz2Syn_CmdLine): -VERBOSE : VERBOSE MODE ON
+*INF (Mz2Syn_CmdLine): -ADVANCE : SET ADVANCE RATE
+*INF (Mz2Syn_CmdLine): ADVANCE RATE =   4.00000     COL/S
+*INF (Mz2Syn_CmdLine): -FIXED-PHASE : FIXED PHASE MODE ON
+*INF (Mz2Syn_CmdLine): -SAMPLING-RATE : SET SAMPLING RATE
+*INF (Mz2Syn_CmdLine): SAMPLING RATE =         48000
+*INF (Mz2Syn_CmdLine): -OUTPUT-FILE : SET OUTPUT FILE
+*INF (Mz2Syn_CmdLine): OUTPUT FILE IS example-02.au
+*INF (Mz2Syn_CmdLine): -CHANNEL-SELECT : SET CHANNEL DEFINITIONS
+*INF (Mz2Syn_CmdLine): CHANNEL SELECTOR = LMMM
+*INF (Mz2Syn_CmdLine): INPUT FILE IS example-02.ppm
+*INF (OscBank_Init): Initializing oscillator bank
+*INF (OscBank_Init): Oscillator accumulators will be randomized
+*INF (OscBank_Init): Oscillator accumulators initialized
+*INF (OscBank_Init): Initializing wavetables
+*INF (OscBank_Init): Wavetables initialized
+*INF (OscBank_Init): Setting up oscillator banks
+*INF (OscBank_Init): Done!
+*INF (Mz2Pnl_Load): Reading input file example-02.ppm...
+*INF (Mz2Pnl_Load): Done!
+*INF (Mz2Pnl_Load): Executing flip across horizontal line...
+*INF (Mz2Pnl_Load): Done!
+*INF (Mz2Pnl_Load): Associated sine oscillators with lum channel
+*INF (Mz2Pnl_Load): Sqwv oscillators are muted
+*INF (Mz2Pnl_Load): Swth oscillators are muted
+*INF (Mz2Pnl_Load): Trng oscillators are muted
+*INF (Mz2Pnl_Load): Memory allocation and initialization ...
+*INF (Mz2Pnl_Load): Done!
+*INF (Au_WrtHdr): File example-02.au opened in mode NEW on unit 22
+*INF (Au_WrtHdr): Hardware is little-endian so samples will be converted
+*INF (Au_WrtHdr): Audio file header write status is 0
+*INF (Mz2Syn_Init): Number of samples to generate: 15360000 (Num channels=  2 )
+*INF (Mz2_Generate): SMPL=    48000 ; %DONE = 0.31250    ; TIME/S=  1.0000    
+*INF (Mz2_Generate): SMPL=    96000 ; %DONE = 0.62500    ; TIME/S=  2.0000    
+*INF (Mz2_Generate): SMPL=   144000 ; %DONE = 0.93750    ; TIME/S=  3.0000  
+```
 
 This will take a few minutes.
 

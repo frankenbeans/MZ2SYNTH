@@ -8,7 +8,7 @@ development status.
 
 ## NAME
 
-> mz2 [option]... <input_file>
+> mz2 [options]... <input_file>
 
 ## DESCRIPTION
 

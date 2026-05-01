@@ -2,27 +2,20 @@
 
 ## SHORT TERM
 
-- Support Intel Fortran on Windows
 - Add installation guide to README.md
 - in verbose mode, put elementary clipping stats at the end of the run.
-- Provide debugging output for the wavetables (each in a separate file)
-- Lanczos approximation is not quite right as written.  Should use sinc(x)=(sin x)/x and GPCOEF last line should be GPCOEF=SINC(PI*Q).  This is just cosmetic as the expressions come to the same thing after substitution.
+- Lanczos approximation is not quite right as written.  Should use
+  sinc(x)=(sin x)/x and GPCOEF last line should be GPCOEF=SINC(PI*Q).
+  This is just cosmetic as the expressions come to the same thing
+  after substitution.
 
 ## MEDIUM TERM
 - Write proper documentation (manual page + tutorial information)
-- Sort out Sun Audio to actually be able to output 32 bit PCM - everything is set up except the subroutine and interface for thus type of file.
-- Supply template files and examples [*** DONE: 2 examples provided ***]
 
 ## LONG TERM
-
+- Support Intel Fortran on Windows
 - Establish a FIFO for interprocess communication that will allow at least the
   rate of advance to be changed during execution to allow for limited live
-  performance.  ALTERNATIVELY, a means of putting column-number based triggers in
-  command-line options with one-shot or retriggerable behaviour.
-
-- [*** DONE, but test on RPI is still to be done ***]
-  Linear interpolation within wavetables has been implemented, and this works well
-  enough on a PC, but clips in which many oscillators are active at any given moment can
-  lead to latency when generating audio in real-time.  Need to find ways to improve
-  performance further in order to support small platforms like Raspberry Pi.
+  performance.  ALTERNATIVELY, a means of putting column-number based triggers
+  in command-line options with one-shot or retriggerable behaviour.
   

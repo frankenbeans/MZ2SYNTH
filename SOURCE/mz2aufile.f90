@@ -1,9 +1,25 @@
 ! ------------------------------------------------------------------------------
 ! MZ2AUFILE.F90
 !
-! SUN AUDIO FILE FORMAT HANDLING SUBROUTINES FOR MZ2
+! SUN AUDIO FILE FORMAT HANDLING SUBROUTINES FOR MZ2 (OUTPUT ONLY)
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! #NEW:2026-05-01a:
+!
+!      (a)  Added offensively missing support for I32 PCM.
+!
+!      (b)  To Au_WrtSmp_XXX, added robust checking to make sure these are
+!           never used with a SunAu 'object' that has previously written
+!           a header that does not match the respective function's sample
+!           format.  Previously a programmer could erroneously set up a
+!           16 bit PCM audio file and write 32 bit real samples to it and
+!           never know it till chaos ensued.
+!
+!      (c)  Check that in each call to Au_WrtSmp_XXX, the input dummy
+!           variable array AUDS(1:) has a size equal to SNAU%NCHN, i.e,
+!           that each call contains just one sample for each channel in
+!           the header.
+!
+! COPYRIGHT (C) 2024,2026 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 MODULE Mz2AuFile
@@ -16,31 +32,43 @@ MODULE Mz2AuFile
   INTEGER(C_INT32_T),PARAMETER :: DATSIZE=INT(Z'FFFFFFFF',C_INT32_T)  ! UNKNOWN
 
   INTEGER,PARAMETER :: AUF_PCM_LINEAR_16B=3
+  INTEGER,PARAMETER :: AUF_PCM_LINEAR_32B=5      ! #NEW:2026-05-01a
   INTEGER,PARAMETER :: AUF_FLT_LINEAR_32B=6
   INTEGER,PARAMETER :: AUF_DEF_SAMPLERATE=44100
   INTEGER,PARAMETER :: AUF_DEF_NMCHANNELS=2
-  LOGICAL,PARAMETER :: AUF_DEF_ENDIANNESS=.TRUE. ! Big-endian
+  LOGICAL,PARAMETER :: AUF_DEF_ENDIANNESS=.TRUE. ! Big-endian by default
 
   TYPE :: SunAu
-     INTEGER            :: AUFU=0
+     INTEGER            :: AUFU=0                   ! Audio file unit
      INTEGER(C_INT32_T) :: ENCD=AUF_FLT_LINEAR_32B
      INTEGER(C_INT32_T) :: SMPR=AUF_DEF_SAMPLERATE
      INTEGER(C_INT32_T) :: NCHN=AUF_DEF_NMCHANNELS
      LOGICAL            :: MCBE=AUF_DEF_ENDIANNESS
      LOGICAL            :: OVWT=.FALSE.
-     INTEGER            :: BCUR=1
+     INTEGER            :: BCUR=1                   ! Buffer cursor
      INTEGER(KIND=C_INT8_T),POINTER :: BUFF(:)=>NULL()
   END TYPE SunAu
 
   INTERFACE Au_WrtSmp
+     ! -------------------------------------------------------------------------
+     ! Buffered routines for writing audio samples to file.  Using a
+     ! subroutine that does not match the format that was stored in
+     ! SunAu%ENCD during the header write operation will halt the program
+     ! with an error.
+     ! -------------------------------------------------------------------------
      MODULE PROCEDURE Au_WrtSmp_I16
-     MODULE PROCEDURE Au_WrtSmp_R32     
+     MODULE PROCEDURE Au_WrtSmp_I32 ! #NEW:2026-05-01a
+     MODULE PROCEDURE Au_WrtSmp_R32
   END INTERFACE Au_WrtSmp
 
   INTERFACE Nord
+     ! -------------------------------------------------------------------------
+     ! Byte-swapping routines - if the host is little-endian the byte order will
+     ! be swapped to big-endian as necessary.
+     ! -------------------------------------------------------------------------
      MODULE PROCEDURE Nord_I16
      MODULE PROCEDURE Nord_I32
-     MODULE PROCEDURE Nord_R32
+     MODULE PROCEDURE Nord_R32     
   END INTERFACE Nord
   
 CONTAINS
@@ -62,7 +90,7 @@ CONTAINS
     SELECT CASE (ENCD)
     CASE (AUF_PCM_LINEAR_16B)
        ZSMP=2
-    CASE (AUF_FLT_LINEAR_32B)
+    CASE (AUF_PCM_LINEAR_32B,AUF_FLT_LINEAR_32B)
        ZSMP=4
     CASE DEFAULT
        GOTO 900
@@ -110,14 +138,16 @@ CONTAINS
   SUBROUTINE Au_WrtSmp_I16(SNAU,AUDS,STAT)
     IMPLICIT NONE
     TYPE(SunAu)             :: SNAU
-    INTEGER(KIND=C_INT16_T) :: AUDS(1:)
-    INTEGER                 :: STAT
+    INTEGER(KIND=C_INT16_T) :: AUDS(1:) ! Audio sample array (SIZE=SNAU%NCHN)
+    INTEGER                 :: STAT     ! Write IOSTAT
     INTENT(IN)    :: AUDS
     INTENT(INOUT) :: SNAU,STAT
     ! --- VARIABLES ---
     INTEGER,PARAMETER :: ZSMP=2
     INTEGER :: BS,BE,ZTFR
     ! --- EXE CODE  ---
+    IF (SNAU%ENCD.NE.AUF_PCM_LINEAR_16B) GOTO 900 ! #NEW:2026-05-01a
+    IF (SNAU%NCHN.NE.SIZE(AUDS))         GOTO 910 ! #NEW:2026-05-01a
     STAT=0 ! Fake out as OK unless there REALLY was a write error
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
@@ -129,20 +159,57 @@ CONTAINS
     BE=SNAU%BCUR+ZTFR-1
     SNAU%BUFF(BS:BE)=TRANSFER(Nord_I16(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
     SNAU%BCUR=BE+1
-    ! --- END CODE  ---    
+    RETURN
+    ! --- END CODE  --- #NEW:2026-05-01a
+800 FORMAT('*ERR (Au_WrtSmp_I16):',1X,A,1X,I0)
+900 WRITE(*,800) 'Invalid call with encoding format=',SNAU%ENCD ; STOP
+910 WRITE(*,800) 'Invalid call with SIZE(AUDS).NE.SNAU%NCHN=',SNAU%NCHN ; STOP
   END SUBROUTINE Au_WrtSmp_I16
 
-  SUBROUTINE Au_WrtSmp_R32(SNAU,AUDS,STAT)
+  SUBROUTINE Au_WrtSmp_I32(SNAU,AUDS,STAT) ! #NEW:2026-05-01a
     IMPLICIT NONE
     TYPE(SunAu)             :: SNAU
-    REAL(KIND=C_FLOAT)      :: AUDS(1:)
-    INTEGER                 :: STAT
+    INTEGER(KIND=C_INT32_T) :: AUDS(1:) ! Audio sample array (SIZE=SNAU%NCHN)
+    INTEGER                 :: STAT     ! Write IOSTAT
     INTENT(IN)    :: AUDS
     INTENT(INOUT) :: SNAU,STAT
     ! --- VARIABLES ---
     INTEGER,PARAMETER :: ZSMP=4
     INTEGER :: BS,BE,ZTFR
     ! --- EXE CODE  ---
+    IF (SNAU%ENCD.NE.AUF_PCM_LINEAR_32B) GOTO 900 ! #NEW:2026-05-01a
+    IF (SNAU%NCHN.NE.SIZE(AUDS))         GOTO 910 ! #NEW:2026-05-01a
+    STAT=0 ! Fake out as OK unless there REALLY was a write error
+    IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
+       WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
+       IF (STAT.NE.0) RETURN
+       SNAU%BCUR=1
+    END IF
+    ZTFR=ZSMP*SIZE(AUDS)
+    BS=SNAU%BCUR
+    BE=SNAU%BCUR+ZTFR-1
+    SNAU%BUFF(BS:BE)=TRANSFER(Nord_I32(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
+    SNAU%BCUR=BE+1
+    RETURN
+    ! --- END CODE  --- #NEW:2026-05-01a
+800 FORMAT('*ERR (Au_WrtSmp_I32):',1X,A,1X,I0)
+900 WRITE(*,800) 'Invalid call with encoding format=',SNAU%ENCD ; STOP
+910 WRITE(*,800) 'Invalid call with SIZE(AUDS).NE.SNAU%NCHN=',SNAU%NCHN ; STOP
+  END SUBROUTINE Au_WrtSmp_I32
+  
+  SUBROUTINE Au_WrtSmp_R32(SNAU,AUDS,STAT)
+    IMPLICIT NONE
+    TYPE(SunAu)             :: SNAU
+    REAL(KIND=C_FLOAT)      :: AUDS(1:) ! Audio sample array (SIZE=SNAU%NCHN)
+    INTEGER                 :: STAT     ! Write IOSTAT
+    INTENT(IN)    :: AUDS
+    INTENT(INOUT) :: SNAU,STAT
+    ! --- VARIABLES ---
+    INTEGER,PARAMETER :: ZSMP=4
+    INTEGER :: BS,BE,ZTFR
+    ! --- EXE CODE  ---
+    IF (SNAU%ENCD.NE.AUF_FLT_LINEAR_32B) GOTO 900 ! #NEW:2026-05-01a
+    IF (SNAU%NCHN.NE.SIZE(AUDS))         GOTO 910 ! #NEW:2026-05-01a
     STAT=0 ! Fake out as OK unless there REALLY was a write error
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
@@ -154,13 +221,17 @@ CONTAINS
     BE=SNAU%BCUR+ZTFR-1
     SNAU%BUFF(BS:BE)=TRANSFER(Nord_R32(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
     SNAU%BCUR=BE+1
-     ! --- END CODE  ---    
+    RETURN
+    ! --- END CODE  --- #NEW:2026-05-01a
+800 FORMAT('*ERR (Au_WrtSmp_R32):',1X,A,1X,I0)
+900 WRITE(*,800) 'Invalid call with encoding format=',SNAU%ENCD ; STOP
+910 WRITE(*,800) 'Invalid call with SIZE(AUDS).NE.SNAU%NCHN=',SNAU%NCHN ; STOP
   END SUBROUTINE Au_WrtSmp_R32
 
   SUBROUTINE Au_Close(SNAU,STAT)
     IMPLICIT NONE
     TYPE(SunAu)             :: SNAU
-    INTEGER                 :: STAT
+    INTEGER                 :: STAT ! Write IOSTAT
     INTENT(INOUT) :: SNAU,STAT
     ! --- EXE CODE  ---
     IF (SNAU%BCUR.GT.1) THEN
@@ -182,6 +253,7 @@ CONTAINS
   END SUBROUTINE Au_Close
 
   PURE FUNCTION MachBE()
+    ! Return .TRUE. if host machine is big-endian, .FALSE. otherwise
     IMPLICIT NONE
     LOGICAL :: MachBE
     ! --- VARIABLES ---

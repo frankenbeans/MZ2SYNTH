@@ -4,9 +4,8 @@ on: [push]
   
 jobs:
   build:
-
+    if: github.actor != 'github-actions[bot]'
     runs-on: macos-latest
-
     steps:
     - uses: actions/checkout@v4
     

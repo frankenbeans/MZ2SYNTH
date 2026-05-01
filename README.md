@@ -186,8 +186,7 @@ second with fixed phase relationships and an audio sampling rate of
 indicator).  We want to link the sine wave voice to the luminance
 channel of the input image and mute the other voices.
 ```
-../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000
--output-file example-02.au -channel-select LMMM example-02.ppm
+../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000 -output-file example-02.au -channel-select LMMM example-02.ppm
 ```
 
 **NOTE** that the command above runs on continuously without a line-break.

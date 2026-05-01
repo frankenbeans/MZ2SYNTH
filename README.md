@@ -152,19 +152,30 @@ executable from there without arguments just to check that it works.
 `../SOURCE/mz2`
 
 We should see a help screen like this:
+```
+MZ2SYNTH 0.1/2026-04-30
+Copyright (C) by E. Lamprecht.   All rights reserved.
 
-> MZ2SYNTH 0.1/2025-02-16
-> Copyright (C) by E. Lamprecht.   All rights reserved.
-> 
-> SYNOPSIS:  mz2 [options...] [input_filename]
-> 
-> OPTIONS:
->   -h|-help                     Print help-screen and halt processing    [off]
->   -v|-verbose                  Toggle verbose text output mode          [off]
->   -w|-overwrite                Toggle overwrite output mode             [off]
->   -d|-debug                    Toggle debugging output mode             [off]
-> ...
->
+SYNOPSIS:  mz2 [options...] [input_filename]
+
+OPTIONS:
+  -h|-help                     Print help-screen and halt processing    [off]
+  -v|-verbose                  Toggle verbose text output mode          [off]
+  -w|-overwrite                Toggle overwrite output mode             [off]
+  -d|-debug                    Toggle debugging output mode             [off]
+  -p|-dynamic-compression      Toggle dynamic compression               [off]
+  -x|-fixed-phase              Toggle fixed phase mode                  [off]
+  -z|-zero-phase               Toggle zero phase mode                   [off]
+  -a|-advance           <r>    Set advance rate in cols/sec             [10]
+  -c|-channel-select    <sqwt> Set (s)in,s(q)r,sa(w),(t)riangle colours [RGBL]
+  -m|-volume-multiplier <m>    Set volume multiplier (m > 0)            [0.1]
+  -o|-output-file       <ofn>  Write output to file <ofn>               [note *]
+  -s|-sampling-rate     <s>    Set sampling rate to <s> c.p.s.          [44100]
+  -r|-transition        <t>    Set transition TC to <t> (frac. of <s>)  [0.01]
+
+* Default input  file is    input.ppm
+* Default output file is    output.au
+```
 
 (4) We will now produce an audio file called **example-02.au** from
 the graphic image file **example-02.ppm**, advancing at 4 columns per

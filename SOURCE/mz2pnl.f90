@@ -234,7 +234,7 @@ CONTAINS
     TI=NINT(SIGN(1.0_RKIND,P%SCANRT)) ! Increment can be positive or negative
     NS=P%CS+TI
     ! -- Stop if panel goes off image on the left or right side --
-    CC=INT((REAL(NS,RKIND)/P%SMPLRT)*P%SCANRT)+1 ! COL * S/SMPL * COL/S
+    CC=INT((REAL(NS,RKIND)/P%SMPLRT)*P%SCANRT)+1 ! SMPL * S/SMPL * COL/S = COL
     IF (CC.LT.0.OR.CC.GT.P%PI%NCOLS) THEN
        DONE=.TRUE.
        RETURN

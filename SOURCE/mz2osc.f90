@@ -94,10 +94,16 @@ CONTAINS
     END IF
 
     fc1=REAL(N_TIC_PER_CYC,RKIND)/REAL(ob%smpr,RKIND)
-    ob%freq(:)=OscFreq((/(j,j=1,N_OSC)/))
-    ob%incr(:)=fc1*ob%freq(:)
-    ob%accm(:)=MERGE((/(RndOscAccm(),j=1,N_OSC)/),0.0_RKIND,lra)
-    ob%wtno(:)=((/(WvtNmbr(j),j=1,N_OSC)/))
+    FORALL(j=1:N_OSC)
+       ob%freq(j)=OscFreq(j)
+       ob%incr(j)=fc1*ob%freq(j)
+       ob%wtno(j)=WvtNmbr(j)
+    END FORALL
+    IF (lra) THEN
+       ob%accm(1:N_OSC)=(/(RndOscAccm(),j=1,N_OSC)/)
+    ELSE
+       ob%accm(1:N_OSC)=(/(0.0_RKIND,j=1,N_OSC)/)
+    END IF
 
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'
     
@@ -275,13 +281,9 @@ CONTAINS
     IMPLICIT NONE    
     TYPE(OscBank),INTENT(INOUT) :: ob
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
-    OPTIONAL :: msk
-    ! --- VARIABLES ---
-    LOGICAL :: lmsk(1:N_OSC)
     ! --- END CODE ---
-    lmsk=.TRUE. ; IF (PRESENT(msk)) lmsk=msk
-    ob%accm=ob%accm+MERGE(ob%incr,0.0_RKIND,lmsk)
-    ob%accm=MERGE(ob%accm-N_TIC_PER_CYC,ob%accm,ob%accm.GT.N_TIC_PER_CYC)
+    WHERE(msk)                      ob%accm=ob%accm+ob%incr
+    WHERE(ob%accm.GT.N_TIC_PER_CYC) ob%accm=ob%accm-REAL(N_TIC_PER_CYC,RKIND)
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 

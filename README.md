@@ -144,12 +144,11 @@ git clone https://github.com/frankenbeans/MZ2SYNTH.git`
 cd MZ2SYNTH/SOURCE/
 make -f Makefile.gfortran all clean
 ```
-Makefile.ifx is also provided that contains
+Makefile.ifx is also provided, which contains
 what is needed to obtain an executable with
-Intel Fortran for Linux.  Although these are
-be somewhat faster, they have other deficiencies as explained above.  Unless you
+Intel Fortran for Linux (IFX).  Although these are somewhat faster, they have other awkward deficiencies as explained above.  Unless you
 really need the faster executable, just use
-GNU Fortran.  I don't check that the IFX Makefiles work at every single commit... 
+GNU Fortran.  I don't check regularly that that the IFX makefiles work properly, but my nightly build runners check the GFortran stuff.
 
 (3) Now that our executable is compiled, we will go to the
     **MZSYNTH/EXAMPLES** subdirectory from where we are now, and run the

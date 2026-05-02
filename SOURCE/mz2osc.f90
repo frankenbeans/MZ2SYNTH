@@ -94,12 +94,11 @@ CONTAINS
     END IF
 
     fc1=REAL(N_TIC_PER_CYC,RKIND)/REAL(ob%smpr,RKIND)
-    DO j=1,N_OSC
-       ob%freq(j)=OscFreq(j)
-       ob%incr(j)=fc1*ob%freq(j)
-       ob%accm(j)=OscAccm(lra)
-       ob%wtno(j)=WvtNmbr(j)       
-    END DO
+    ob%freq(:)=OscFreq((/(j,j=1,N_OSC)/))
+    ob%incr(:)=fc1*ob%freq(:)
+    ob%accm(:)=MERGE((/(RndOscAccm(),j=1,N_OSC)/),0.0_RKIND,lra)
+    ob%wtno(:)=((/(WvtNmbr(j),j=1,N_OSC)/))
+
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'
     
     IF (PFL_DBUG) THEN
@@ -158,19 +157,14 @@ CONTAINS
       ! --- END CODE ---
     END FUNCTION OscFreq
 
-    FUNCTION OscAccm(r) RESULT(a)
+    FUNCTION RndOscAccm() RESULT(a)
       IMPLICIT NONE
       REAL(KIND=RKIND)   :: a
-      LOGICAL,INTENT(IN) :: r
       ! --- EXE CODE ---
-      IF (r) THEN
-         CALL RANDOM_NUMBER(a)
-         a=a*REAL(N_TIC_PER_CYC,RKIND)
-      ELSE
-         a=0
-      END IF
+      CALL RANDOM_NUMBER(a)
+      a=a*REAL(N_TIC_PER_CYC,RKIND)
       ! --- END CODE ---
-    END FUNCTION OscAccm
+    END FUNCTION RndOscAccm
   END SUBROUTINE OscBank_Init
 
   SUBROUTINE OscBank_Clear(ob)
@@ -283,17 +277,11 @@ CONTAINS
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
     OPTIONAL :: msk
     ! --- VARIABLES ---
-    INTEGER :: j
     LOGICAL :: lmsk(1:N_OSC)
     ! --- END CODE ---
     lmsk=.TRUE. ; IF (PRESENT(msk)) lmsk=msk
-    DO j=1,N_OSC
-       IF (.NOT.lmsk(j)) CYCLE
-       ob%accm(j)=ob%accm(j)+ob%incr(j)
-       DO WHILE(ob%accm(j).GT.N_TIC_PER_CYC)
-          ob%accm(j)=ob%accm(j)-N_TIC_PER_CYC
-       END DO
-    END DO
+    ob%accm=ob%accm+MERGE(ob%incr,0.0_RKIND,lmsk)
+    ob%accm=MERGE(ob%accm-N_TIC_PER_CYC,ob%accm,ob%accm.GT.N_TIC_PER_CYC)
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 

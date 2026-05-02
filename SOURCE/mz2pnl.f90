@@ -228,7 +228,7 @@ CONTAINS
     TYPE(Mz2Panel),INTENT(INOUT) :: P
     LOGICAL       ,INTENT(INOUT) :: DONE
     ! --- VARIABLES ---
-    INTEGER :: CC,NS,TI,J
+    INTEGER :: CC,NS,TI
     ! --- EXE CODE ---
     DONE=.FALSE.
     TI=NINT(SIGN(1.0_RKIND,P%SCANRT)) ! Increment can be positive or negative
@@ -242,24 +242,16 @@ CONTAINS
     ! -- Update current sample value in structure
     P%CS=NS
     IF (ASSOCIATED(P%DTSINE)) THEN
-       DO J=1,P%PI%NROWS
-          CALL RM_TICK(P%ASINE(J),P%WSINE(J),P%RMCNST,P%DTSINE(CC,J),P%VZERO)
-       END DO
+       CALL RM_TICK(P%ASINE(:),P%WSINE(:),P%RMCNST,P%DTSINE(CC,:),P%VZERO)
     END IF
     IF (ASSOCIATED(P%DTSQWV)) THEN
-       DO J=1,P%PI%NROWS
-          CALL RM_TICK(P%ASQWV(J),P%WSQWV(J),P%RMCNST,P%DTSQWV(CC,J),P%VZERO)
-       END DO       
+       CALL RM_TICK(P%ASQWV(:),P%WSQWV(:),P%RMCNST,P%DTSQWV(CC,:),P%VZERO)
     END IF
     IF (ASSOCIATED(P%DTSWTH)) THEN
-       DO J=1,P%PI%NROWS
-          CALL RM_TICK(P%ASWTH(J),P%WSWTH(J),P%RMCNST,P%DTSWTH(CC,J),P%VZERO)
-       END DO       
+       CALL RM_TICK(P%ASWTH(:),P%WSWTH(:),P%RMCNST,P%DTSWTH(CC,:),P%VZERO)
     END IF
     IF (ASSOCIATED(P%DTTRNG)) THEN
-       DO J=1,P%PI%NROWS
-          CALL RM_TICK(P%ATRNG(J),P%WTRNG(J),P%RMCNST,P%DTTRNG(CC,J),P%VZERO)
-       END DO       
+       CALL RM_TICK(P%ATRNG(:),P%WTRNG(:),P%RMCNST,P%DTTRNG(CC,:),P%VZERO)
     END IF    
     ! --- END CODE ---
     

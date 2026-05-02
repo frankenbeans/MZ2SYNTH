@@ -1,8 +1,12 @@
 *** README.txt ***
 
-This is the home of the MZ2SYNTH binary executables, built nightly by GitHub runners.
+This is the home of the MZ2SYNTH binary executables, built nightly by
+GitHub runners.
 
-WIN64: Requires Mingw-w64 runtime
+LINUX: Should run with default install
 MACOS: Homebrew's gcc@13 package
+WIN64: Requires Mingw-w64 runtime
 
-I have not tested these executables beyond starting them in -help mode in the action script.  Please report problems in the Issues discussion.
+I have not tested these executables beyond starting them in -help mode
+in the action script.  Please report problems in the Issues
+discussion.

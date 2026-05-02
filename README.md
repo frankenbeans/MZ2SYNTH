@@ -150,7 +150,7 @@ Intel Fortran for Linux (IFX).  Although these are somewhat faster, they have ot
 really need the faster executable, just use
 GNU Fortran.  I don't check regularly that that the IFX makefiles work properly, but my nightly build runners check the GFortran stuff.
 
-Makefiles.*.nochk disable the safety feature of runtime array bounds checking, giving somewhat faster executables.  What price your neck?
+Makefiles.*.nochk disable the safety feature of runtime array bounds checking, giving somewhat faster executables, but with potential undetected bad behaviour security loopholes, depending on exactly what you are doing.  What price your neck?
 
 (3) Now that our executable is compiled, we will go to the
     **MZSYNTH/EXAMPLES** subdirectory from where we are now, and run the

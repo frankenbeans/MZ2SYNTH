@@ -1,7 +1,7 @@
 name: Linux Makefile CI
 
 on:
-  workflow-dispatch:
+  workflow_dispatch:
   schedule:
     # Run at 01:00 UTC every day
     - cron: '0 1 * * *'  

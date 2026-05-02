@@ -1,6 +1,7 @@
 name: MacOS Makefile CI
 
 on:
+  workflow-dispatch:
   schedule:
     # Run at 02:00 UTC every day
     - cron: '0 2 * * *'  

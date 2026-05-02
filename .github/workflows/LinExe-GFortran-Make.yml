@@ -1,0 +1,32 @@
+name: Linux Makefile CI
+
+on:
+  schedule:
+    # Run at 01:00 UTC every day
+    - cron: '0 1 * * *'  
+jobs:
+  build:    
+    runs-on: ubuntu-latest
+    steps:            
+    - name: Check out repository
+      uses: actions/checkout@v4
+    
+    - name: Change directory, build project and run with -help
+      run: |             
+             cd SOURCE ;
+             gcc --version ;
+             make -f Makefile.gfortran all clean ;
+             rm ../BIN/LINUX/*
+             mv mz2 ../BIN/LINUX ;
+             ls ../BIN/LINUX ;
+             echo '' ;
+             ../BIN/LINUX/mz2 -help ;
+
+    - name: Commit changes
+      run: |
+            git config user.name github-actions ;
+            git config user.email github-actions@github.com ;
+            git add --all
+            git commit --allow-empty -a -m "Yay, Linux executable generated" ;
+            git push ;
+

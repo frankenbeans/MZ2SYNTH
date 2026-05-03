@@ -94,11 +94,9 @@ CONTAINS
     END IF
 
     fc1=REAL(N_TIC_PER_CYC,RKIND)/REAL(ob%smpr,RKIND)
-    FORALL(j=1:N_OSC)
-       ob%freq(j)=OscFreq(j)
-       ob%incr(j)=fc1*ob%freq(j)
-       ob%wtno(j)=WvtNmbr(j)
-    END FORALL    
+    ob%freq(1:N_OSC)=(/(OscFreq(j)    ,j=1,N_OSC)/)
+    ob%incr(1:N_OSC)=(/(fc1*ob%freq(j),j=1,N_OSC)/)
+    ob%wtno(1:N_OSC)=(/(WvtNmbr(j)    ,j=1,N_OSC)/)
     IF (lra) ob%accm(1:N_OSC)=(/(RndOscAccm(),j=1,N_OSC)/)
 
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'

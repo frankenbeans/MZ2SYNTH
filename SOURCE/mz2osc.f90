@@ -98,12 +98,8 @@ CONTAINS
        ob%freq(j)=OscFreq(j)
        ob%incr(j)=fc1*ob%freq(j)
        ob%wtno(j)=WvtNmbr(j)
-    END FORALL
-    IF (lra) THEN
-       ob%accm(1:N_OSC)=(/(RndOscAccm(),j=1,N_OSC)/)
-    ELSE
-       ob%accm(1:N_OSC)=(/(0.0_RKIND,j=1,N_OSC)/)
-    END IF
+    END FORALL    
+    IF (lra) ob%accm(1:N_OSC)=(/(RndOscAccm(),j=1,N_OSC)/)
 
     IF (PFL_VERB) WRITE(*,700) 'Oscillator accumulators initialized'
     
@@ -155,7 +151,8 @@ CONTAINS
       REAL(KIND=RKIND)   :: f
       INTEGER,INTENT(IN) :: n
       ! --- VARIABLES ---
-      REAL(KIND=RKIND),PARAMETER :: rdenom=1.0_RKIND/REAL(N_OSC_PER_OCT,RKIND)
+      REAL(KIND=RKIND),PARAMETER :: rdenom= &
+           1.0_RKIND/REAL(N_OSC_PER_OCT,RKIND)
       REAL(KIND=RKIND)   :: x
       ! --- EXE CODE ---
       x=REAL(n-REFERENCE_SMT_NUM*N_OSC_PER_SMT,RKIND)*rdenom
@@ -164,11 +161,16 @@ CONTAINS
     END FUNCTION OscFreq
 
     FUNCTION RndOscAccm() RESULT(a)
+      ! ----------------------------------------------------------------
+      ! Return random real number in [0,N_TIC_PER_CYC-1]
+      ! ----------------------------------------------------------------
       IMPLICIT NONE
       REAL(KIND=RKIND)   :: a
-      ! --- EXE CODE ---
+      ! --- VARIABLES ---
+      REAL(KIND=RKIND),PARAMETER :: NTPC=REAL(N_TIC_PER_CYC,RKIND)
+      ! --- EXE CODE ---      
       CALL RANDOM_NUMBER(a)
-      a=a*REAL(N_TIC_PER_CYC,RKIND)
+      a=AINT(a*NTPC)
       ! --- END CODE ---
     END FUNCTION RndOscAccm
   END SUBROUTINE OscBank_Init
@@ -208,7 +210,7 @@ CONTAINS
        DO j=1,N_OSC
           IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
           IF (msk(j)) THEN
-             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
+             x0=NINT(ob%accm(j))+1
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tsin(x0,ob%wtno(j)) ; y1=ob%tsin(x1,ob%wtno(j))
@@ -220,7 +222,7 @@ CONTAINS
        DO j=1,N_OSC
           IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
           IF (msk(j)) THEN
-             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
+             x0=NINT(ob%accm(j))+1
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
@@ -232,7 +234,7 @@ CONTAINS
        DO j=1,N_OSC
           IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
           IF (msk(j)) THEN
-             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
+             x0=NINT(ob%accm(j))+1
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
@@ -244,7 +246,7 @@ CONTAINS
        DO j=1,N_OSC
           IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
           IF (msk(j)) THEN
-             x0=MIN(INT(ob%accm(j))+1,N_TIC_PER_CYC)
+             x0=NINT(ob%accm(j))+1
              x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
              y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
@@ -277,13 +279,15 @@ CONTAINS
     END FUNCTION Yli
   END SUBROUTINE OscBank_Update
 
-  SUBROUTINE OscBank_Tick(ob,msk)
+  PURE SUBROUTINE OscBank_Tick(ob,msk)
     IMPLICIT NONE    
     TYPE(OscBank),INTENT(INOUT) :: ob
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
+    ! --- VARIABLES ---
+    INTEGER,PARAMETER :: maxacc=N_TIC_PER_CYC-1
     ! --- END CODE ---
-    WHERE(msk)                      ob%accm=ob%accm+ob%incr
-    WHERE(ob%accm.GT.N_TIC_PER_CYC) ob%accm=ob%accm-REAL(N_TIC_PER_CYC,RKIND)
+    WHERE(msk)               ob%accm=ob%accm+ob%incr
+    WHERE(ob%accm.GT.maxacc) ob%accm=ob%accm-maxacc
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 

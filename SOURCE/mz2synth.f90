@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2026-05-01'
+#define PROGVERS '0.1/2026-05-03'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  
@@ -70,59 +70,59 @@ CONTAINS
           EXIT
        CASE('-V','-VERBOSE')
           PFL_VERB=.NOT.PFL_VERB
-          RARG='VERBOSE MODE'
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+          RARG='Verbose mode'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
        CASE('-D','-DEBUG')
           PFL_DBUG=.NOT.PFL_DBUG
-          RARG='DEBUG MODE'
+          RARG='Debug mode'
           IF (PFL_DBUG) THEN
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
           ELSE
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'off'
           END IF
        CASE('-P','-DYNAMIC-COMPRESSION')
           CMPR=.NOT.CMPR
-          RARG='DYNAMIC COMPRESSION'
+          RARG='Dynamic compression'
           IF (CMPR) THEN
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
           ELSE
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'off'
           END IF          
        CASE('-W','-OVERWRITE')
           PFL_OVWT=.NOT.PFL_OVWT
-          RARG='OVERWRITE MODE'
+          RARG='Overwrite mode'
           IF (PFL_OVWT) THEN
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
           ELSE
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'off'
           END IF
        CASE('-X','-FIXED-PHASE')
           FXPH=.NOT.FXPH
-          RARG='FIXED PHASE MODE'
+          RARG='Fixed phase mode'
           IF (FXPH) THEN
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
           ELSE
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'off'
           END IF          
        CASE('-Z','-ZERO-PHASE')
           ZRPH=.NOT.ZRPH
-          RARG='ZERO PHASES INITIALLY'
+          RARG='Zero phase mode'
           IF (FXPH) THEN
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'ON'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
           ELSE
-             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'OFF'
+             IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'off'
           END IF          
        ! --- BINARY ARGUMENTS ---
        CASE('-A','-ADVANCE')
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET ADVANCE RATE'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set advance rate'
           NARG=NARG+1
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 900
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=900) ACPS
           IF (ACPS.LT.1) GOTO 900
-          IF (PFL_VERB) WRITE(*,710) 'ADVANCE RATE =',ACPS,'COL/S'
+          IF (PFL_VERB) WRITE(*,710) 'Advance rate =',ACPS,'col/s'
        CASE('-C','-CHANNEL-SELECT')
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET CHANNEL DEFINITIONS'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set channel definitions'
           NARG=NARG+1          
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 910
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
@@ -131,45 +131,46 @@ CONTAINS
              IF (SCAN(CARG(K:K),'RGBLM').EQ.0) GOTO 910             
           END DO
           VCHS=CARG(1:NVCH)
-          IF (PFL_VERB) WRITE(*,700) 'CHANNEL SELECTOR =',VCHS
+          IF (PFL_VERB) WRITE(*,700) 'Channel selection =',VCHS
        CASE('-M','-VOLUME-MULTIPLIER')
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET VOLUME MULTIPLIER'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set volume multiplier'
           NARG=NARG+1
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 920
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=920) VMUL
           IF (VMUL.LT.0) GOTO 920
-          IF (PFL_VERB) WRITE(*,710) 'VOLUME MULTIPLIER =',VMUL
+          IF (PFL_VERB) WRITE(*,710) 'Volume multiplier =',VMUL
        CASE('-O','-OUTPUT-FILE')
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET OUTPUT FILE'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set output file'
           NARG=NARG+1
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 940
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           POFN=CARG
-          IF (PFL_VERB) WRITE(*,700) 'OUTPUT FILE IS',TRIM(POFN)
+          IF (PFL_VERB) WRITE(*,700) 'Output file is',TRIM(POFN)
           INQUIRE(FILE=POFN,EXIST=FEX,WRITE=FMWT)
           IF (FEX.AND..NOT.PFL_OVWT) GOTO 945
           IF (FEX.AND.PFL_OVWT.AND.FMWT.EQ.'NO') GOTO 947
        CASE('-R','-TRANSITION')
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET TRANSITION FRACTION'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set transition fraction'
           NARG=NARG+1
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 950
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=948) TRZF
           IF (TRZF.LT.0.OR.TRZF.GT.1) GOTO 950
-          IF (PFL_VERB) WRITE(*,710) 'TRANSITION FRACTION =',TRZF
+          IF (PFL_VERB) WRITE(*,710) 'Transition fraction =',TRZF
        CASE('-S','-SAMPLING-RATE')
-          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','SET SAMPLING RATE'
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set sampling rate'
           NARG=NARG+1
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 948
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=948) SMPR
           IF (SMPR.LT.DSMP/2) GOTO 948
-          IF (PFL_VERB) WRITE(*,710) 'SAMPLING RATE =',SMPR
-        CASE DEFAULT
+          IF (PFL_VERB) WRITE(*,710) 'Sampling rate =',SMPR
+       CASE DEFAULT
           IF (CARG(1:1).EQ.'-') GOTO 990
+          IF (NARG.NE.COMMAND_ARGUMENT_COUNT()) GOTO 980
           PIFN=CARG
-          IF (PFL_VERB) WRITE (*,700) 'INPUT FILE IS',TRIM(PIFN)
+          IF (PFL_VERB) WRITE (*,700) 'Input file is',TRIM(PIFN)
           INQUIRE(FILE=PIFN,EXIST=FEX,READ=FMRD)
           IF (.NOT.FEX)           GOTO 960
           IF (TRIM(FMRD).EQ.'NO') GOTO 960
@@ -185,16 +186,17 @@ CONTAINS
 700 FORMAT('*INF (Mz2Syn_CmdLine):',999(:,1X,A))
 710 FORMAT('*INF (Mz2Syn_CmdLine):',999(:,1X,A,:,1X,G13.6))
 800 FORMAT('*ERR (Mz2Syn_CmdLine):',999(:,1X,A,:,1X,I0))
-900 WRITE(*,800) 'ADVANCE RATE MUST BE PRESENT AND >= 1'         ; STOP
-910 WRITE(*,800) 'CHANNEL MULTIPLIER MUST BE FOUR OF [RGBLM]'    ; STOP
-920 WRITE(*,800) 'VOLUME MULTIPLIER MUST BE PRESENT AND >= 0'    ; STOP
-940 WRITE(*,800) 'EXPECTING OUTPUT FILE NAME'                    ; STOP
-945 WRITE(*,800) 'OUTPUT FILE EXISTS AND OVERWRITE MODE IS OFF'  ; STOP
-947 WRITE(*,800) 'OUTPUT FILE CANNOT BE OPENED IN WRITE MODE'    ; STOP
-948 WRITE(*,800) 'SAMPLING RATE MUST BE INT >=',NINT(DSMP)/2     ; STOP
-950 WRITE(*,800) 'MISSING OR BAD TRANSITION FRACTION < 0 OR > 1' ; STOP
-960 WRITE(*,800) 'CANNOT READ INPUT FILE '//TRIM(PIFN)           ; STOP
-990 WRITE(*,800) 'INVALID COMMAND LINE OPTION '//TRIM(CARG)      ; STOP
+900 WRITE(*,800) 'Advance rate must be present and >= 1'         ; STOP
+910 WRITE(*,800) 'Channel multiplier must be four of [RGBLM]'    ; STOP
+920 WRITE(*,800) 'Volume multiplier must be present and >= 0'    ; STOP
+940 WRITE(*,800) 'Expecting output file name'                    ; STOP
+945 WRITE(*,800) 'Output file exists but overwrite mode is off'  ; STOP
+947 WRITE(*,800) 'Output file cannot be opened in WRITE mode'    ; STOP
+948 WRITE(*,800) 'Sampling rate must be integer >=',NINT(DSMP)/2 ; STOP
+950 WRITE(*,800) 'Transition frac must be present and in [0,1]'  ; STOP
+960 WRITE(*,800) 'Cannot read input file '//TRIM(PIFN)           ; STOP
+980 WRITE(*,800) 'Trailing rubbish after input file argument'    ; STOP
+990 WRITE(*,800) 'Invalid command-line option '//TRIM(CARG)      ; STOP
   END SUBROUTINE Mz2Syn_CmdLine
 
   SUBROUTINE Mz2Syn_Help()
@@ -258,7 +260,7 @@ CONTAINS
     RETURN
 700 FORMAT('*INF (Mz2Syn_Init):',1X,999(:,A,1X,I0,1X))
 800 FORMAT('*ERR (Mz2Syn_Init):',1X,999(:,A,1X))
-900 WRITE(*,800) 'FILE OUTPUT ERROR WHILE WRITING '//TRIM(POFN) ; STOP    
+900 WRITE(*,800) 'File output error while writing '//TRIM(POFN) ; STOP    
   END SUBROUTINE Mz2Syn_Init
 
   SUBROUTINE Mz2Syn_Tidy()
@@ -272,34 +274,43 @@ CONTAINS
     RETURN
     ! --- END CODE ---    
 800 FORMAT('*ERR (Mz2Syn_Tidy):',999(:,1X,A))
-900 WRITE(*,800) 'FILE OUTPUT ERROR WHILE WRITING '//TRIM(POFN) ; STOP        
+900 WRITE(*,800) 'File output error while writing '//TRIM(POFN) ; STOP        
   END SUBROUTINE Mz2Syn_Tidy
 
   SUBROUTINE Mz2Syn_Generate()
     IMPLICIT NONE
     ! --- VARIABLES ---
     LOGICAL :: DONE
-    INTEGER :: J,JP,FS
+    INTEGER :: J,JP,FS,NHCLP
     REAL(KIND=RKIND) :: TDATA,TDATA1,TDATA2,TDATA3,TDATA4
     LOGICAL :: OTICK(1:N_OSC)
     ! --- EXE CODE  ---
     J=0
     JP=SMPR
-    ! ..........................................................................
+    NHCLP=0
+    ! ==========================================================================
     ! BEGIN MAIN LOOP |
     ! ----------------+
 10  J=J+1
-    CALL Mz2Pnl_Tick(PN,DONE)
-    IF (DONE) GOTO 20
-    IF (PFL_VERB) THEN
-       IF (J.GE.JP) THEN
-          WRITE(*,700) 'SMPL=',J,  &
-               '; %DONE =',100.0_RKIND*REAL(J,RKIND)/REAL(ZDATA,RKIND), &
-               '; TIME/S=',REAL(J,RKIND) / ob%smpr
-          JP=JP+SMPR
-       END IF
+    ! ..........................................................................
+    ! Tick panel.
+    !
+    CALL Mz2Pnl_Tick(PN,DONE)    
+    ! ..........................................................................
+    ! In verbose mode, write a progress indicator update for every second of
+    ! generated data and one entry for the end.
+    !
+    IF (PFL_VERB.AND.(DONE.OR.J.GE.JP)) THEN
+       WRITE(*,700) 'SmplNo=',J,  &
+            '; %Done =',100.0_RKIND*REAL(J,RKIND)/REAL(ZDATA,RKIND), &
+            '; Time/s=',REAL(J,RKIND) / ob%smpr
+       JP=JP+SMPR
     END IF
-    ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ! ..........................................................................
+    ! If panel said we're done, then exit loop.
+    !    
+    IF (DONE) GOTO 20
+    ! ..........................................................................
     ! Decide which oscillators in the oscillator banks need to be ticked.
     ! In fixed-phase mode, all of them do, but otherwise only those for whom
     ! there would be a nonzero weight in the panel do.  Then tick 'em.
@@ -322,8 +333,10 @@ CONTAINS
        END IF
     END IF
     CALL OscBank_Tick(ob,OTICK)
+    ! ..........................................................................
+    ! Update oscillator banks and obtain current values of each voice, after
+    ! which combine all four voices and multiply by volume multiplier.
     !
-    ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     TDATA=0 ; TDATA1=0 ; TDATA2=0 ; TDATA3=0 ; TDATA4=0
     IF (ASSOCIATED(PN%DTSINE)) THEN
        CALL OscBank_Update(ob,PN%WSINE.GT.0,V_SIN)
@@ -340,23 +353,41 @@ CONTAINS
     IF (ASSOCIATED(PN%DTTRNG)) THEN
        CALL OscBank_Update(ob,PN%WTRNG.GT.0,V_TRI)
        TDATA4=SUM(PN%WTRNG*ob%vval(:,V_TRI),PN%WTRNG.GT.0)
-    END IF    
+    END IF
     TDATA=VMUL*(TDATA1+TDATA2+TDATA3+TDATA4)
-    IF (CMPR) TDATA=Mz2Syn_Clip(TDATA)
-    CALL Au_WrtSmp(AU,REAL((/TDATA,TDATA/),C_FLOAT),FS)
+    ! ..........................................................................
+    ! Soft or hard clip data and if hard then increment number of hard-clipped
+    ! samples.
+    !
+    IF (CMPR) THEN       
+       TDATA=Mz2Syn_SoftClip(TDATA) ! Soft clip compression
+    ELSE IF (ABS(TDATA).GT.1.0_RKIND) THEN
+       TDATA=SIGN(1.0_RKIND,TDATA)  ! Simple hard clip
+       NHCLP=NHCLP+1
+    END IF
+    ! ..........................................................................
+    ! Write current data to both channels of the audio output file.
+    CALL Au_WrtSmp(AU,REAL((/TDATA,TDATA/),C_FLOAT),FS)    
     IF (FS.NE.0) GOTO 900
+    ! ..........................................................................
+    ! Loop back.
+    !
     GOTO 10
     ! --------------+
     ! END MAIN LOOP |
-    ! ..........................................................................
-20  RETURN
+    ! ==========================================================================
+20  CONTINUE
+    IF (NHCLP.GT.0) WRITE(*,810) NHCLP
+    RETURN
     ! --- END CODE  ---
 700 FORMAT('*INF (Mz2_Generate):',1X,A,1X,I8,1X,A,G12.5,A,G12.5)
-800 FORMAT('*INF (Mz2_Generate): ERROR WRITING OUTPUT FILE',1X,A,1X,'TO UNIT',1X,I0)
+800 FORMAT('*INF (Mz2_Generate): Error writing output file', &
+           1X,A,1X,'to unit',1X,I0)
+810 FORMAT('*INF (Mz2_Generate): Number of hard-clipped samples=',1X,I0)
 900 WRITE(*,800) TRIM(POFN),OFU ; STOP    
   END SUBROUTINE Mz2Syn_Generate
 
-  ELEMENTAL FUNCTION Mz2Syn_Clip(X)
+  ELEMENTAL FUNCTION Mz2Syn_SoftClip(X)
     ! +------------------------------------------------------------------------+
     ! | REFERENCE:  Fabián Esqueda, Stefan Bilbao & Vesa Välimäki;             |
     ! |            "Antialiased soft clipping using a polynomial approximation |
@@ -375,15 +406,15 @@ CONTAINS
     ! |            US Patent 5,570,424, 29 Oct. 1996                           |
     ! +------------------------------------------------------------------------+
     IMPLICIT NONE
-    REAL(KIND=RKIND) :: Mz2Syn_Clip
+    REAL(KIND=RKIND) :: Mz2Syn_SoftClip
     ! --- DUMMIES ---
     REAL(KIND=RKIND), INTENT(IN) :: X
     ! --- EXE CODE ---
     IF (ABS(X).LT.1) THEN
-       Mz2Syn_Clip=0.5_RKIND*(3.0_RKIND*X-X**3)
+       Mz2Syn_SoftClip=0.5_RKIND*(3.0_RKIND*X-X**3)
     ELSE
-       Mz2Syn_Clip=SIGN(1.0_RKIND,X) ! VALUE OF 1.0_R WITH SIGN OF X
+       Mz2Syn_SoftClip=SIGN(1.0_RKIND,X) ! VALUE OF 1.0_R WITH SIGN OF X
     END IF
     ! --- END CODE ---
-  END FUNCTION Mz2Syn_Clip
+  END FUNCTION Mz2Syn_SoftClip
 END PROGRAM

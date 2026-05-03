@@ -1,65 +1,75 @@
 ! ----------------------------------------------------------------------
 ! CASECONV.F90
 !
-! FORTRAN ROUTINES FOR CONVERTING STRINGS TO UPPERCASE OR LOWERCASE.
+! FORTRAN SUBROUTINES FOR IN-PLACE CASE CONVERSION OF CHARACTER STRINGS.
 !
-! COPYRIGHT (C) 2025 BY E. LAMPRECHT -  ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2026 BY E. LAMPRECHT -  ALL RIGHTS RESERVED.
 ! ----------------------------------------------------------------------
 
 MODULE CaseConv
   IMPLICIT NONE
+  INTEGER,PARAMETER :: SHFT=ICHAR('a')-ICHAR('A')
+  PRIVATE :: SHFT,INRANG,ISLOWR,ISUPPR
+  PUBLIC  :: TOLOWR,TOUPPR
 
 CONTAINS
+  ! ----------------------------------------------------------------------
+  ! PURE FUNCTION INRANG(C,CA,CZ)
+  ! RETURN .TRUE. IF C IS IN RANGE CA TO CZ
+  !
+  PURE FUNCTION INRANG(C,CA,CZ)
+    IMPLICIT NONE
+    LOGICAL :: INRANG
+    CHARACTER(LEN=1),INTENT(IN) :: C,CA,CZ
+    INRANG=(ICHAR(C).GE.ICHAR(CA).AND.ICHAR(C).LE.ICHAR(CZ))
+  END FUNCTION INRANG
   
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE TOUPPR(C)
-  ! --------------------
-  ! CONVERT VARIABLE-LENGTH CHARACTER STRING C TO UPPER CASE.
-  ! 
-  SUBROUTINE TOUPPR(C)
+  ! PURE FUNCTION ISLOWR(C)
+  ! RETURN .TRUE. IF C IS A LOWER CASE LETTER, .FALSE. OTHERWISE
+  !
+  PURE FUNCTION ISLOWR(C)
     IMPLICIT NONE
-    CHARACTER(LEN=*),INTENT(INOUT) :: C
-    CALL LTRSHF(C,.TRUE.)
+    LOGICAL :: ISLOWR
+    CHARACTER(LEN=1),INTENT(IN) :: C
+    ISLOWR=INRANG(C,'a','z')
+  END FUNCTION ISLOWR
+
+  ! ----------------------------------------------------------------------
+  ! PURE FUNCTION ISUPPR(C)
+  ! RETURN .TRUE. IF C IS AN UPPER CASE LETTER, .FALSE. OTHERWISE
+  !
+  PURE FUNCTION ISUPPR(C)
+    IMPLICIT NONE
+    LOGICAL :: ISUPPR
+    CHARACTER(LEN=1),INTENT(IN) :: C
+    ISUPPR=INRANG(C,'A','Z')
+  END FUNCTION ISUPPR
+  
+  ! ----------------------------------------------------------------------
+  ! PURE SUBROUTINE TOUPPR(C)
+  ! CONVERT VARIABLE-LENGTH CHARACTER STRING C TO UPPER CASE, IN PLACE.
+  ! 
+  PURE SUBROUTINE TOUPPR(S)
+    IMPLICIT NONE
+    CHARACTER(LEN=*),INTENT(INOUT) :: S
+    INTEGER :: J
+    DO J=1,LEN(S)
+       IF (ISLOWR(S(J:J))) S(J:J)=ACHAR(ICHAR(S(J:J))-SHFT)
+    END DO
   END SUBROUTINE TOUPPR
   
   ! ----------------------------------------------------------------------
-  ! SUBROUTINE TOLOWR(C)
-  ! --------------------
-  ! CONVERT VARIABLE-LENGTH CHARACTER STRING C TO LOWER CASE.
+  ! PURE SUBROUTINE TOLOWR(C)
+  ! CONVERT VARIABLE-LENGTH CHARACTER STRING C TO LOWER CASE, IN PLACE.
   ! 
-  SUBROUTINE TOLOWR(C)
+  PURE SUBROUTINE TOLOWR(S)
     IMPLICIT NONE
-    CHARACTER(LEN=*),INTENT(INOUT) :: C
-    CALL LTRSHF(C,.FALSE.)
+    CHARACTER(LEN=*),INTENT(INOUT) :: S
+    INTEGER :: J
+    DO J=1,LEN(S)
+       IF (ISUPPR(S(J:J))) S(J:J)=ACHAR(ICHAR(S(J:J))+SHFT)
+    END DO    
   END SUBROUTINE TOLOWR
-  
-  ! ----------------------------------------------------------------------
-  ! SUBROUTINE LTRSHF(C,TOUP)
-  ! -------------------------
-  ! SHIFT SINGLE-LETTER CHARACTER STRING C TO UPPER CASE IF LOGICAL TOUP
-  ! CONTAINS THE VALUE .TRUE., OR TO LOWER CASE OTHERWISE.
-  !
-  ! NOTE:  ONLY LETTERS 'A-z' ARE AFFECTED;  ALL OTHER CHARACTERS ARE
-  ! ----   IGNORED.
-  !
-  SUBROUTINE LTRSHF(C,TOUP)
-    IMPLICIT NONE
-    ! --- DUMMY ARGS ---
-    CHARACTER(LEN=*),INTENT(INOUT) :: C
-    LOGICAL         ,INTENT(IN)    :: TOUP
-    ! --- VARIABLES ---
-    INTEGER :: SHFT,J
-    LOGICAL :: TOSHFT
-    SHFT=ICHAR('a')-ICHAR('A')
-    IF (TOUP) SHFT=-1*SHFT
-    DO J=1,LEN(C)
-       TOSHFT=(TOUP.AND.ICHAR(C(J:J)).GE.ICHAR('a')                            &
-                   .AND.ICHAR(C(J:J)).LE.ICHAR('z'))                           &
-              .OR.                                                             &
-              (.NOT.TOUP  .AND.ICHAR(C(J:J)).GE.ICHAR('A')                     &
-                          .AND.ICHAR(C(J:J)).LE.ICHAR('Z'))
-       IF (TOSHFT) C(J:J)=CHAR(ICHAR(C(J:J))+SHFT)
-    END DO
-  END SUBROUTINE LTRSHF
   
 END MODULE CaseConv

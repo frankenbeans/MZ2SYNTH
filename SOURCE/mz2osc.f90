@@ -284,8 +284,10 @@ CONTAINS
     ! --- VARIABLES ---
     INTEGER,PARAMETER :: maxacc=N_TIC_PER_CYC-1
     ! --- END CODE ---
-    WHERE(msk)               ob%accm=ob%accm+ob%incr
-    WHERE(ob%accm.GT.maxacc) ob%accm=ob%accm-maxacc
+    !NB: only need to "tick" oscillators with frequencies at or below Nyquist.
+    WHERE(msk.AND.2*ob%freq.le.ob%smpr) ob%accm=ob%accm+ob%incr
+    ! Deal with any overflowing accumulators
+    WHERE(ob%accm.GT.maxacc)            ob%accm=ob%accm-maxacc
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 

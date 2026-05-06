@@ -62,6 +62,10 @@
 #define CONST_DCHS 'RGBM'
 #endif
 
+#ifndef CONST_DAFM
+#define CONST_DAFM C_FLOAT
+#endif
+
 #ifndef CONST_DVML
 #define CONST_DVML 0.1_RKIND
 #endif
@@ -100,7 +104,8 @@
 
 
 MODULE CONSTANT
-  IMPLICIT NONE
+  USE ISO_C_BINDING
+  IMPLICIT NONE  
 
   ! --- REAL NUMBER KIND ---
   INTEGER,PARAMETER :: RKIND=CONST_RKIND ! DOUBLE PRECISION
@@ -125,6 +130,7 @@ MODULE CONSTANT
   ! --- PROGRAM DEFAULT OPTION VALUES ---
   INTEGER            ,PARAMETER :: ZCHS = 4
   CHARACTER(LEN=ZCHS),PARAMETER :: DCHS = CONST_DCHS ! Colour channel spec
+  INTEGER            ,PARAMETER :: DAFM = CONST_DAFM ! Audio format (s/d)
   REAL(KIND=RKIND)   ,PARAMETER :: DVML = CONST_DVML ! Volume multiplier
   REAL(KIND=RKIND)   ,PARAMETER :: DADV = CONST_DADV ! Advance rate (col/s)
   REAL(KIND=RKIND)   ,PARAMETER :: DFTZ = CONST_DFTZ ! Transition zone fraction

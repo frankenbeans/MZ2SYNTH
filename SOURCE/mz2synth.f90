@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2026-05-03'
+#define PROGVERS '0.1/2026-05-06'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  
@@ -22,7 +22,7 @@ PROGRAM Mz2Synth
   INTEGER,PARAMETER   :: ZARG=ZSTR
   CHARACTER(LEN=ZARG) :: PIFN=DIFN
   CHARACTER(LEN=ZARG) :: POFN=DOFN
-  CHARACTER(LEN=NVCH) :: VCHS=DCHS
+  CHARACTER(LEN=ZARG) :: VCHS=DCHS
   REAL(KIND=RKIND)    :: VMUL=DVML
   REAL(KIND=RKIND)    :: ACPS=DADV
   REAL(KIND=RKIND)    :: TRZF=DFTZ
@@ -30,6 +30,7 @@ PROGRAM Mz2Synth
   LOGICAL             :: FXPH=DFXP
   LOGICAL             :: ZRPH=DZRP
   INTEGER             :: SMPR=DSMP
+  INTEGER             :: AFMT=DAFM
   ! --- VARIABLES ---
   INTEGER             :: ZDATA
   TYPE(OscBank)       :: OB
@@ -49,7 +50,7 @@ CONTAINS
   SUBROUTINE Mz2Syn_CmdLine()
     IMPLICIT NONE
     ! --- VARIABLES ---
-    CHARACTER(LEN=ZARG) :: CARG='',RARG=''
+    CHARACTER(LEN=ZARG) :: CARG='',RARG='',TEMP=''
     CHARACTER(LEN=10)   :: FMRD='',FMWT=''
     INTEGER             :: NARG,K
     LOGICAL             :: FEX,HLPX
@@ -126,12 +127,28 @@ CONTAINS
           NARG=NARG+1          
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 910
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
-          IF (LEN(TRIM(CARG)).NE.NVCH) GOTO 910          
-          DO K=1,NVCH
-             IF (SCAN(CARG(K:K),'RGBLM').EQ.0) GOTO 910             
-          END DO
+          IF (LEN(TRIM(CARG)).NE.NVCH) GOTO 910
           VCHS=CARG(1:NVCH)
-          IF (PFL_VERB) WRITE(*,700) 'Channel selection =',VCHS
+          CALL TOUPPR(VCHS)
+          DO K=1,NVCH
+             IF (SCAN(VCHS(K:K),'RGBLM').EQ.0) GOTO 910             
+          END DO
+          IF (PFL_VERB) WRITE(*,700) 'Channel selection =',TRIM(VCHS)
+       CASE('-F','-AUDIO-FORMAT')
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set audio format'
+          NARG=NARG+1          
+          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 910
+          CALL GET_COMMAND_ARGUMENT(NARG,CARG)
+          IF (LEN(TRIM(CARG)).LT.1) GOTO 910          
+          TEMP=TRIM(CARG) ; CALL TOUPPR(TEMP)
+          SELECT CASE (TRIM(TEMP))
+          CASE('SINGLE')
+             AFMT=C_FLOAT
+          CASE('DOUBLE')
+             AFMT=C_DOUBLE
+          CASE DEFAULT
+          END SELECT
+          IF (PFL_VERB) WRITE(*,700) 'Audio sample format =',TRIM(TEMP)
        CASE('-M','-VOLUME-MULTIPLIER')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set volume multiplier'
           NARG=NARG+1
@@ -222,10 +239,13 @@ CONTAINS
          'Toggle fixed phase mode','off'
     WRITE(*,710) '-z','-zero-phase','',                    &
          'Toggle zero phase mode','off'
+    ! --- Binary options ---
     WRITE(*,710) '-a','-advance','<r>',                    &
          'Set advance rate in cols/sec ','10'
     WRITE(*,710) '-c','-channel-select','<sqwt>',          &
          'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBLM'
+    WRITE(*,710) '-f','-audio-format','<afmt>',            &
+         'Set audio format to "single"/"double"','single'
     WRITE(*,710) '-m','-volume-multiplier','<m>',          &
          'Set volume multiplier (m > 0)','0.1'
     WRITE(*,710) '-o','-output-file','<ofn>',              &
@@ -246,12 +266,13 @@ CONTAINS
   SUBROUTINE Mz2Syn_Init()
     IMPLICIT NONE
     ! --- VARIABLES ---
-    INTEGER :: FS
+    INTEGER :: FS,AF
     ! --- EXE CODE ---
     CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
     IF (PFL_DBUG) CALL OscBank_Dump(ob)
     CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
-    CALL Au_WrtHdr(AU,POFN,OFU,AUF_FLT_LINEAR_32B,SMPR,DNCH,PFL_OVWT,FS)
+    AF=AUF_FLT_LINEAR_32B; IF (AFMT.EQ.C_DOUBLE) AF=AUF_FLT_LINEAR_64B
+    CALL Au_WrtHdr(AU,POFN,OFU,AF,SMPR,DNCH,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900
     ZDATA=PN%PI%NCOLS*NINT(PN%SMPLRT/PN%SCANRT) ! SMPL = COL * SMPL/S * S/COL
     IF (PFL_VERB) WRITE(*,700) 'Number of samples to generate:',ZDATA,&
@@ -281,7 +302,7 @@ CONTAINS
     IMPLICIT NONE
     ! --- VARIABLES ---
     LOGICAL :: DONE
-    INTEGER :: J,JP,FS,NHCLP
+    INTEGER :: J,JP,JS,FS,NHCLP
     REAL(KIND=RKIND) :: TDATA,TDATA1,TDATA2,TDATA3,TDATA4
     LOGICAL :: OTICK(1:N_OSC)
     ! --- EXE CODE  ---
@@ -367,7 +388,14 @@ CONTAINS
     END IF
     ! ..........................................................................
     ! Write current data to both channels of the audio output file.
-    CALL Au_WrtSmp(AU,REAL((/TDATA,TDATA/),C_FLOAT),FS)    
+    ! Note that the KIND argument to REAL(.) has to be constant, hence this
+    ! stupid if-block structure.
+    !
+    IF (AFMT.EQ.C_FLOAT) THEN
+       CALL Au_WrtSmp(AU,REAL((/(TDATA,JS=1,AU%NCHN)/),C_FLOAT),FS)
+    ELSE
+       CALL Au_WrtSmp(AU,REAL((/(TDATA,JS=1,AU%NCHN)/),C_DOUBLE),FS)
+    END IF
     IF (FS.NE.0) GOTO 900
     ! ..........................................................................
     ! Loop back.

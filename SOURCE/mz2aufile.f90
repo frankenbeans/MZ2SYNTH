@@ -264,7 +264,7 @@ CONTAINS
     SNAU%BCUR=BE+1
     RETURN
     ! --- END CODE  --- #NEW:2026-05-01a
-800 FORMAT('*ERR (Au_WrtSmp_R32):',1X,A,1X,I0)
+800 FORMAT('*ERR (Au_WrtSmp_R64):',1X,A,1X,I0)
 900 WRITE(*,800) 'Invalid call with encoding format=',SNAU%ENCD ; STOP
 910 WRITE(*,800) 'Invalid call with SIZE(AUDS).NE.SNAU%NCHN=',SNAU%NCHN ; STOP
   END SUBROUTINE Au_WrtSmp_R64

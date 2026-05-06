@@ -1,6 +1,9 @@
 # TODO for MZ2SYNTH
 
 ## SHORT TERM
+- Update README to reflect the new support for
+  double precision output format in addition to
+  single.
 - NB NB NB: There is stupidity in the way that the oscillator accumulator
   indices are calculated during linear interpolation.  The way to fix this:
   (a) initialize oscillator accumulators to 1.0_RKIND or random values between

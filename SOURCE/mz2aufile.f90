@@ -3,6 +3,14 @@
 !
 ! SUN AUDIO FILE FORMAT HANDLING SUBROUTINES FOR MZ2 (OUTPUT ONLY)
 !
+! #NEW:2026-05-06a:
+!
+!      (a)  Added support for 64-bit real samples.
+!
+!      (b)  Made ZSMP a member of the SunAu struct so that it can be
+!           computed once when the structure is first populated and
+!           used when needed in the sample-writing routines.
+!
 ! #NEW:2026-05-01a:
 !
 !      (a)  Added offensively missing support for I32 PCM.
@@ -34,6 +42,7 @@ MODULE Mz2AuFile
   INTEGER,PARAMETER :: AUF_PCM_LINEAR_16B=3
   INTEGER,PARAMETER :: AUF_PCM_LINEAR_32B=5      ! #NEW:2026-05-01a
   INTEGER,PARAMETER :: AUF_FLT_LINEAR_32B=6
+  INTEGER,PARAMETER :: AUF_FLT_LINEAR_64B=7      ! #NEW:2026-05-06a
   INTEGER,PARAMETER :: AUF_DEF_SAMPLERATE=44100
   INTEGER,PARAMETER :: AUF_DEF_NMCHANNELS=2
   LOGICAL,PARAMETER :: AUF_DEF_ENDIANNESS=.TRUE. ! Big-endian by default
@@ -46,6 +55,7 @@ MODULE Mz2AuFile
      LOGICAL            :: MCBE=AUF_DEF_ENDIANNESS
      LOGICAL            :: OVWT=.FALSE.
      INTEGER            :: BCUR=1                   ! Buffer cursor
+     INTEGER            :: ZSMP=0 !#NEW:2026-05-06a ! Sample-size in bytes
      INTEGER(KIND=C_INT8_T),POINTER :: BUFF(:)=>NULL()
   END TYPE SunAu
 
@@ -59,6 +69,7 @@ MODULE Mz2AuFile
      MODULE PROCEDURE Au_WrtSmp_I16
      MODULE PROCEDURE Au_WrtSmp_I32 ! #NEW:2026-05-01a
      MODULE PROCEDURE Au_WrtSmp_R32
+     MODULE PROCEDURE Au_WrtSmp_R64 ! #NEW:2026-05-06a
   END INTERFACE Au_WrtSmp
 
   INTERFACE Nord
@@ -68,7 +79,8 @@ MODULE Mz2AuFile
      ! -------------------------------------------------------------------------
      MODULE PROCEDURE Nord_I16
      MODULE PROCEDURE Nord_I32
-     MODULE PROCEDURE Nord_R32     
+     MODULE PROCEDURE Nord_R32
+     MODULE PROCEDURE Nord_R64 ! #NEW:2026-05-06a
   END INTERFACE Nord
   
 CONTAINS
@@ -84,14 +96,16 @@ CONTAINS
     INTENT(IN)    :: AUFN,AUFU,ENCD,SMPR,NCHN,OVWT
     INTENT(INOUT) :: SNAU,STAT
     ! --- VARIABLES ---
-    INTEGER :: ZSMP,ZBUF,MS
+    INTEGER :: ZBUF,MS
     CHARACTER(LEN=:),ALLOCATABLE :: FSTA
     ! --- EXE CODE  ---
     SELECT CASE (ENCD)
     CASE (AUF_PCM_LINEAR_16B)
-       ZSMP=2
+       SNAU%ZSMP=2
     CASE (AUF_PCM_LINEAR_32B,AUF_FLT_LINEAR_32B)
-       ZSMP=4
+       SNAU%ZSMP=4       
+    CASE (AUF_FLT_LINEAR_64B) ! #NEW:2026-05-06a
+       SNAU%ZSMP=8
     CASE DEFAULT
        GOTO 900
     END SELECT
@@ -103,7 +117,7 @@ CONTAINS
     SNAU%NCHN=NCHN
     SNAU%MCBE=MachBE()
     SNAU%OVWT=OVWT
-    ZBUF=ZSMP*SNAU%SMPR*SNAU%NCHN
+    ZBUF=SNAU%ZSMP*SNAU%SMPR*SNAU%NCHN
     ALLOCATE(SNAU%BUFF(1:ZBUF),STAT=MS)
     IF (MS.NE.0) GOTO 930
     IF (OVWT) THEN
@@ -143,7 +157,6 @@ CONTAINS
     INTENT(IN)    :: AUDS
     INTENT(INOUT) :: SNAU,STAT
     ! --- VARIABLES ---
-    INTEGER,PARAMETER :: ZSMP=2
     INTEGER :: BS,BE,ZTFR
     ! --- EXE CODE  ---
     IF (SNAU%ENCD.NE.AUF_PCM_LINEAR_16B) GOTO 900 ! #NEW:2026-05-01a
@@ -154,7 +167,7 @@ CONTAINS
        IF (STAT.NE.0) RETURN
        SNAU%BCUR=1
     END IF
-    ZTFR=ZSMP*SIZE(AUDS)
+    ZTFR=SNAU%ZSMP*SIZE(AUDS)
     BS=SNAU%BCUR
     BE=SNAU%BCUR+ZTFR-1
     SNAU%BUFF(BS:BE)=TRANSFER(Nord_I16(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
@@ -174,7 +187,6 @@ CONTAINS
     INTENT(IN)    :: AUDS
     INTENT(INOUT) :: SNAU,STAT
     ! --- VARIABLES ---
-    INTEGER,PARAMETER :: ZSMP=4
     INTEGER :: BS,BE,ZTFR
     ! --- EXE CODE  ---
     IF (SNAU%ENCD.NE.AUF_PCM_LINEAR_32B) GOTO 900 ! #NEW:2026-05-01a
@@ -185,7 +197,7 @@ CONTAINS
        IF (STAT.NE.0) RETURN
        SNAU%BCUR=1
     END IF
-    ZTFR=ZSMP*SIZE(AUDS)
+    ZTFR=SNAU%ZSMP*SIZE(AUDS)
     BS=SNAU%BCUR
     BE=SNAU%BCUR+ZTFR-1
     SNAU%BUFF(BS:BE)=TRANSFER(Nord_I32(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
@@ -205,7 +217,6 @@ CONTAINS
     INTENT(IN)    :: AUDS
     INTENT(INOUT) :: SNAU,STAT
     ! --- VARIABLES ---
-    INTEGER,PARAMETER :: ZSMP=4
     INTEGER :: BS,BE,ZTFR
     ! --- EXE CODE  ---
     IF (SNAU%ENCD.NE.AUF_FLT_LINEAR_32B) GOTO 900 ! #NEW:2026-05-01a
@@ -216,7 +227,7 @@ CONTAINS
        IF (STAT.NE.0) RETURN
        SNAU%BCUR=1
     END IF
-    ZTFR=ZSMP*SIZE(AUDS)
+    ZTFR=SNAU%ZSMP*SIZE(AUDS)
     BS=SNAU%BCUR
     BE=SNAU%BCUR+ZTFR-1
     SNAU%BUFF(BS:BE)=TRANSFER(Nord_R32(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
@@ -228,6 +239,36 @@ CONTAINS
 910 WRITE(*,800) 'Invalid call with SIZE(AUDS).NE.SNAU%NCHN=',SNAU%NCHN ; STOP
   END SUBROUTINE Au_WrtSmp_R32
 
+  SUBROUTINE Au_WrtSmp_R64(SNAU,AUDS,STAT) ! #NEW:2026-05-06a
+    IMPLICIT NONE
+    TYPE(SunAu)             :: SNAU
+    REAL(KIND=C_DOUBLE)     :: AUDS(1:) ! Audio sample array (SIZE=SNAU%NCHN)
+    INTEGER                 :: STAT     ! Write IOSTAT
+    INTENT(IN)    :: AUDS
+    INTENT(INOUT) :: SNAU,STAT
+    ! --- VARIABLES ---
+    INTEGER :: BS,BE,ZTFR
+    ! --- EXE CODE  ---
+    IF (SNAU%ENCD.NE.AUF_FLT_LINEAR_64B) GOTO 900
+    IF (SNAU%NCHN.NE.SIZE(AUDS))         GOTO 910
+    STAT=0 ! Fake out as OK unless there REALLY was a write error
+    IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
+       WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
+       IF (STAT.NE.0) RETURN
+       SNAU%BCUR=1
+    END IF
+    ZTFR=SNAU%ZSMP*SIZE(AUDS)
+    BS=SNAU%BCUR
+    BE=SNAU%BCUR+ZTFR-1
+    SNAU%BUFF(BS:BE)=TRANSFER(Nord_R64(AUDS,SNAU%MCBE),SNAU%BUFF(BS:BE))
+    SNAU%BCUR=BE+1
+    RETURN
+    ! --- END CODE  --- #NEW:2026-05-01a
+800 FORMAT('*ERR (Au_WrtSmp_R32):',1X,A,1X,I0)
+900 WRITE(*,800) 'Invalid call with encoding format=',SNAU%ENCD ; STOP
+910 WRITE(*,800) 'Invalid call with SIZE(AUDS).NE.SNAU%NCHN=',SNAU%NCHN ; STOP
+  END SUBROUTINE Au_WrtSmp_R64
+  
   SUBROUTINE Au_Close(SNAU,STAT)
     IMPLICIT NONE
     TYPE(SunAu)             :: SNAU
@@ -302,19 +343,46 @@ CONTAINS
     REAL(KIND=C_FLOAT),INTENT(IN) :: R
     LOGICAL,INTENT(IN)            :: MBE
     ! --- VARIABLES ---
-    INTEGER(KIND=C_INT32_T) :: I
+    INTEGER(KIND=C_INT32_T) :: I0,I
     ! --- EXE CODE ---
     Nord_R32=R
     IF (.NOT.MBE) THEN
        ! Little-endian machine
+       I0=TRANSFER(R,I)
        I=0 ! Shut -Wall up talking
-       CALL MVBITS(TRANSFER(R,I), 0,8,I,24)
-       CALL MVBITS(TRANSFER(R,I), 8,8,I,16)
-       CALL MVBITS(TRANSFER(R,I),16,8,I, 8)
-       CALL MVBITS(TRANSFER(R,I),24,8,I, 0)
+       CALL MVBITS(I0, 0,8,I,24)
+       CALL MVBITS(I0, 8,8,I,16)
+       CALL MVBITS(I0,16,8,I, 8)
+       CALL MVBITS(I0,24,8,I, 0)
        Nord_R32=TRANSFER(I,Nord_R32)
     END IF
     ! --- END CODE ---
   END FUNCTION Nord_R32
- 
+
+  ELEMENTAL FUNCTION Nord_R64(R,MBE) ! #NEW:2026-05-06a
+    IMPLICIT NONE
+    REAL(KIND=C_DOUBLE)            :: Nord_R64
+    REAL(KIND=C_DOUBLE),INTENT(IN) :: R
+    LOGICAL,INTENT(IN)             :: MBE
+    ! --- VARIABLES ---
+    INTEGER(KIND=C_INT64_T) :: I0,I
+    ! --- EXE CODE ---
+    Nord_R64=R
+    IF (.NOT.MBE) THEN
+       ! Little-endian machine
+       I0=TRANSFER(R,I)
+       I=0 ! Shut -Wall up talking
+       CALL MVBITS(I0, 0,8,I,56)
+       CALL MVBITS(I0, 8,8,I,48)
+       CALL MVBITS(I0,16,8,I,40)
+       CALL MVBITS(I0,24,8,I,32)
+       CALL MVBITS(I0,32,8,I,24)
+       CALL MVBITS(I0,40,8,I,16)
+       CALL MVBITS(I0,48,8,I, 8)
+       CALL MVBITS(I0,56,8,I, 0)       
+       Nord_R64=TRANSFER(I,Nord_R64)
+    END IF
+    ! --- END CODE ---
+  END FUNCTION Nord_R64
+
 END MODULE Mz2AuFile

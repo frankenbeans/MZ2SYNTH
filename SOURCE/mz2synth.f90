@@ -50,7 +50,7 @@ CONTAINS
   SUBROUTINE Mz2Syn_CmdLine()
     IMPLICIT NONE
     ! --- VARIABLES ---
-    CHARACTER(LEN=ZARG) :: CARG='',RARG='',TEMP=''
+    CHARACTER(LEN=ZARG) :: CARG='',RARG=''
     CHARACTER(LEN=10)   :: FMRD='',FMWT=''
     INTEGER             :: NARG,K
     LOGICAL             :: FEX,HLPX
@@ -140,15 +140,16 @@ CONTAINS
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 910
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           IF (LEN(TRIM(CARG)).LT.1) GOTO 910          
-          TEMP=TRIM(CARG) ; CALL TOUPPR(TEMP)
-          SELECT CASE (TRIM(TEMP))
+          CARG=TRIM(CARG)
+          CALL TOUPPR(CARG)
+          SELECT CASE (TRIM(CARG))
           CASE('SINGLE')
              AFMT=C_FLOAT
           CASE('DOUBLE')
              AFMT=C_DOUBLE
           CASE DEFAULT
           END SELECT
-          IF (PFL_VERB) WRITE(*,700) 'Audio sample format =',TRIM(TEMP)
+          IF (PFL_VERB) WRITE(*,700) 'Audio sample format =',TRIM(CARG)
        CASE('-M','-VOLUME-MULTIPLIER')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set volume multiplier'
           NARG=NARG+1

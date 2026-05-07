@@ -42,8 +42,8 @@ Each of the sine, square, sawtooth or triangle waves can be linked to
 the (r)ed, (g)reen, (b)lue, (l)uminance values of the graphic file
 pixels, or else (m)uted.  See option -c below for syntax.
 
-Output takes the form of a stereo 32-bit floating point PCM Sun audio
-file.
+Output takes the form of a stereo 32-bit or 64-bit floating point PCM
+Sun audio file.
 
 The following options are available (case insensitive):
 |Short form| Long form                | Description                                     |
@@ -57,6 +57,7 @@ The following options are available (case insensitive):
 |-z        | -zero-phase              | Toggle on zero-phase mode (changes beat freq.s) |
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M), in order for sin/sqw/swt/tri  |
+|-f fmt    | -audio-format fmt        | Set fmt to "single" or "double" precision       |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
 |-r ftr    | -transition ftr          | Set transition TC (as frac. of (spr*1s)) to ftr |
@@ -72,6 +73,7 @@ The following options are available (case insensitive):
 |Output file name        |output.au                                                     |
 |Advance rate            |10 columns per second                                         |
 |Channels                |sine:square:sawtooth:triangle = R:G:B:L ( as for -c RGBL)     |
+|Audio format            |single precision real                                         |
 |Volume multiplier       |0.1                                                           |
 |Transition fraction     |0.01 (of the number of samples in one second)                 |
 |Sampling rate           |44100 c.p.s.                                                  |

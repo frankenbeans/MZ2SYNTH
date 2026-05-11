@@ -2,9 +2,10 @@
 
 ## SHORT TERM
 - Audit code and do a Big Tidy.
+- Improve makefiles - don't really need four...
 
 ## MEDIUM TERM
-- Write proper documentation (manual page + tutorial information)
+- Write proper documentation (manual page, technical report + tutorial information)
 
 ## LONG TERM
 - Support Intel Fortran on Windows

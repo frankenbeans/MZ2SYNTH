@@ -58,6 +58,7 @@ The following options are available (case insensitive):
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M), in order for sin/sqw/swt/tri  |
 |-f fmt    | -audio-format fmt        | Set fmt to "single" or "double" precision       |
+|-g sxp    | -sigma-exponent sxp      | Set sigma exponent to sxp in [0.0,2.0]          |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
 |-o ofn    | -output-file ofn         | Set output file name to ofn                     |
 |-r ftr    | -transition ftr          | Set transition TC (as frac. of (spr*1s)) to ftr |
@@ -74,6 +75,7 @@ The following options are available (case insensitive):
 |Advance rate            |10 columns per second                                         |
 |Channels                |sine:square:sawtooth:triangle = R:G:B:L ( as for -c RGBL)     |
 |Audio format            |single precision real                                         |
+|Sigma exponent          |1.0 - larger values lead to earlier dropoff in Fourier sum    |
 |Volume multiplier       |0.1                                                           |
 |Transition fraction     |0.01 (of the number of samples in one second)                 |
 |Sampling rate           |44100 c.p.s.                                                  |
@@ -146,13 +148,18 @@ git clone https://github.com/frankenbeans/MZ2SYNTH.git`
 cd MZ2SYNTH/SOURCE/
 make -f Makefile.gfortran all clean
 ```
-Makefile.ifx is also provided, which contains
-what is needed to obtain an executable with
-Intel Fortran for Linux (IFX).  Although these are somewhat faster, they have other awkward deficiencies as explained above.  Unless you
-really need the faster executable, just use
-GNU Fortran.  I don't check regularly that that the IFX makefiles work properly, but my nightly build runners check the GFortran stuff.
 
-Makefiles.*.nochk disable the safety feature of runtime array bounds checking, giving somewhat faster executables, but with the potential for undetected bad behaviour and security loopholes, depending on exactly what you are doing.  What price your neck?
+Makefile.ifx is also provided, which contains what is needed to obtain
+an executable with Intel Fortran for Linux (IFX).  Although these are
+somewhat faster, they have other awkward deficiencies as explained
+above.  Unless you really need the faster executable, just use GNU
+Fortran.  I don't check regularly that that the IFX makefiles work
+properly, but my nightly build runners check the GFortran stuff.
+
+Makefiles.*.nochk disable the safety feature of runtime array bounds
+checking, giving somewhat faster executables, but with the potential
+for undetected bad behaviour and security loopholes, depending on
+exactly what you are doing.  What price your neck?
 
 (3) Now that our executable is compiled, we will go to the
     **MZSYNTH/EXAMPLES** subdirectory from where we are now, and run the

@@ -17,6 +17,7 @@ PROGRAM Mz2Synth
   USE Mz2Osc
   USE Mz2Pnl
   USE Mz2AuFile
+  
   IMPLICIT NONE
   ! --- INPUT PARAMETERS ---
   INTEGER,PARAMETER   :: ZARG=ZSTR
@@ -25,6 +26,7 @@ PROGRAM Mz2Synth
   CHARACTER(LEN=ZARG) :: VCHS=DCHS
   REAL(KIND=RKIND)    :: VMUL=DVML
   REAL(KIND=RKIND)    :: ACPS=DADV
+  REAL(KIND=RKIND)    :: SIGX=DSXP
   REAL(KIND=RKIND)    :: TRZF=DFTZ
   LOGICAL             :: CMPR=.FALSE.
   LOGICAL             :: FXPH=DFXP
@@ -150,6 +152,14 @@ CONTAINS
           CASE DEFAULT
           END SELECT
           IF (PFL_VERB) WRITE(*,700) 'Audio sample format =',TRIM(CARG)
+       CASE('-G','-SIGMA-EXPONENT')
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set sigma exponent'
+          NARG=NARG+1
+          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 948
+          CALL GET_COMMAND_ARGUMENT(NARG,CARG)
+          READ(CARG,*,ERR=948) SIGX
+          IF (SIGX.LT.0.OR.SIGX.GT.2) GOTO 948
+          IF (PFL_VERB) WRITE(*,710) 'Sigma exponent =',SIGX          
        CASE('-M','-VOLUME-MULTIPLIER')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set volume multiplier'
           NARG=NARG+1
@@ -175,14 +185,14 @@ CONTAINS
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=948) TRZF
           IF (TRZF.LT.0.OR.TRZF.GT.1) GOTO 950
-          IF (PFL_VERB) WRITE(*,710) 'Transition fraction =',TRZF
+          IF (PFL_VERB) WRITE(*,710) 'Transition fraction =',TRZF          
        CASE('-S','-SAMPLING-RATE')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set sampling rate'
           NARG=NARG+1
-          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 948
+          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 949
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=948) SMPR
-          IF (SMPR.LT.DSMP/2) GOTO 948
+          IF (SMPR.LT.DSMP/2) GOTO 949
           IF (PFL_VERB) WRITE(*,710) 'Sampling rate =',SMPR
        CASE DEFAULT
           IF (CARG(1:1).EQ.'-') GOTO 990
@@ -210,7 +220,8 @@ CONTAINS
 940 WRITE(*,800) 'Expecting output file name'                    ; STOP
 945 WRITE(*,800) 'Output file exists but overwrite mode is off'  ; STOP
 947 WRITE(*,800) 'Output file cannot be opened in WRITE mode'    ; STOP
-948 WRITE(*,800) 'Sampling rate must be integer >=',NINT(DSMP)/2 ; STOP
+948 WRITE(*,800) 'Sigma exponent must be present and in [0,2]'   ; STOP
+949 WRITE(*,800) 'Sampling rate must be integer >=',NINT(DSMP)/2 ; STOP
 950 WRITE(*,800) 'Transition frac must be present and in [0,1]'  ; STOP
 960 WRITE(*,800) 'Cannot read input file '//TRIM(PIFN)           ; STOP
 980 WRITE(*,800) 'Trailing rubbish after input file argument'    ; STOP
@@ -247,6 +258,8 @@ CONTAINS
          'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBLM'
     WRITE(*,710) '-f','-audio-format','<afmt>',            &
          'Set audio format to "single"/"double"','single'
+    WRITE(*,710) '-g','-sigma-exponent','<sigx>',          &
+         'Set exponent to value in [0,2]','1.0'
     WRITE(*,710) '-m','-volume-multiplier','<m>',          &
          'Set volume multiplier (m > 0)','0.1'
     WRITE(*,710) '-o','-output-file','<ofn>',              &
@@ -265,11 +278,12 @@ CONTAINS
   END SUBROUTINE Mz2Syn_Help
 
   SUBROUTINE Mz2Syn_Init()
+    USE WveCmp,ONLY:SIGEXP
     IMPLICIT NONE
     ! --- VARIABLES ---
     INTEGER :: FS,AF
     ! --- EXE CODE ---
-    CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
+    SIGEXP=SIGX ; CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
     IF (PFL_DBUG) CALL OscBank_Dump(ob)
     CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
     AF=AUF_FLT_LINEAR_32B; IF (AFMT.EQ.C_DOUBLE) AF=AUF_FLT_LINEAR_64B

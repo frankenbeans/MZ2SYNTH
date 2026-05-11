@@ -10,7 +10,8 @@ MODULE WveCmp
   USE Constant
   IMPLICIT NONE
 
-  INTEGER,PARAMETER :: MXNCMP=128
+  INTEGER,PARAMETER     :: MXNCMP=128
+  REAL(KIND=RKIND),SAVE :: SIGEXP=DSXP
   
 CONTAINS
   
@@ -133,7 +134,7 @@ CONTAINS
     REAL(KIND=RKIND)   :: Q
     ! --- EXE CODE ---
     Q=REAL(GK,KIND=RKIND)/REAL(GMK+1,KIND=RKIND)
-    GPCoef=Sinc(Q)
+    GPCoef=Sinc(Q)**SIGEXP
     ! --- END CODE ---      
   END FUNCTION GPCoef
 ! ------------------------------------------------------------------------------

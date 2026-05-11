@@ -82,6 +82,10 @@
 #define CONST_DSMP 44100
 #endif
 
+#ifndef CONST_DSXP
+#define CONST_DSXP 1.0_RKIND
+#endif
+
 #ifndef CONST_DNCH
 #define CONST_DNCH 2
 #endif
@@ -135,6 +139,7 @@ MODULE CONSTANT
   REAL(KIND=RKIND)   ,PARAMETER :: DADV = CONST_DADV ! Advance rate (col/s)
   REAL(KIND=RKIND)   ,PARAMETER :: DFTZ = CONST_DFTZ ! Transition zone fraction
   REAL(KIND=RKIND)   ,PARAMETER :: DSMP = CONST_DSMP ! Sampling rate (c.p.s.)
+  REAL(KIND=RKIND)   ,PARAMETER :: DSXP = CONST_DSXP ! Sigma approx. exponenent
   INTEGER            ,PARAMETER :: DNCH = CONST_DNCH ! Number of output channels
   INTEGER            ,PARAMETER :: DWWW = CONST_DWWW ! Width of wavetable window
   INTEGER            ,PARAMETER :: DRNS = CONST_DRNS ! Random seed for phase ini

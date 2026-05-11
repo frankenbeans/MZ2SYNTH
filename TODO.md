@@ -1,10 +1,7 @@
 # TODO for MZ2SYNTH
 
 ## SHORT TERM
-- Lanczos approximation is not quite right as written.  Should use
-  sinc(x)=(sin x)/x and GPCOEF last line should be GPCOEF=SINC(PI*Q).
-  This is just cosmetic as the expressions come to the same thing
-  after substitution.
+- Audit code and do a Big Tidy.
 
 ## MEDIUM TERM
 - Write proper documentation (manual page + tutorial information)

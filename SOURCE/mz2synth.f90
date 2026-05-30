@@ -3,11 +3,11 @@
 !
 ! MZ2 MAIN SUBROUTINES
 !
-! COPYRIGHT (C) 2025 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2026 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2026-05-06'
+#define PROGVERS '0.1/2026-05-30'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  
@@ -255,7 +255,7 @@ CONTAINS
     WRITE(*,710) '-a','-advance','<r>',                    &
          'Set advance rate in cols/sec ','10'
     WRITE(*,710) '-c','-channel-select','<sqwt>',          &
-         'Set (s)in,s(q)r,sa(w),(t)riangle colours','RGBLM'
+         'Set (s)in,s(q)r,sa(w),(t)riangle colours',DCHS
     WRITE(*,710) '-f','-audio-format','<afmt>',            &
          'Set audio format to "single"/"double"','single'
     WRITE(*,710) '-g','-sigma-exponent','<sigx>',          &
@@ -271,6 +271,14 @@ CONTAINS
     WRITE(*,700) ''
     WRITE(*,700) '* Default input  file is    '//TRIM(DIFN)
     WRITE(*,700) '* Default output file is    '//TRIM(DOFN)
+    WRITE(*,700) '* Argument to -c is a string of four letters'//   &
+         ' which specifies which colours are'
+    WRITE(*,700) '  connected respectively to the sine, square,'//  &
+         ' sawtooth and triangle wave voices.'
+    WRITE(*,700) '  The four letters must each be in the set,' //   &
+         ' {R,G,B,L,M} (case-insensitive),'
+    WRITE(*,700) '  meaning (R)ed, (G)reen, (B)lue, (L)uminance'//  &
+         ' and (M)uted voice.'         
     WRITE(*,700) ''
         
 700 FORMAT(A)

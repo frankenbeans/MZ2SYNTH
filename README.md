@@ -200,7 +200,14 @@ OPTIONS:
   The four letters must each be in the set, {R,G,B,L,M} (case-insensitive),
   meaning (R)ed, (G)reen, (B)lue, (L)uminance and (M)uted voice.
 ```
-../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000 -output-file example-02.au -channel-select LMMM example-02.ppm
+
+(4) We will now produce an audio file called **example-02.au** from
+the graphic image file **example-02.ppm**, advancing at 4 columns per
+second with fixed phase relationships and an audio sampling rate of
+48000 c.p.s, with verbose text output mode on (as a sort of progress
+indicator).  We want to link the sine wave voice to the luminance
+channel of the input image and mute the other voices.
+```../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000 -output-file example-02.au -channel-select LMMM example-02.ppm
 ```
 
 **NOTE** that the command above runs on continuously without a line-break.

@@ -73,7 +73,7 @@ The following options are available (case insensitive):
 |Input file name         |input.ppm                                                     |
 |Output file name        |output.au                                                     |
 |Advance rate            |10 columns per second                                         |
-|Channels                |sine:square:sawtooth:triangle = R:G:B:L ( as for -c RGBL)     |
+|Channels                |sine:square:sawtooth:triangle = R:G:B:M (as for -c RGBM)     |
 |Audio format            |single precision real                                         |
 |Sigma exponent          |1.0 - larger values lead to earlier dropoff in Fourier sum    |
 |Volume multiplier       |0.1                                                           |
@@ -171,7 +171,7 @@ cd ../EXAMPLES
 
 We should see a help screen like this:
 ```
-MZ2SYNTH 0.1/2026-05-01
+MZ2SYNTH 0.1/2026-05-30
 Copyright (C) by E. Lamprecht.   All rights reserved.
 
 SYNOPSIS:  mz2 [options...] [input_filename]
@@ -185,7 +185,9 @@ OPTIONS:
   -x|-fixed-phase              Toggle fixed phase mode                  [off]
   -z|-zero-phase               Toggle zero phase mode                   [off]
   -a|-advance           <r>    Set advance rate in cols/sec             [10]
-  -c|-channel-select    <sqwt> Set (s)in,s(q)r,sa(w),(t)riangle colours [RGBLM]
+  -c|-channel-select    <sqwt> Set (s)in,s(q)r,sa(w),(t)riangle colours [RGBM]
+  -f|-audio-format      <afmt> Set audio format to "single"/"double"    [single]
+  -g|-sigma-exponent    <sigx> Set exponent to value in [0,2]           [1.0]
   -m|-volume-multiplier <m>    Set volume multiplier (m > 0)            [0.1]
   -o|-output-file       <ofn>  Write output to file <ofn>               [note *]
   -s|-sampling-rate     <s>    Set sampling rate to <s> c.p.s.          [44100]
@@ -193,14 +195,10 @@ OPTIONS:
 
 * Default input  file is    input.ppm
 * Default output file is    output.au
-```
-
-(4) We will now produce an audio file called **example-02.au** from
-the graphic image file **example-02.ppm**, advancing at 4 columns per
-second with fixed phase relationships and an audio sampling rate of
-48000 c.p.s, with verbose text output mode on (as a sort of progress
-indicator).  We want to link the sine wave voice to the luminance
-channel of the input image and mute the other voices.
+* Argument to -c is a string of four letters which specifies which colours are
+  connected respectively to the sine, square, sawtooth and triangle wave voices.
+  The four letters must each be in the set, {R,G,B,L,M} (case-insensitive),
+  meaning (R)ed, (G)reen, (B)lue, (L)uminance and (M)uted voice.
 ```
 ../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000 -output-file example-02.au -channel-select LMMM example-02.ppm
 ```

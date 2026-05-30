@@ -168,7 +168,6 @@ exactly what you are doing.  What price your neck?
 cd ../EXAMPLES
 ../SOURCE/mz2
 ```
-
 We should see a help screen like this:
 ```
 MZ2SYNTH 0.1/2026-05-30
@@ -207,7 +206,8 @@ second with fixed phase relationships and an audio sampling rate of
 48000 c.p.s, with verbose text output mode on (as a sort of progress
 indicator).  We want to link the sine wave voice to the luminance
 channel of the input image and mute the other voices.
-```../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000 -output-file example-02.au -channel-select LMMM example-02.ppm
+```
+../SOURCE/mz2 -verbose -advance 4 -fixed-phase -sampling-rate 48000 -output-file example-02.au -channel-select LMMM example-02.ppm
 ```
 
 **NOTE** that the command above runs on continuously without a line-break.

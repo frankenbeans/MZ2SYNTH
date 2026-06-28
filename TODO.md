@@ -2,6 +2,9 @@
 
 ## SHORT TERM
 - Audit code and do a Big Tidy.
+- Replace FImageMod with new version, and add the following features:
+  - Add Gaussian Blur option (-b <kw>)
+  - Add Edge Detect (-e <bw>)
 - Improve makefiles - don't really need four...
 
 ## MEDIUM TERM

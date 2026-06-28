@@ -990,6 +990,19 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 991 FORMAT('*** WARNING (FIM_verify_data): Invalid RGB information in fim.')
   END SUBROUTINE FIM_verify_data
 !==============================================================================
+  ELEMENTAL FUNCTION DOMFIT(X)
+    ! +-----------------------------------------------------------------------+
+    ! | Adjust domain of linear RGB value X to [0..1].                        |
+    ! +-----------------------------------------------------------------------+
+    IMPLICIT NONE
+    REAL(KIND=RKIND) :: DOMFIT
+    ! --- Dummy arguments ---
+    REAL(KIND=RKIND),INTENT(IN) :: X
+    ! --- Executable code ---
+    DOMFIT=min(max(x,0.0_RKIND),1.0_RKIND)
+    ! --- End code        ---
+  END FUNCTION DOMFIT
+!==============================================================================
   SUBROUTINE FIM_fit_domain(fim)
     ! +-----------------------------------------------------------------------+
     ! | Adjust domain of linear RGB values to [0..1].                         |
@@ -999,13 +1012,12 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     TYPE(FImage),INTENT(INOUT)     :: fim
     ! --- Executable code ---
     !$OMP PARALLEL
-    fim%dred=min(max(fim%dred,0.0_RKIND),1.0_RKIND)
-    fim%dgrn=min(max(fim%dgrn,0.0_RKIND),1.0_RKIND)
-    fim%dblu=min(max(fim%dblu,0.0_RKIND),1.0_RKIND)
+    fim%dred=DOMFIT(fim%dred)
+    fim%dgrn=DOMFIT(fim%dgrn)
+    fim%dblu=DOMFIT(fim%dblu)
     !$OMP END PARALLEL
     ! --- End code        ---
   END SUBROUTINE FIM_fit_domain
-!==============================================================================
 !==============================================================================
 ! * * *  C O L O U R   T R A N S F O R M A T I O N   F U N C T I O N S    * * *
 !==============================================================================
@@ -1657,8 +1669,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dred(c,i),i=fww/2,1,-1), &
                fim%dred(c,:),               &
               (fim%dred(c,fim%nrows-i),i=1,fww/2)/)
-       fim%dred(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%nrows)/)
-       fim%dred(c,:)=MIN(MAX(fim%dred(c,:),0.0_RKIND),1.0_RKIND)
+       fim%dred(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%nrows)/))
     END DO
     !$OMP END PARALLEL DO
 10  IF (.NOT.lcmsk(2)) GOTO 20
@@ -1667,8 +1679,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dgrn(c,i),i=fww/2,1,-1), &
                fim%dgrn(c,:),               &
               (fim%dgrn(c,fim%nrows-i),i=1,fww/2)/)
-       fim%dgrn(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%nrows)/)
-       fim%dgrn(c,:)=MIN(MAX(fim%dgrn(c,:),0.0_RKIND),1.0_RKIND)
+       fim%dgrn(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%nrows)/))
     END DO
     !$OMP END PARALLEL DO
 20  IF (.NOT.lcmsk(3)) GOTO 30
@@ -1677,8 +1689,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dblu(c,i),i=fww/2,1,-1), &
                fim%dblu(c,:),               &
               (fim%dblu(c,fim%nrows-i),i=1,fww/2)/)
-       fim%dblu(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%nrows)/)
-       fim%dblu(c,:)=MIN(MAX(fim%dblu(c,:),0.0_RKIND),1.0_RKIND)
+       fim%dblu(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%nrows)/))
     END DO
     !$OMP END PARALLEL DO
 30  CONTINUE
@@ -1691,8 +1703,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dred(i,r),i=fww/2,1,-1), &
                fim%dred(:,r),               &
               (fim%dred(fim%nrows-i,r),i=1,fww/2)/)
-       fim%dred(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%ncols)/)
-       fim%dred(:,r)=MIN(MAX(fim%dred(:,r),0.0_RKIND),1.0_RKIND)
+       fim%dred(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%ncols)/))
     END DO
     !$OMP END PARALLEL DO
 40  IF (.NOT.lcmsk(2)) GOTO 50
@@ -1701,8 +1713,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dgrn(i,r),i=fww/2,1,-1), &
                fim%dgrn(:,r),               &
               (fim%dgrn(fim%nrows-i,r),i=1,fww/2)/)
-       fim%dgrn(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%ncols)/)
-       fim%dgrn(:,r)=MIN(MAX(fim%dgrn(:,r),0.0_RKIND),1.0_RKIND)
+       fim%dgrn(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%ncols)/))
     END DO
     !$OMP END PARALLEL DO
 50  IF (.NOT.lcmsk(3)) GOTO 60
@@ -1711,8 +1723,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dblu(i,r),i=fww/2,1,-1), &
                fim%dblu(:,r),               &
               (fim%dblu(fim%nrows-i,r),i=1,fww/2)/)
-       fim%dblu(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%ncols)/)
-       fim%dblu(:,r)=MIN(MAX(fim%dblu(:,r),0.0_RKIND),1.0_RKIND)
+       fim%dblu(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%ncols)/))
     END DO
     !$OMP END PARALLEL DO
 60  CONTINUE
@@ -1749,9 +1761,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     CALL FIM_flt_gauss(fim0,wid2)
     ! --- Take the difference and clamp ---
     !$OMP PARALLEL WORKSHARE
-    fim%dred=MIN(ABS(fim0%dred-fim%dred),1.0_RKIND)
-    fim%dgrn=MIN(ABS(fim0%dgrn-fim%dgrn),1.0_RKIND)
-    fim%dblu=MIN(ABS(fim0%dblu-fim%dblu),1.0_RKIND)
+    fim%dred=DOMFIT(ABS(fim0%dred-fim%dred))
+    fim%dgrn=DOMFIT(ABS(fim0%dgrn-fim%dgrn))
+    fim%dblu=DOMFIT(ABS(fim0%dblu-fim%dblu))
     !$OMP END PARALLEL WORKSHARE
     CALL FIM_clear(fim0)
     ! --- End exe code    ---

@@ -9,8 +9,10 @@
 MODULE MZ2Pnl
   USE Constant
   USE PFlags
-  USE FImageMod, ONLY: FImage,FIM_read,FIM_stf_hflip, &
-                       FIM_clear,FIM_error_ok,Luminance
+  USE FImageMod, ONLY: FImage,FIM_read,FIM_write,FIM_stf_hflip,    &
+                       FIM_clear,FIM_error_ok,Luminance,           &
+                       FIM_flt_gauss, FIM_flt_edged
+                            
   IMPLICIT NONE
 
   INTEGER,PARAMETER :: NVCH=ZCHS
@@ -65,15 +67,18 @@ CONTAINS
 700 FORMAT('*INF (Mz2Pnl_Clear):',1X,A,999(:,1X,G12.5,1X,:,A))    
   END SUBROUTINE MZ2Pnl_Clear
 
-  SUBROUTINE MZ2Pnl_Load(P,IFN,CHS,SCANRT,SMPLRT,TCFRAC)
+  SUBROUTINE MZ2Pnl_Load(P,IFN,CHS,SCANRT,SMPLRT,TCFRAC,WWBLUR,WWEDGE)
     IMPLICIT NONE
     ! --- DUMMY ARGS ---
     TYPE(Mz2Panel)  ,INTENT(INOUT) :: P
     CHARACTER(LEN=*),INTENT(IN)    :: IFN
     CHARACTER(LEN=4),INTENT(IN)    :: CHS    
     REAL(KIND=RKIND),INTENT(IN)    :: SCANRT,SMPLRT,TCFRAC
+    INTEGER,OPTIONAL,INTENT(IN)    :: WWBLUR,WWEDGE    
     ! --- VARIABLES ---
-    INTEGER :: MS
+    CHARACTER(LEN=ZSTR) :: DIFN
+    INTEGER,PARAMETER   :: EDWD=4 ! NB: this MUST always be even
+    INTEGER             :: MS,WB,WE
     ! --- EXE CODE ---
     P%SCANRT=SCANRT
     P%SMPLRT=SMPLRT
@@ -81,6 +86,43 @@ CONTAINS
     CALL FIM_read(P%PI,IFN,IFU)
     IF (PFL_VERB) WRITE(*,700) 'Done!'
     IF (P%PI%ecode.NE.FIM_error_ok) GOTO 900
+    ! If Gaussian Blur is specified via WWBLUR > 0 then do it
+    IF (PRESENT(WWBLUR)) THEN       
+       WB=MAX(0,MIN(WWBLUR+1-MODULO(WWBLUR,2), &
+                MIN(P%PI%ncols,P%PI%nrows)-1+MODULO(WWBLUR,2)))
+       IF (WB.LE.1) THEN
+          WRITE(*,700) 'Skipping Gaussian Blur, WB=',WB
+       ELSE
+          WRITE(*,700) 'Applying Gaussian Blur, WB=',WB
+          CALL FIM_flt_gauss(P%PI,WB)
+          WRITE(*,700) 'Done!'
+       END IF
+    END IF
+    ! If DoG Edge Detection is specified via WWEDGE > 0 then do it
+    IF (PRESENT(WWEDGE)) THEN
+       WE=MAX(0,MIN(WWEDGE+1-MODULO(WWEDGE,2), &
+                MIN(P%PI%ncols,P%PI%nrows)-1+MODULO(WWEDGE,2)))
+       IF (WE.LE.1) THEN
+          WRITE(*,700) 'Skipping Edge Detect, WE=',WE
+       ELSE
+          WRITE(*,700) 'Applying Edge Detect, WE=',WE
+          CALL FIM_flt_edged(P%PI,1,WE)
+          WRITE(*,700) 'Done!'
+       END IF
+    END IF
+    ! In DEBUG mode, write image file for viewing if there was a graphical
+    ! filter applied above.    
+    IF (PFL_DBUG.AND.(WB.GT.1.OR.WE.GT.1)) THEN
+       DIFN='DEBUG-'//IFN
+       WRITE(*,700) 'Writing processed image to file '//TRIM(DIFN)
+       CALL FIM_write(P%PI,TRIM(DIFN),DFU)
+       IF (P%PI%ecode.EQ.FIM_error_ok) THEN
+          WRITE(*,700) 'Done!'
+       ELSE
+          WRITE(*,700) 'Cannot write processed image file on unit',DFU
+       END IF
+    END IF
+    ! Do horizontal flip so that origin is bottom left of original image
     IF (PFL_VERB) WRITE(*,700) 'Executing flip across horizontal line...'
     CALL FIM_stf_hflip(P%PI)
     IF (PFL_VERB) WRITE(*,700) 'Done!'

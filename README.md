@@ -56,7 +56,9 @@ The following options are available (case insensitive):
 |-x        | -fixed-phase             | Toggle on fixed-phase mode (slower, accurate)   |
 |-z        | -zero-phase              | Toggle on zero-phase mode (changes beat freq.s) |
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
+|-b bfw    | -gaussian-blur bfw       | Set Gaussian blur window (bfw/2=3*sigma)        |
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M), in order for sin/sqw/swt/tri  |
+|-e bfw    | -edge-detect edw         | Set DoG edge detect window (edw/2=3*sigma)      |
 |-f fmt    | -audio-format fmt        | Set fmt to "single" or "double" precision       |
 |-g sxp    | -sigma-exponent sxp      | Set sigma exponent to sxp in [0.0,2.0]          |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |
@@ -73,7 +75,9 @@ The following options are available (case insensitive):
 |Input file name         |input.ppm                                                     |
 |Output file name        |output.au                                                     |
 |Advance rate            |10 columns per second                                         |
-|Channels                |sine:square:sawtooth:triangle = R:G:B:M (as for -c RGBM)     |
+|Gaussian blur mode      |off (i.e., no preprocessed blur)                              |
+|Channels                |sine:square:sawtooth:triangle = R:G:B:M (as for -c RGBM)      |
+|Edge detect mode        |off (i.e., no preprocessed edge-detection)                    |
 |Audio format            |single precision real                                         |
 |Sigma exponent          |1.0 - larger values lead to earlier dropoff in Fourier sum    |
 |Volume multiplier       |0.1                                                           |

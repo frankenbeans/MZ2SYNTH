@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2026-05-30'
+#define PROGVERS '0.1/2026-06-28'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  
@@ -33,6 +33,8 @@ PROGRAM Mz2Synth
   LOGICAL             :: ZRPH=DZRP
   INTEGER             :: SMPR=DSMP
   INTEGER             :: AFMT=DAFM
+  INTEGER             :: GBLW=DGBW
+  INTEGER             :: EDGW=DEDW
   ! --- VARIABLES ---
   INTEGER             :: ZDATA
   TYPE(OscBank)       :: OB
@@ -124,6 +126,14 @@ CONTAINS
           READ(CARG,*,ERR=900) ACPS
           IF (ACPS.LT.1) GOTO 900
           IF (PFL_VERB) WRITE(*,710) 'Advance rate =',ACPS,'col/s'
+       CASE('-B','-GAUSSIAN-BLUR')
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set Gaussian Blur window'
+          NARG=NARG+1
+          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 905
+          CALL GET_COMMAND_ARGUMENT(NARG,CARG)
+          READ(CARG,*,ERR=905) GBLW
+          IF (GBLW.LT.1) GOTO 905
+          IF (PFL_VERB) WRITE(*,710) 'Gaussian blur window =',GBLW,'pixels'         
        CASE('-C','-CHANNEL-SELECT')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set channel definitions'
           NARG=NARG+1          
@@ -136,6 +146,14 @@ CONTAINS
              IF (SCAN(VCHS(K:K),'RGBLM').EQ.0) GOTO 910             
           END DO
           IF (PFL_VERB) WRITE(*,700) 'Channel selection =',TRIM(VCHS)
+       CASE('-E','-EDGE-DETECT')
+          IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set Edge Detect window'
+          NARG=NARG+1
+          IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 930
+          CALL GET_COMMAND_ARGUMENT(NARG,CARG)
+          READ(CARG,*,ERR=930) EDGW
+          IF (EDGW.LT.1) GOTO 930
+          IF (PFL_VERB) WRITE(*,710) 'Edge Detect window =',EDGW,'pixels'
        CASE('-F','-AUDIO-FORMAT')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set audio format'
           NARG=NARG+1          
@@ -215,8 +233,10 @@ CONTAINS
 710 FORMAT('*INF (Mz2Syn_CmdLine):',999(:,1X,A,:,1X,G13.6))
 800 FORMAT('*ERR (Mz2Syn_CmdLine):',999(:,1X,A,:,1X,I0))
 900 WRITE(*,800) 'Advance rate must be present and >= 1'         ; STOP
+905 WRITE(*,700) 'Gaussian blur window must be >= 1'             ; STOP
 910 WRITE(*,800) 'Channel multiplier must be four of [RGBLM]'    ; STOP
 920 WRITE(*,800) 'Volume multiplier must be present and >= 0'    ; STOP
+930 WRITE(*,700) 'Edge Detect window must be >= 1'               ; STOP
 940 WRITE(*,800) 'Expecting output file name'                    ; STOP
 945 WRITE(*,800) 'Output file exists but overwrite mode is off'  ; STOP
 947 WRITE(*,800) 'Output file cannot be opened in WRITE mode'    ; STOP
@@ -254,8 +274,12 @@ CONTAINS
     ! --- Binary options ---
     WRITE(*,710) '-a','-advance','<r>',                    &
          'Set advance rate in cols/sec ','10'
+    WRITE(*,710) '-b','-gaussian-blur','<w>',              &
+         'Set Gaussian blur window width ','off'
     WRITE(*,710) '-c','-channel-select','<sqwt>',          &
          'Set (s)in,s(q)r,sa(w),(t)riangle colours',DCHS
+    WRITE(*,710) '-e','-edge-detect','<w>',                &
+         'Set edge-detect window width ','off'
     WRITE(*,710) '-f','-audio-format','<afmt>',            &
          'Set audio format to "single"/"double"','single'
     WRITE(*,710) '-g','-sigma-exponent','<sigx>',          &
@@ -293,7 +317,7 @@ CONTAINS
     ! --- EXE CODE ---
     SIGEXP=SIGX ; CALL OscBank_Init(ob,sr=SMPR,ra=.NOT.ZRPH)
     IF (PFL_DBUG) CALL OscBank_Dump(ob)
-    CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF)
+    CALL Mz2Pnl_Load(PN,PIFN,VCHS,ACPS,REAL(SMPR,RKIND),TRZF,GBLW,EDGW)
     AF=AUF_FLT_LINEAR_32B; IF (AFMT.EQ.C_DOUBLE) AF=AUF_FLT_LINEAR_64B
     CALL Au_WrtHdr(AU,POFN,OFU,AF,SMPR,DNCH,PFL_OVWT,FS)
     IF (FS.NE.0) GOTO 900

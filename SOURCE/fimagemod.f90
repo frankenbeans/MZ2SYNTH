@@ -1,7 +1,7 @@
 !+============================================================================+
 !| FIMAGEMOD.F90                                                              |
 !|                                                                            |
-!| FORTRAN 2003 routines for reading and writing binary or plain PGM and PPM  |
+!| FORTRAN 2008 routines for reading and writing binary or plain PGM and PPM  |
 !| image files.  Both 8-bit and 16-bit variants of the PGM and PPM formats    |
 !| are supported.                                                             |
 !|                                                                            |
@@ -35,9 +35,12 @@
 !| BUGS AND LIMITATIONS:                                                      |
 !| --------------------                                                       |
 !|                                                                            |
-!| (i) Only single-layer PPM and PGM formats are supported.                   |
+!| (i)  Only single-layer PPM and PGM formats are supported.                  |
 !|                                                                            |
-!| Copyright (C) 2024 by E. Lamprecht.  All rights reserved.                  |
+!| (ii) Compile with -heap-arrays under IFX or you may get segfaults in some  |
+!|      subroutines where temporary arrays are created.                       |
+!|                                                                            |
+!| Copyright (C) 2024,2026 by E. Lamprecht.  All rights reserved.             |
 !+============================================================================+
 
 MODULE FImageMod
@@ -141,12 +144,12 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 992 FORMAT('*** ERROR (FIM_new): ', A)
 993 FORMAT('*** ERROR (FIM_new): invalid maxval  ', I6, '; should be <=65536')
 994 FORMAT('*** ERROR (FIM_new): invalid subtype ', I6)
-999 CONTINUE
+999 RETURN
   END SUBROUTINE FIM_new
 !==============================================================================
   SUBROUTINE FIM_copy(fim,sim)
     ! +-----------------------------------------------------------------------+
-    ! | Make an identical copyof sim in fim.                                  |
+    ! | Make an identical copy of sim in fim.                                 |
     ! +-----------------------------------------------------------------------+
     IMPLICIT NONE
     ! --- Dummy arguments ---
@@ -158,9 +161,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! +-------------------+
     ! | Validation checks |
     ! +-------------------+
-    IF (sim%nrows.LT.1) GOTO 900
-    IF (sim%ncols.LT.1) GOTO 910
-    IF (sim%maxval.LT.1.OR.sim%maxval.GT.2**16-1) GOTO 920
+    IF (sim%nrows.LT.1)                                                   GOTO 900
+    IF (sim%ncols.LT.1)                                                   GOTO 910
+    IF (sim%maxval.LT.1.OR.sim%maxval.GT.2**16-1)                         GOTO 920
     IF (sim%subtype.LT.FIM_subtype_pgm.OR.sim%subtype.GT.FIM_subtype_ppm) GOTO 930
     ! +--------------------------------+
     ! | Create new image based on sim. |
@@ -191,7 +194,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 991 FORMAT('*** ERROR (FIM_copy): invalid ', A, I6, '; should be >=1')
 992 FORMAT('*** ERROR (FIM_copy): invalid maxval  ', I6, '; should be <=65536')
 993 FORMAT('*** ERROR (FIM_copy): invalid subtype ', I6)
-999 CONTINUE
+999 RETURN
   END SUBROUTINE FIM_copy
 !==============================================================================
   SUBROUTINE FIM_read(fim,fname,funit)
@@ -369,7 +372,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
       ! --- END CODE ---
       GOTO 999
 900   rderr=.TRUE.
-999   CONTINUE
+999   RETURN
     END SUBROUTINE process_comments_and_blanks
 
     SUBROUTINE read_asc_data
@@ -384,7 +387,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 900   WRITE(*,991) TRIM(fname)
       fim%ecode=FIM_error_pre ; GOTO 999
 991   FORMAT('*** ERROR (FIM_read_pnm): Prem. EOF before asc. data in ',A)
-999   CONTINUE
+999   RETURN
     END SUBROUTINE read_asc_data
 
     SUBROUTINE read_bin_data
@@ -735,9 +738,6 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- Dummy arguments --- 
     TYPE(FImage),INTENT(INOUT) :: fim
     ! --- Executable code ---
-    fim%ncols =0
-    fim%nrows =0
-    fim%maxval=0
     ! +--------------------------------------------+
     ! | Deallocate image data arrays.              |
     ! | Note reverse order of memory deallocation. |
@@ -745,15 +745,10 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     IF (ASSOCIATED(fim%dblu)) DEALLOCATE(fim%dblu)
     IF (ASSOCIATED(fim%dgrn)) DEALLOCATE(fim%dgrn)
     IF (ASSOCIATED(fim%dred)) DEALLOCATE(fim%dred)
-    
-    ! +-------------------------------------------------+
-    ! | Nullify pointers and initialize static members. |
-    ! +-------------------------------------------------+
-    NULLIFY(fim%dred,fim%dgrn,fim%dblu)
-    fim%subtype=FIM_subtype_nul
-    fim%ncomments=0
-    fim%comments=''
-    fim%ecode=FIM_error_nul
+    ! +--------------------------------------------+
+    ! | Set up as for default.                     |
+    ! +--------------------------------------------+
+    fim=FImage()
   END SUBROUTINE FIM_clear
 !==============================================================================
   SUBROUTINE FIM_add_comment(fim,com)
@@ -794,10 +789,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
          ACCESS='STREAM',STATUS='OLD',ERR=900)
 
     ! +-----------------------------------------------------------------+
-    ! | Read header information in the correct order, and verify. A few |
-    ! | moments' reflection will show that we do not need to read the   |
-    ! | lookup tables --- they will be handled automatically if the     |
-    ! | subroutines FIM_read() or FIM_write() need to be called.        |
+    ! | Read header information in the correct order, and verify.       |
     ! +-----------------------------------------------------------------+
     READ(UNIT=funit,ERR=900,END=900) tfim%subtype,  &
                                      tfim%ncols,    &
@@ -834,7 +826,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 910 WRITE(*,991) 'Bad header information in file ' // fname ; GOTO 999
 990 FORMAT('*** ERROR (FIM_read_unf): ',A)
 991 FORMAT('*** WARNING (FIM_read_unf): ',A)
-999 CONTINUE
+999 RETURN
 
   CONTAINS ! -------------- !
     
@@ -896,7 +888,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 910 WRITE(*,990) 'Error writing file ' // fname
     fim%ecode=FIM_error_fwt ; CALL tidy ; GOTO 999
 990 FORMAT('*** ERROR (FIM_write_unf): ',A)
-999 CONTINUE
+999 RETURN
 
   CONTAINS ! -------------- !
     
@@ -963,7 +955,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 910 WRITE(*,991) 'Invalid subtype.'
     STOP
 991 FORMAT('*** ERROR (FIM_check_data): ')
-999 CONTINUE
+999 RETURN
   END FUNCTION FIM_check_data_ok
 !==============================================================================
   SUBROUTINE FIM_verify_header(fim)
@@ -1045,6 +1037,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- Variables       ---
     INTEGER :: lmthd
     ! --- Executable code ---
+    IF (fim%ecode.EQ.FIM_error_nul) GOTO 900
     lmthd=dmthd
     IF (PRESENT(mthd)) lmthd=mthd
     SELECT CASE(lmthd)
@@ -1096,13 +1089,16 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        fim%dblu=fim%dred
        !$OMP END PARALLEL WORKSHARE
     CASE DEFAULT
-       GOTO 900
+       GOTO 910
     END SELECT
     ! --- End code        ---
     GOTO 999
-900 WRITE(*,991) LMTHD, FIM_grscl_nul, FIM_grscl_lum
+900 WRITE(*,991) 'Cannot greyscale uninitialized structure.'
     STOP
-991 FORMAT('*** ERROR (FIM_ctf_gray): Invalid mthd =', I0, ', expecting ',    &
+910 WRITE(*,992) LMTHD, FIM_grscl_nul, FIM_grscl_lum
+    STOP
+991 FORMAT('*** ERROR (FIM_ctf_gray):',1x,A)
+992 FORMAT('*** ERROR (FIM_ctf_gray): Invalid mthd =', I0, ', expecting ',    &
            I0, ' to ', I0)
 999 RETURN
   END SUBROUTINE FIM_ctf_grey
@@ -1139,6 +1135,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     INTEGER :: c,r
     LOGICAL :: lcmsk(1:3)
     ! --- Executable code ---
+    IF (fim%ecode.EQ.FIM_error_nul) GOTO 900
     lcmsk=.TRUE.
     IF(PRESENT(cmsk)) lcmsk=cmsk    
     IF (lcmsk(1).EQV..FALSE.) GOTO 10
@@ -1169,6 +1166,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     !$OMP END PARALLEL DO
 30  CONTINUE
     ! --- End code        ---
+    GOTO 999
+900 WRITE(*,991) 'Cannot iterate uninitialized structure.'
+    STOP
+991 FORMAT('*** ERROR (FIM_ctf_iter):',1x,A)
+999 RETURN
   END SUBROUTINE FIM_ctf_iter
 !==============================================================================
   PURE FUNCTION APOLY(V,D)
@@ -1227,6 +1229,17 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     AMINV=D(0)+D(1)*A
     ! --- End code        ---        
   END FUNCTION AMINV
+!==============================================================================
+  PURE FUNCTION ACLMP(V,D)
+    IMPLICIT NONE
+    REAL(KIND=RKIND) :: ACLMP
+   ! --- Dummy arguments ---
+    REAL(KIND=RKIND),INTENT(IN) :: V
+    REAL(KIND=RKIND),INTENT(IN) :: D(0:)
+    ! --- Executable code ---
+    ACLMP=MERGE(D(1),D(2),V.LE.D(0))
+    ! --- End code        ---        
+  END FUNCTION ACLMP  
 !============================================================================== 
 ! * * *   G A M M A   C O R R E C T I O N    A N D    L U M I N A N C E   * * *
 !==============================================================================
@@ -1446,6 +1459,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     INTEGER     :: C,R1,R2
     REAL(RKIND) :: TR,TG,TB
     ! --- Executable code ---
+    IF (fim%ecode.EQ.FIM_error_nul) GOTO 900
     !$OMP PARALLEL DO PRIVATE(C,R1,R2,TR,TG,TB)
     DO R1=1,fim%nrows/2
        R2=FIM%nrows+1-R1 
@@ -1463,6 +1477,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     END DO
     !$OMP END PARALLEL DO
     ! --- End code        ---
+    GOTO 999
+900 WRITE(*,991) 'Cannot transform uninitialized structure.'
+    STOP
+991 FORMAT('*** ERROR (FIM_stf_hflip):',1x,A)
+999 RETURN    
   END SUBROUTINE FIM_stf_hflip
 !==============================================================================
   SUBROUTINE FIM_stf_vflip(fim)
@@ -1477,6 +1496,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     INTEGER     :: C1,C2,R
     REAL(RKIND) :: TR,TG,TB
     ! --- Executable code ---
+    IF (fim%ecode.EQ.FIM_error_nul) GOTO 900
     !$OMP PARALLEL DO PRIVATE(C1,C2,R,TR,TG,TB)
     DO C1=1,fim%ncols/2
        C2=fim%ncols+1-C1
@@ -1494,6 +1514,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     END DO
     !$OMP END PARALLEL DO
     ! --- End code        ---
+    GOTO 999
+900 WRITE(*,991) 'Cannot transform uninitialized structure.'
+    STOP
+991 FORMAT('*** ERROR (FIM_stf_vflip):',1x,A)
+999 RETURN
   END SUBROUTINE FIM_stf_vflip
 !==============================================================================
   SUBROUTINE FIM_stf_rotate(fim, rop)
@@ -1512,10 +1537,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     INTEGER             :: c1,c2,r1,r2,t
     INTEGER             :: ms
     ! --- Executable code ---
+    IF (fim%ecode.EQ.FIM_error_nul) GOTO 900
     IF (abs(rop).EQ.90.OR.abs(rop).EQ.270) THEN
        ALLOCATE(red(1:fim%nrows,1:fim%ncols),grn(1:fim%nrows,1:fim%ncols), &
                 blu(1:fim%nrows,1:fim%ncols),stat=ms)
-       IF (MS.ne.0) goto 900
+       IF (MS.ne.0) goto 910
        IF (rop.EQ.90.or.rop.eq.-270) THEN
           !$OMP PARALLEL DO PRIVATE (r1,r2,c1,c2,tr,tg,tb)
           DO r1=1,fim%nrows
@@ -1542,7 +1568,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
           !$OMP END PARALLEL DO
        END IF
        DEALLOCATE(fim%dred, fim%dgrn, fim%dblu, stat=ms) 
-       IF (ms.ne.0) GOTO 900
+       IF (MS.ne.0) GOTO 910
        fim%dred=>red ; fim%dgrn=>grn ; fim%dblu=>blu
        t=fim%nrows
        fim%nrows=fim%ncols
@@ -1574,19 +1600,168 @@ CONTAINS ! /// ------------------------------------------------------------ ///
           !$OMP END PARALLEL DO
        END IF
     ELSE
-       GOTO 910
+       GOTO 920
     END IF    
     ! --- End code        ---
     GOTO 999
-900 WRITE(*,991)     ; STOP
-910 WRITE(*,992) rop ; STOP
-991 FORMAT('*** WARNING (FIM_stf_rotate): memory allocation/deallocation')
-992 FORMAT('*** WARNING (FIM_stf_rotate): invalid angle ',I6)
-999 CONTINUE
+900 WRITE(*,991) 'Cannot transform uninitialized structure.' ; STOP
+910 WRITE(*,991) 'Memory allocation/deallocation'            ; STOP
+920 WRITE(*,992) rop                                         ; STOP
+991 FORMAT('*** ERROR (FIM_stf_rotate):',1x,A)
+992 FORMAT('*** ERROR (FIM_stf_rotate): invalid angle ',I6)
+999 RETURN
   END SUBROUTINE FIM_stf_rotate
 !==============================================================================
+! * * *       D I G I T A L   F I L T E R I N G   F U N C T I O N S       * * *
+!==============================================================================
+  SUBROUTINE FIM_flt_gauss(fim,wid,cmsk)
+    ! +-----------------------------------------------------------------------+
+    ! | Perform a 2D gaussian blur with a window width of wid, operating on   |
+    ! | colour channels (RGB) specified by cmsk array, assuming wid/2=3sigma. |
+    ! | Note:  (1) subroutine will return immediately if ALL(cmsk.EQ..false.) |
+    ! | ----       or if wid.LE.1                                             |
+    ! |        (2) if mod(wid,2).eq.0, then wid will be incremented.          |
+    ! |        (3) ADJUSTED window width must be smaller than the smallest    |
+    ! |            FIM dimension (i.e., WID.LE.MIN(fim%ncols,fim%nrows).      |
+    ! +-----------------------------------------------------------------------+
+    IMPLICIT NONE
+    ! --- Dummy arguments ---      
+    TYPE(FImage),INTENT(INOUT)       :: fim
+    INTEGER     ,INTENT(IN)          :: wid
+    LOGICAL     ,INTENT(IN),OPTIONAL :: cmsk(1:3)
+    ! --- Variables ---
+    LOGICAL                 :: lcmsk(1:3)
+    REAL(RKIND)             :: sgma
+    REAL(RKIND),allocatable :: tmpa(:),gkrn(:)
+    INTEGER                 :: c,r,i,ms,fww
+    ! --- Executable code ---
+    ! --- Admin and early exists for mask all false ---
+    lcmsk=.TRUE. ; IF (PRESENT(cmsk)) lcmsk=cmsk
+    IF (ALL(lcmsk.eqv..FALSE.)) RETURN    
+    ! Preliminary checks and early exists
+    fww=wid
+    IF (MOD(fww,2).EQ.0) fww=fww+1       ! Always work with odd-sized kernel
+    IF (fim%ecode.EQ.FIM_error_nul)      GOTO 900
+    IF (fww.LE.1)                        RETURN ! => NO OP
+    IF (fww.GT.MIN(fim%ncols,fim%nrows)) GOTO 910
+    ! Set up filter kernel assuming window ends are at 3 sigma away from middle
+    sgma=real(fww,RKIND)/(2*3) ! 3 sigma is half the window width
+    ALLOCATE(gkrn(-fww/2:fww/2),STAT=MS) ; IF (MS.NE.0) GOTO 920
+    gkrn=(/(EXP(-REAL(i,RKIND)**2/(2*sgma)),i=-fww/2,fww/2)/)
+    gkrn=gkrn/SUM(gkrn) ! Normalize kernel against sum of all elements
+    ! Set up and filter vertically down each column
+    ALLOCATE(tmpa(1-fww/2:fim%nrows+fww/2),STAT=MS) ;  IF (MS.NE.0) GOTO 920
+    IF (.NOT.lcmsk(1)) GOTO 10
+    !$OMP PARALLEL DO PRIVATE(tmpa)
+    DO c=1,fim%ncols
+       tmpa=(/(fim%dred(c,i),i=fww/2,1,-1), &
+               fim%dred(c,:),               &
+              (fim%dred(c,fim%nrows-i),i=1,fww/2)/)
+       fim%dred(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%nrows)/)
+       fim%dred(c,:)=MIN(MAX(fim%dred(c,:),0.0_RKIND),1.0_RKIND)
+    END DO
+    !$OMP END PARALLEL DO
+10  IF (.NOT.lcmsk(2)) GOTO 20
+    !$OMP PARALLEL DO PRIVATE(tmpa)
+    DO c=1,fim%ncols
+       tmpa=(/(fim%dgrn(c,i),i=fww/2,1,-1), &
+               fim%dgrn(c,:),               &
+              (fim%dgrn(c,fim%nrows-i),i=1,fww/2)/)
+       fim%dgrn(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%nrows)/)
+       fim%dgrn(c,:)=MIN(MAX(fim%dgrn(c,:),0.0_RKIND),1.0_RKIND)
+    END DO
+    !$OMP END PARALLEL DO
+20  IF (.NOT.lcmsk(3)) GOTO 30
+    !$OMP PARALLEL DO PRIVATE(tmpa)
+    DO c=1,fim%ncols
+       tmpa=(/(fim%dblu(c,i),i=fww/2,1,-1), &
+               fim%dblu(c,:),               &
+              (fim%dblu(c,fim%nrows-i),i=1,fww/2)/)
+       fim%dblu(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%nrows)/)
+       fim%dblu(c,:)=MIN(MAX(fim%dblu(c,:),0.0_RKIND),1.0_RKIND)
+    END DO
+    !$OMP END PARALLEL DO
+30  CONTINUE
+    DEALLOCATE(tmpa,STAT=MS)  ; IF (MS.NE.0) GOTO 920
+    ! Set up and filter horizontally across each column
+    ALLOCATE(tmpa(1-fww/2:fim%ncols+fww/2),STAT=MS)  ; IF (MS.NE.0) GOTO 920
+    IF (.NOT.lcmsk(1)) GOTO 40
+    !$OMP PARALLEL DO PRIVATE(tmpa)
+    DO r=1,fim%nrows
+       tmpa=(/(fim%dred(i,r),i=fww/2,1,-1), &
+               fim%dred(:,r),               &
+              (fim%dred(fim%nrows-i,r),i=1,fww/2)/)
+       fim%dred(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%ncols)/)
+       fim%dred(:,r)=MIN(MAX(fim%dred(:,r),0.0_RKIND),1.0_RKIND)
+    END DO
+    !$OMP END PARALLEL DO
+40  IF (.NOT.lcmsk(2)) GOTO 50
+    !$OMP PARALLEL DO PRIVATE(tmpa)
+    DO r=1,fim%nrows
+       tmpa=(/(fim%dgrn(i,r),i=fww/2,1,-1), &
+               fim%dgrn(:,r),               &
+              (fim%dgrn(fim%nrows-i,r),i=1,fww/2)/)
+       fim%dgrn(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%ncols)/)
+       fim%dgrn(:,r)=MIN(MAX(fim%dgrn(:,r),0.0_RKIND),1.0_RKIND)
+    END DO
+    !$OMP END PARALLEL DO
+50  IF (.NOT.lcmsk(3)) GOTO 60
+    !$OMP PARALLEL DO PRIVATE(tmpa)
+    DO r=1,fim%nrows
+       tmpa=(/(fim%dblu(i,r),i=fww/2,1,-1), &
+               fim%dblu(:,r),               &
+              (fim%dblu(fim%nrows-i,r),i=1,fww/2)/)
+       fim%dblu(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)),i=1,fim%ncols)/)
+       fim%dblu(:,r)=MIN(MAX(fim%dblu(:,r),0.0_RKIND),1.0_RKIND)
+    END DO
+    !$OMP END PARALLEL DO
+60  CONTINUE
+    DEALLOCATE(tmpa,STAT=MS) ; IF (MS.NE.0) GOTO 920
+    DEALLOCATE(gkrn,STAT=MS) ; IF (MS.NE.0) GOTO 920
+    ! --- End exe code    ---
+    GOTO 999
+900 WRITE(*,991) 'Cannot filter uninitialized structure.'    ; STOP
+910 WRITE(*,991) 'WID greater than smallest FIM dimension', &
+                 MIN(fim%ncols,fim%nrows)                    ; STOP
+920 WRITE(*,991) 'Error while allocating/deallocating memory'; STOP
+991 FORMAT('*** ERROR (FIM_flt_gauss):',1x,A,(:,1x,I0))
+999 RETURN
+  END SUBROUTINE FIM_flt_gauss
+!==============================================================================
+  SUBROUTINE FIM_flt_edged(fim,wid1,wid2)
+    ! +-----------------------------------------------------------------------+
+    ! | Do a difference-of-gaussian edge detection on fim, using window width |
+    ! | wid* for the Gaussian blurs.  See notes to FIM_flt_gauss, which also  |
+    ! | apply here, mutatis mutandis.                                         |
+    ! +-----------------------------------------------------------------------+
+    IMPLICIT NONE
+    ! --- Dummy arguments ---      
+    TYPE(FImage),INTENT(INOUT)     :: fim
+    INTEGER     ,INTENT(IN)        :: wid1,wid2
+    ! --- Variables       ---
+    TYPE(FImage) :: fim0 ! Temporary holding area
+    ! --- Executable code ---
+    ! Preliminary checks    
+    IF (fim%ecode.EQ.FIM_error_nul)      GOTO 900
+    ! --- Save original image data and do Gaussian blur ---
+    CALL FIM_copy(fim0,fim)
+    CALL FIM_flt_gauss(fim ,wid1)
+    CALL FIM_flt_gauss(fim0,wid2)
+    ! --- Take the difference and clamp ---
+    !$OMP PARALLEL WORKSHARE
+    fim%dred=MIN(ABS(fim0%dred-fim%dred),1.0_RKIND)
+    fim%dgrn=MIN(ABS(fim0%dgrn-fim%dgrn),1.0_RKIND)
+    fim%dblu=MIN(ABS(fim0%dblu-fim%dblu),1.0_RKIND)
+    !$OMP END PARALLEL WORKSHARE
+    CALL FIM_clear(fim0)
+    ! --- End exe code    ---
+    GOTO 999
+900 WRITE(*,991) 'Cannot filter uninitialized structure.' ; STOP
+991 FORMAT('*** ERROR (FIM_flt_edged):',1x,A,(:,1x,I0))
+999 RETURN
+  END SUBROUTINE FIM_flt_edged
+!==============================================================================  
 END MODULE FImageMod
-
 !*******
 !* EOF *
 !*******

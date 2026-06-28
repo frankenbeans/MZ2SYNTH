@@ -106,6 +106,13 @@
 #define CONST_DZRP .FALSE.
 #endif
 
+#ifndef CONST_DGBW
+#define CONST_DGBW 0
+#endif
+
+#ifndef CONST_DEDW
+#define CONST_DEDW 0
+#endif
 
 MODULE CONSTANT
   USE ISO_C_BINDING
@@ -145,4 +152,6 @@ MODULE CONSTANT
   INTEGER            ,PARAMETER :: DRNS = CONST_DRNS ! Random seed for phase ini
   LOGICAL            ,PARAMETER :: DFXP = CONST_DFXP ! Fixed phase mode
   LOGICAL            ,PARAMETER :: DZRP = CONST_DZRP ! Initialize phases to zero
+  INTEGER            ,PARAMETER :: DGBW = CONST_DGBW ! Default Gaussian Blur Window
+  INTEGER            ,PARAMETER :: DEDW = CONST_DEDW ! Default DOG Edge Det. Window
 END MODULE CONSTANT

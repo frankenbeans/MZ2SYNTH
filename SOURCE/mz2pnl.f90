@@ -41,7 +41,7 @@ MODULE MZ2Pnl
 
 CONTAINS
 
-#define FREE(W) IF (ASSOCIATED(W)) DEALLOCATE(W)
+#define SAFEFREE(W) IF (ASSOCIATED(W)) DEALLOCATE(W) ; NULLIFY(W)
 
   SUBROUTINE MZ2Pnl_Clear(P)
     IMPLICIT NONE
@@ -54,12 +54,16 @@ CONTAINS
     ! Then try to dellocate LUM data - this is in case a channel had been
     ! linked to luminance, which would have its own data allocated aside from
     ! that in the image. 
-    FREE(P%DLUM) ;
+    SAFEFREE(P%DLUM)
     ! The rest is obvious - this is all just data allocated in the MZ2Panel.
-    FREE(P%ASINE)  ; FREE(P%ASQWV)  ;
-    FREE(P%ASWTH)  ; FREE(P%ATRNG)  ;
-    FREE(P%WSINE)  ; FREE(P%WSQWV)  ;
-    FREE(P%WSWTH)  ; FREE(P%WTRNG)  ;
+    SAFEFREE(P%ASINE)
+    SAFEFREE(P%ASQWV)
+    SAFEFREE(P%ASWTH)
+    SAFEFREE(P%ATRNG)
+    SAFEFREE(P%WSINE)
+    SAFEFREE(P%WSQWV)
+    SAFEFREE(P%WSWTH)
+    SAFEFREE(P%WTRNG)
     P=MZ2Panel()
     IF (PFL_VERB) WRITE(*,700) 'Panel memory deallocated and structure cleared.'
     RETURN
@@ -270,7 +274,7 @@ CONTAINS
     TYPE(Mz2Panel),INTENT(INOUT) :: P
     LOGICAL       ,INTENT(INOUT) :: DONE
     ! --- VARIABLES ---
-    INTEGER :: CC,NS,TI
+    INTEGER :: CC,NS,TI,I
     ! --- EXE CODE ---
     DONE=.FALSE.
     TI=NINT(SIGN(1.0_RKIND,P%SCANRT)) ! Increment can be positive or negative
@@ -283,17 +287,26 @@ CONTAINS
     END IF
     ! -- Update current sample value in structure
     P%CS=NS
+    ! -- Tick all ratemeters that need it!
     IF (ASSOCIATED(P%DTSINE)) THEN
-       CALL RM_TICK(P%ASINE(:),P%WSINE(:),P%RMCNST,P%DTSINE(CC,:),P%VZERO)
+       DO CONCURRENT(I=LBOUND(P%ASINE,1):UBOUND(P%ASINE,1))
+          CALL RM_TICK(P%ASINE(I),P%WSINE(I),P%RMCNST,P%DTSINE(CC,I),P%VZERO)
+       END DO
     END IF
     IF (ASSOCIATED(P%DTSQWV)) THEN
-       CALL RM_TICK(P%ASQWV(:),P%WSQWV(:),P%RMCNST,P%DTSQWV(CC,:),P%VZERO)
+       DO CONCURRENT(I=LBOUND(P%ASQWV,1):UBOUND(P%ASQWV,1))
+          CALL RM_TICK(P%ASQWV(I),P%WSQWV(I),P%RMCNST,P%DTSQWV(CC,I),P%VZERO)
+       END DO
     END IF
     IF (ASSOCIATED(P%DTSWTH)) THEN
-       CALL RM_TICK(P%ASWTH(:),P%WSWTH(:),P%RMCNST,P%DTSWTH(CC,:),P%VZERO)
+       DO CONCURRENT(I=LBOUND(P%ASWTH,1):UBOUND(P%ASWTH,1))
+          CALL RM_TICK(P%ASWTH(I),P%WSWTH(I),P%RMCNST,P%DTSWTH(CC,I),P%VZERO)
+       END DO
     END IF
     IF (ASSOCIATED(P%DTTRNG)) THEN
-       CALL RM_TICK(P%ATRNG(:),P%WTRNG(:),P%RMCNST,P%DTTRNG(CC,:),P%VZERO)
+       DO CONCURRENT(I=LBOUND(P%ATRNG,1):UBOUND(P%ATRNG,1))
+          CALL RM_TICK(P%ATRNG(I),P%WTRNG(I),P%RMCNST,P%DTTRNG(CC,I),P%VZERO)
+       END DO
     END IF    
     ! --- END CODE ---
     

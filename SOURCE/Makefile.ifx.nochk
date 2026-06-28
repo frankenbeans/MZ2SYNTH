@@ -3,7 +3,7 @@ CFLAGS=-warn all           \
        -O3 -ipo            \
        -fp-model fast -ftz \
        -flto               \
-       -stand f03 -free    \
+       -stand f08 -free    \
 #      -check bounds
 
 EXE=mz2

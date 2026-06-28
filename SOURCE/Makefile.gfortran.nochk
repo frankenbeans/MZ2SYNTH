@@ -3,7 +3,7 @@ CFLAGS=-Wall          \
        -O3            \
        -ffast-math    \
        -flto          \
-       -std=f2003     \
+       -std=f2008     \
 #      -fcheck=bounds
 
 EXE=mz2

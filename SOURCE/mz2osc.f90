@@ -73,6 +73,7 @@ CONTAINS
     INTEGER :: i,j,nseed,zseed,ms
     REAL(KIND=RKIND) :: fc1
     ! --- EXE CODE ---
+    CALL OscBank_Clear(ob)
     ALLOCATE(ob%freq(1:N_OSC),SOURCE=0.0_RKIND,STAT=MS) ; IF (MS.NE.0) GOTO 900
     ALLOCATE(ob%incr(1:N_OSC),SOURCE=0.0_RKIND,STAT=MS) ; IF (MS.NE.0) GOTO 900
     ALLOCATE(ob%accm(1:N_OSC),SOURCE=0.0_RKIND,STAT=MS) ; IF (MS.NE.0) GOTO 900
@@ -117,7 +118,7 @@ CONTAINS
     ob%tswt=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_SWT)
     ob%ttri=>ob%wtr(1:N_TIC_PER_CYC,1:N_WVT,V_TRI)
     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    DO j=1,N_WVT
+    DO CONCURRENT (j=1:N_WVT)
        CALL WVFSIN(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
             N_TIC_PER_CYC,ob%tsin(:,j))
        CALL WVFSQR(ob%freq(OscNmbr(j)), REAL(ob%smpr,RKIND), &
@@ -187,7 +188,7 @@ CONTAINS
     ! NB:  Do not deallocate ob%tsin..ob%ttri as those are just handles to
     ! --   memory allocated/deallocated by other structures
     ! ---------------------------------------------------------------------
-    ob=OscBank()
+    ob=OscBank() ! Restore defaults
     IF (PFL_VERB) WRITE(*,700) 'Oscillator banks deallocated cleared'
     RETURN
     ! --- END CODE ---
@@ -200,57 +201,60 @@ CONTAINS
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
     INTEGER      ,INTENT(IN)    :: vce
     ! --- VARIBLES ---
-    INTEGER          :: j,x0,x1
-    REAL(KIND=RKIND) :: y0,y1
+    INTEGER          :: j
     ! --- EXE CODE ---
     ob%vval(:,vce)=0
     IF (vce.EQ.V_SIN) THEN
-       DO j=1,N_OSC
-          IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
-          IF (msk(j)) THEN
-             x0=NINT(ob%accm(j))+1
-             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-             ! .................................................................
-             y0=ob%tsin(x0,ob%wtno(j)) ; y1=ob%tsin(x1,ob%wtno(j))
-             ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-             ! .................................................................
-          END IF
+       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
+          BLOCK
+            INTEGER          :: x0,x1
+            REAL(KIND=RKIND) :: y0,y1
+            x0=NINT(ob%accm(j))+1
+            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
+            ! .................................................................
+            y0=ob%tsin(x0,ob%wtno(j)) ; y1=ob%tsin(x1,ob%wtno(j))
+            ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+            ! .................................................................
+          END BLOCK
        END DO
     ELSE IF (vce.EQ.V_SQW) THEN       
-       DO j=1,N_OSC
-          IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
-          IF (msk(j)) THEN
-             x0=NINT(ob%accm(j))+1
-             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-             ! .................................................................
-             y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
-             ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-             ! .................................................................
-          END IF
+       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
+          BLOCK
+            INTEGER          :: x0,x1
+            REAL(KIND=RKIND) :: y0,y1
+            x0=NINT(ob%accm(j))+1
+            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
+            ! .................................................................
+            y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
+            ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+            ! .................................................................
+          END BLOCK
        END DO
     ELSE IF (vce.EQ.V_SWT) THEN
-       DO j=1,N_OSC
-          IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
-          IF (msk(j)) THEN
-             x0=NINT(ob%accm(j))+1
-             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-             ! .................................................................
-             y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
-             ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-             ! .................................................................
-          END IF
+       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
+          BLOCK
+            INTEGER          :: x0,x1
+            REAL(KIND=RKIND) :: y0,y1
+            x0=NINT(ob%accm(j))+1
+            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
+            ! .................................................................
+            y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
+            ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+            ! .................................................................
+          END BLOCK
        END DO
     ELSE IF (vce.EQ.V_TRI) THEN
-       DO j=1,N_OSC
-          IF (ob%smpr.lt.2*ob%freq(j)) EXIT ! No need to update beyond F_Nyquist
-          IF (msk(j)) THEN
-             x0=NINT(ob%accm(j))+1
-             x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
+       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
+          BLOCK
+            INTEGER          :: x0,x1
+            REAL(KIND=RKIND) :: y0,y1
+            x0=NINT(ob%accm(j))+1
+            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
              ! .................................................................
-             y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
-             ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-             ! .................................................................
-          END IF
+            y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
+            ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
+            ! .................................................................
+          END BLOCK
        END DO
     ELSE
        GOTO 900
@@ -283,11 +287,15 @@ CONTAINS
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
     ! --- VARIABLES ---
     INTEGER,PARAMETER :: maxacc=N_TIC_PER_CYC-1
+    INTEGER           :: I
     ! --- END CODE ---
     !NB: only need to "tick" oscillators with frequencies at or below Nyquist.
-    WHERE(msk.AND.2*ob%freq.le.ob%smpr) ob%accm=ob%accm+ob%incr
-    ! Deal with any overflowing accumulators
-    WHERE(ob%accm.GT.maxacc)            ob%accm=ob%accm-maxacc
+    ASSOCIATE(TICKMASK=>MSK.AND.2*OB%FREQ.LE.OB%SMPR)
+      DO CONCURRENT(I=LBOUND(TICKMASK,1):UBOUND(TICKMASK,1),TICKMASK(I))
+         OB%ACCM(I)=OB%ACCM(I)+OB%INCR(I)- &
+              MERGE(MAXACC,0,OB%ACCM(I)+OB%INCR(I).GT.MAXACC)
+      END DO
+    END ASSOCIATE
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 

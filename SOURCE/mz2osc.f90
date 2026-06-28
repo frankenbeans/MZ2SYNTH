@@ -290,7 +290,7 @@ CONTAINS
     INTEGER           :: I
     ! --- END CODE ---
     !NB: only need to "tick" oscillators with frequencies at or below Nyquist.
-    ASSOCIATE(TICKMASK=>MSK.AND.2*OB%FREQ.LE.OB%SMPR)
+    ASSOCIATE(TICKMASK=>MSK.AND.2*OB%FREQ.LT.OB%SMPR)
       DO CONCURRENT(I=LBOUND(TICKMASK,1):UBOUND(TICKMASK,1),TICKMASK(I))
          OB%ACCM(I)=OB%ACCM(I)+OB%INCR(I)- &
               MERGE(MAXACC,0,OB%ACCM(I)+OB%INCR(I).GT.MAXACC)

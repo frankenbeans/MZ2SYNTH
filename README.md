@@ -58,7 +58,7 @@ The following options are available (case insensitive):
 |-a cps    | -advance cps             | Set advance rate in columns per second          |
 |-b bfw    | -gaussian-blur bfw       | Set Gaussian blur window (bfw/2=3*sigma)        |
 |-c XXXX   | -channel selct XXXX      | X in (R,G,B,L,M), in order for sin/sqw/swt/tri  |
-|-e bfw    | -edge-detect edw         | Set DoG edge detect window (edw/2=3*sigma)      |
+|-e edw    | -edge-detect edw         | Set DoG edge detect window (edw/2=3*sigma)      |
 |-f fmt    | -audio-format fmt        | Set fmt to "single" or "double" precision       |
 |-g sxp    | -sigma-exponent sxp      | Set sigma exponent to sxp in [0.0,2.0]          |
 |-m mul    | -volume-multiplier mul   | Multiply raw volume by factor mul \>  0         |

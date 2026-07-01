@@ -1,8 +1,8 @@
 # TODO for MZ2SYNTH
 
 ## SHORT TERM
-- Audit code and do a Big Tidy.
-- Replace FImageMod with new version, and add the following features:
+- Audit code and do a Big Tidy, particularly in the oscillator modules to eliminate the overcomplicated mess in wvecmp.f90.
+- [DONE] Replace FImageMod with new version, and add the following features:
   - Add Gaussian Blur option (-b <kw>)
   - Add Edge Detect (-e <bw>)
 - Improve makefiles - don't really need four...

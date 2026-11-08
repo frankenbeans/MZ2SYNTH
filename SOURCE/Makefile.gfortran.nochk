@@ -1,6 +1,7 @@
 FC=gfortran
 CFLAGS=-Wall          \
        -O3            \
+       -march=native  \
        -ffast-math    \
        -flto          \
        -std=f2008     \

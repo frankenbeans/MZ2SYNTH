@@ -1,6 +1,7 @@
 FC=ifx
 CFLAGS=-warn all           \
        -O3 -ipo            \
+       -xHost              \
        -fp-model fast -ftz \
        -flto               \
        -stand f08 -free    \

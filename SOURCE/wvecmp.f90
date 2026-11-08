@@ -188,7 +188,7 @@ CONTAINS
     ! Find amplitude of output waveform section and normalize to UNITY if the
     ! waveform exceeds the maximum permissible value of UNITY anywhere.
     ABSAMP=MAXVAL(ABS(OUTPUT))
-    IF (ABSAMP.GT.0) OUTPUT=OUTPUT/ABSAMP
+    IF (ABSAMP.GT.1E-9) OUTPUT=OUTPUT/ABSAMP
     ! ..........................................................................
     ! --- END CODE ---
   END SUBROUTINE Wvf000

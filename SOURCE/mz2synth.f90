@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2026-06-28'
+#define PROGVERS '0.1/2026-11-08'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  

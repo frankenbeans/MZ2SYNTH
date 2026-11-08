@@ -3,7 +3,7 @@
 !
 ! FOURIER SYNTHESIS OF COMMON MUSICAL SYNTHESIZER WAVEFORMS
 !
-! COPYRIGHT (C) 2025 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! COPYRIGHT (C) 2026 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
 MODULE WveCmp
@@ -117,24 +117,18 @@ CONTAINS
     ! --- END CODE ---    
   END FUNCTION Sinc
 ! ------------------------------------------------------------------------------
-  PURE FUNCTION GPCoef(GK,GMK)
+  PURE FUNCTION GPCoef(FCMP,FNYQ)
     ! Calculates low-pass filter coefficient to reduce the amplitudes
-    ! of the high-frequency Fourier components as these approach the
-    ! Nyquist Frequency.  GK corresponds to the Kth Fourier component
-    ! that this coefficient will be used with, and GMK is the maximum
-    ! K that we will reach before exceeding the Nyquist Frequency.
-    !
+    ! of the frequency component FCMP as it approaches the Nyquist
+    ! frequency, FNYQ.
     ! REFERENCE:  Sigma Approximation
     !             https://en.wikipedia.org/wiki/Sigma_approximation
     IMPLICIT NONE
     REAL(KIND=RKIND) :: GPCoef
     ! --- DUMMIES ---
-    INTEGER,INTENT(IN) :: GK,GMK
-    ! --- VARIABLES ---
-    REAL(KIND=RKIND)   :: Q
+    REAL(KIND=RKIND),INTENT(IN) :: FCMP,FNYQ
     ! --- EXE CODE ---
-    Q=REAL(GK,KIND=RKIND)/REAL(GMK+1,KIND=RKIND)
-    GPCoef=Sinc(Q)**SIGEXP
+    GPCoef=Sinc(MIN(FCMP/FNYQ,1.0_RKIND))**SIGEXP
     ! --- END CODE ---      
   END FUNCTION GPCoef
 ! ------------------------------------------------------------------------------
@@ -161,11 +155,8 @@ CONTAINS
     INTENT(IN)       :: IFWAVE,IFSMPL,IZOUTP,MXNITR
     INTENT(INOUT)    :: OUTPUT
     ! --- VARIABLES ---
-    INTEGER          :: J
-    INTEGER          :: K,MAXK
-    REAL(KIND=RKIND) :: FCFREQ
-    REAL(KIND=RKIND) :: T
-    REAL(KIND=RKIND) :: ABSAMP
+    INTEGER          :: J,K,MAXK
+    REAL(KIND=RKIND) :: FCFREQ,NQFREQ,T,ABSAMP,GPCVAL
     ! --- EXE CODE ---
     ! INITIALIZE VARIABLES TO ZERO
     OUTPUT=0
@@ -183,19 +174,21 @@ CONTAINS
     ! of the highest frequency Fourier component that should appear in
     ! OUTPUT.
     ! ..........................................................................
-    MAXK=MIN(INT(IFSMPL/(2*IFWAVE)),MXNCMP)
+    NQFREQ=IFSMPL/2
+    MAXK=MIN(INT(NQFREQ/IFWAVE),MXNCMP)
     ! DO FOURIER SUMMATION FOR THIS WAVEFORM
     DO K=1,MIN(MXNITR,MAXK)
+       GPCVAL=GPCoef(K*IFWAVE,NQFREQ)
        DO J=1,IZOUTP
           T=REAL(J-1,RKIND)/REAL(IZOUTP,RKIND)
-          OUTPUT(J)=OUTPUT(J)+GPCoef(K,MAXK)*WVFUNC(Omega(FCFREQ),T,K)
+          OUTPUT(J)=OUTPUT(J)+GPCVAL*WVFUNC(Omega(FCFREQ),T,K)
        END DO
     END DO
     ! .........................................................................
     ! Find amplitude of output waveform section and normalize to UNITY if the
     ! waveform exceeds the maximum permissible value of UNITY anywhere.
     ABSAMP=MAXVAL(ABS(OUTPUT))
-    IF (ABSAMP.GT.1) OUTPUT=OUTPUT/ABSAMP
+    IF (ABSAMP.GT.0) OUTPUT=OUTPUT/ABSAMP
     ! ..........................................................................
     ! --- END CODE ---
   END SUBROUTINE Wvf000
@@ -256,14 +249,10 @@ CONTAINS
     INTEGER          :: K
     INTENT(IN) :: OMG,T,K
     ! --- EXE CODE ---
-    IF (MOD(K,2).EQ.0) THEN
-       FGNTri=0
-    ELSE
-       ! FORTRAN-77 VERSION WAS:
-       !   FGNTri=(-1D0)**(DBLE(K-1)/2D0)/(DBLE(K)**2)*SIN(K*OMG*T)
-       FGNTri=((-1.0_RKIND)**(REAL(K-1,RKIND)/2.0_RKIND))*(SIN(K*OMG*T)) &
-              / (REAL(K,RKIND)**2)
-    END IF
+    FGNTri=0
+    IF(MOD(K,2).GT.0) FGNTri=((-1)**((K-1)/2))*(SIN(K*OMG*T))/(REAL(K,RKIND)**2)
+    ! FORTRAN-77 VERSION WAS:
+    !   FGNTri=(-1D0)**(DBLE(K-1)/2D0)/(DBLE(K)**2)*SIN(K*OMG*T)
     ! --- END CODE ---
   END FUNCTION FGNTri
 ! ------------------------------------------------------------------------------

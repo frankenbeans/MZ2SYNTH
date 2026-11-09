@@ -201,84 +201,23 @@ CONTAINS
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
     INTEGER      ,INTENT(IN)    :: vce
     ! --- VARIBLES ---
-    INTEGER          :: j
+    INTEGER          :: j,i0,i1
+    REAL(KIND=RKIND) :: fr,y0,y1
     ! --- EXE CODE ---
+    IF (vce.LT.V_SIN.OR.vce.GT.V_TRI) GOTO 900
     ob%vval(:,vce)=0
-    IF (vce.EQ.V_SIN) THEN
-       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
-          BLOCK
-            INTEGER          :: x0,x1
-            REAL(KIND=RKIND) :: y0,y1
-            x0=NINT(ob%accm(j))+1
-            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-            ! .................................................................
-            y0=ob%tsin(x0,ob%wtno(j)) ; y1=ob%tsin(x1,ob%wtno(j))
-            ob%vval(j,V_SIN)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-            ! .................................................................
-          END BLOCK
-       END DO
-    ELSE IF (vce.EQ.V_SQW) THEN       
-       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
-          BLOCK
-            INTEGER          :: x0,x1
-            REAL(KIND=RKIND) :: y0,y1
-            x0=NINT(ob%accm(j))+1
-            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-            ! .................................................................
-            y0=ob%tsqw(x0,ob%wtno(j)) ; y1=ob%tsqw(x1,ob%wtno(j))
-            ob%vval(j,V_SQW)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-            ! .................................................................
-          END BLOCK
-       END DO
-    ELSE IF (vce.EQ.V_SWT) THEN
-       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
-          BLOCK
-            INTEGER          :: x0,x1
-            REAL(KIND=RKIND) :: y0,y1
-            x0=NINT(ob%accm(j))+1
-            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-            ! .................................................................
-            y0=ob%tswt(x0,ob%wtno(j)) ; y1=ob%tswt(x1,ob%wtno(j))
-            ob%vval(j,V_SWT)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-            ! .................................................................
-          END BLOCK
-       END DO
-    ELSE IF (vce.EQ.V_TRI) THEN
-       DO CONCURRENT (j=1:N_OSC,MSK(j).AND.2*ob%freq(j).lt.ob%smpr)
-          BLOCK
-            INTEGER          :: x0,x1
-            REAL(KIND=RKIND) :: y0,y1
-            x0=NINT(ob%accm(j))+1
-            x1=x0+1 ; IF (x1.GT.N_TIC_PER_CYC) x1=1
-             ! .................................................................
-            y0=ob%ttri(x0,ob%wtno(j)) ; y1=ob%ttri(x1,ob%wtno(j))
-            ob%vval(j,V_TRI)=Yli(REAL(x0,RKIND),ob%accm(j),y0,y1)
-            ! .................................................................
-          END BLOCK
-       END DO
-    ELSE
-       GOTO 900
-    END IF
+    DO j=1,N_OSC
+       IF ((.NOT.msk(j)).OR.2*ob%freq(j).ge.REAL(ob%smpr,RKIND)) CYCLE
+       i0=INT(ob%accm(j))+1
+       i1=i0+1 ; if (i1.GT.N_TIC_PER_CYC) i1=1
+       y0=ob%wtr(i0,ob%wtno(j),vce) ; y1=ob%wtr(i1,ob%wtno(j),vce)
+       fr=ob%accm(j)-AINT(ob%accm(j))
+       ob%vval(j,vce)=y0+fr*(y1-y0)
+    END DO
     RETURN
     ! --- END CODE ---    
 800 FORMAT('*ERR (OscBank_Update):',1x,A)
-900 WRITE(*,800) 'Invalid voice number' ; STOP
-    
-  CONTAINS
-    
-    ELEMENTAL FUNCTION Yli(x0,x,y0,y1) RESULT(y)
-      IMPLICIT NONE
-      REAL(KIND=RKIND)            :: y
-      REAL(KIND=RKIND),INTENT(IN) :: x0,x,y0,y1
-      ! --- VARIABLES ---
-      REAL(KIND=RKIND),PARAMETER :: rdenom=1.0_RKIND/REAL(N_TIC_PER_CYC,RKIND)
-      REAL(KIND=RKIND) :: m,c
-      ! --- EXE CODE ---
-      m=(y1-y0)*rdenom ! Avoids expensive division
-      c=y0-m*x0
-      y=m*x+c
-      ! --- END CODE ---
-    END FUNCTION Yli
+900 WRITE(*,800) 'Invalid voice number' ; STOP    
   END SUBROUTINE OscBank_Update
 
   PURE SUBROUTINE OscBank_Tick(ob,msk)
@@ -286,16 +225,17 @@ CONTAINS
     TYPE(OscBank),INTENT(INOUT) :: ob
     LOGICAL      ,INTENT(IN)    :: msk(1:N_OSC)
     ! --- VARIABLES ---
-    INTEGER,PARAMETER :: maxacc=N_TIC_PER_CYC-1
+    REAL(KIND=RKIND),PARAMETER :: MAXACC=REAL(N_TIC_PER_CYC,RKIND)
     INTEGER           :: I
-    ! --- END CODE ---
-    !NB: only need to "tick" oscillators with frequencies at or below Nyquist.
+    ! --- EXE CODE ---
+    ! Accumulators in range R[0,N_TIC_PER_CYC) maintain phase.
+    ! NB: only need to "tick" oscillators with frequencies at or below Nyquist.  
     ASSOCIATE(TICKMASK=>MSK.AND.2*OB%FREQ.LT.OB%SMPR)
-      DO CONCURRENT(I=LBOUND(TICKMASK,1):UBOUND(TICKMASK,1),TICKMASK(I))
-         OB%ACCM(I)=OB%ACCM(I)+OB%INCR(I)- &
-              MERGE(MAXACC,0,OB%ACCM(I)+OB%INCR(I).GT.MAXACC)
+      DO CONCURRENT(I=1:N_OSC,TICKMASK(I))
+         OB%ACCM(I)=OB%ACCM(I)+OB%INCR(I)
+         IF (OB%ACCM(I).GE.MAXACC) OB%ACCM(I)=OB%ACCM(I)-MAXACC
       END DO
-    END ASSOCIATE
+    END ASSOCIATE    
     ! --- END CODE ---
   END SUBROUTINE OscBank_Tick
 

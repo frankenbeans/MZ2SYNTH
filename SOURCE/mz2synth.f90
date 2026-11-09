@@ -7,7 +7,7 @@
 ! ------------------------------------------------------------------------------
 
 #define PROGNAME 'MZ2SYNTH'
-#define PROGVERS '0.1/2026-11-08'
+#define PROGVERS '0.1/2026-11-09'
 #define PROGCOPY 'Copyright (C) by E. Lamprecht.   All rights reserved.'
 
 PROGRAM Mz2Synth  
@@ -112,7 +112,7 @@ CONTAINS
        CASE('-Z','-ZERO-PHASE')
           ZRPH=.NOT.ZRPH
           RARG='Zero phase mode'
-          IF (FXPH) THEN
+          IF (ZRPH) THEN
              IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'on'
           ELSE
              IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':',TRIM(RARG),'off'
@@ -168,6 +168,7 @@ CONTAINS
           CASE('DOUBLE')
              AFMT=C_DOUBLE
           CASE DEFAULT
+             GOTO 935
           END SELECT
           IF (PFL_VERB) WRITE(*,700) 'Audio sample format =',TRIM(CARG)
        CASE('-G','-SIGMA-EXPONENT')
@@ -202,7 +203,7 @@ CONTAINS
           IF (NARG.GT.COMMAND_ARGUMENT_COUNT()) GOTO 950
           CALL GET_COMMAND_ARGUMENT(NARG,CARG)
           READ(CARG,*,ERR=948) TRZF
-          IF (TRZF.LT.0.OR.TRZF.GT.1) GOTO 950
+          IF (TRZF.LE.0.OR.TRZF.GT.0.5) GOTO 950
           IF (PFL_VERB) WRITE(*,710) 'Transition fraction =',TRZF          
        CASE('-S','-SAMPLING-RATE')
           IF (PFL_VERB) WRITE(*,700) TRIM(CARG),':','Set sampling rate'
@@ -232,20 +233,22 @@ CONTAINS
 700 FORMAT('*INF (Mz2Syn_CmdLine):',999(:,1X,A))
 710 FORMAT('*INF (Mz2Syn_CmdLine):',999(:,1X,A,:,1X,G13.6))
 800 FORMAT('*ERR (Mz2Syn_CmdLine):',999(:,1X,A,:,1X,I0))
-900 WRITE(*,800) 'Advance rate must be present and >= 1'         ; STOP
-905 WRITE(*,700) 'Gaussian blur window must be >= 1'             ; STOP
-910 WRITE(*,800) 'Channel multiplier must be four of [RGBLM]'    ; STOP
-920 WRITE(*,800) 'Volume multiplier must be present and >= 0'    ; STOP
-930 WRITE(*,700) 'Edge Detect window must be >= 1'               ; STOP
-940 WRITE(*,800) 'Expecting output file name'                    ; STOP
-945 WRITE(*,800) 'Output file exists but overwrite mode is off'  ; STOP
-947 WRITE(*,800) 'Output file cannot be opened in WRITE mode'    ; STOP
-948 WRITE(*,800) 'Sigma exponent must be present and in [0,2]'   ; STOP
-949 WRITE(*,800) 'Sampling rate must be integer >=',NINT(DSMP)/2 ; STOP
-950 WRITE(*,800) 'Transition frac must be present and in [0,1]'  ; STOP
-960 WRITE(*,800) 'Cannot read input file '//TRIM(PIFN)           ; STOP
-980 WRITE(*,800) 'Trailing rubbish after input file argument'    ; STOP
-990 WRITE(*,800) 'Invalid command-line option '//TRIM(CARG)      ; STOP
+900 WRITE(*,800) 'Advance rate must be present and >= 1'            ; STOP
+905 WRITE(*,800) 'Gaussian blur window must be >= 1'                ; STOP
+910 WRITE(*,800) 'Channel multiplier must be four of [RGBLM]'       ; STOP
+920 WRITE(*,800) 'Volume multiplier must be present and >= 0'       ; STOP
+930 WRITE(*,800) 'Edge Detect window must be >= 1'                  ; STOP
+935 WRITE(*,800) 'Invalid audio format, expecting SINGLE or DOUBLE' ; STOP
+940 WRITE(*,800) 'Expecting output file name'                       ; STOP
+945 WRITE(*,800) 'Output file exists but overwrite mode is off'
+    WRITE(*,700) 'NB: to allow overwrites, use -w before -o'        ; STOP
+947 WRITE(*,800) 'Output file cannot be opened in WRITE mode'       ; STOP
+948 WRITE(*,800) 'Sigma exponent must be present and in [0,2]'      ; STOP
+949 WRITE(*,800) 'Sampling rate must be integer >=',NINT(DSMP)/2    ; STOP
+950 WRITE(*,800) 'Transition frac must be present and in [0,1]'     ; STOP
+960 WRITE(*,800) 'Cannot read input file '//TRIM(PIFN)              ; STOP
+980 WRITE(*,800) 'Trailing rubbish after input file argument'       ; STOP
+990 WRITE(*,800) 'Invalid command-line option '//TRIM(CARG)         ; STOP
   END SUBROUTINE Mz2Syn_CmdLine
 
   SUBROUTINE Mz2Syn_Help()

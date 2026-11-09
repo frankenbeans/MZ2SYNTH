@@ -16,6 +16,7 @@ MODULE MZ2Pnl
   IMPLICIT NONE
 
   INTEGER,PARAMETER :: NVCH=ZCHS
+  INTEGER,PARAMETER :: NROW=DNOC*DNOO
 
   TYPE :: MZ2Panel
      INTEGER                  :: CS=0
@@ -81,15 +82,17 @@ CONTAINS
     INTEGER,OPTIONAL,INTENT(IN)    :: WWBLUR,WWEDGE    
     ! --- VARIABLES ---
     CHARACTER(LEN=ZSTR) :: DIFN
-    INTEGER,PARAMETER   :: EDWD=4 ! NB: this MUST always be even
     INTEGER             :: MS,WB,WE
     ! --- EXE CODE ---
+    IF (TCFRAC.LE.0.0_RKIND.OR.TCFRAC.GT.0.5_RKIND.OR.TCFRAC*SMPLRT.LT.1) &
+       GOTO 930
+    WB=0 ; WE=0    
     P%SCANRT=SCANRT
     P%SMPLRT=SMPLRT
     IF (PFL_VERB) WRITE(*,700) 'Reading input file '//TRIM(IFN)//'...'
-    CALL FIM_read(P%PI,IFN,IFU)
+    CALL FIM_read(P%PI,IFN,IFU) ; IF (P%PI%NROWS.NE.NROW) GOTO 905
     IF (PFL_VERB) WRITE(*,700) 'Done!'
-    IF (P%PI%ecode.NE.FIM_error_ok) GOTO 900
+    IF (P%PI%ecode.NE.FIM_error_ok) GOTO 900    
     ! If Gaussian Blur is specified via WWBLUR > 0 then do it
     IF (PRESENT(WWBLUR)) THEN       
        WB=MAX(0,MIN(WWBLUR+1-MODULO(WWBLUR,2), &
@@ -256,16 +259,16 @@ CONTAINS
        P%ATRNG=0 ; P%WTRNG=0 ;
     END IF
     IF (PFL_VERB) WRITE(*,700) 'Done!'
-    IF (TCFRAC.LE.0.0_RKIND.OR.TCFRAC.GT.0.5_RKIND) GOTO 930
     P%RMCNST=1.0_RKIND/(TCFRAC*P%SMPLRT)
     RETURN
     ! --- END CODE ---
 700 FORMAT('*INF (Mz2Pnl_Load):',1X,A,999(:,1X,G12.5,1X,:,A))
 800 FORMAT('*ERR (Mz2Pnl_Load):',1X,A,999(:,1X,G12.5,1X,:,A))
 900 WRITE(*,800) 'Cannot read image file '//TRIM(IFN)                     ; STOP
+905 WRITE(*,800) 'Expected image height is 720 px, found',P%PI%NROWS      ; STOP
 910 WRITE(*,800) 'Out of memory'                                          ; STOP
 920 WRITE(*,800) 'Invalid colour-channel mapping (expecting RGBLM)'       ; STOP
-930 WRITE(*,800) 'Invalid TCPERC'                                         ; STOP
+930 WRITE(*,800) 'Invalid combination of TCFRAC and SMPLRT'               ; STOP
   END SUBROUTINE MZ2Pnl_Load
 
   SUBROUTINE MZ2Pnl_Tick(P,DONE)
@@ -281,7 +284,7 @@ CONTAINS
     NS=P%CS+TI
     ! -- Stop if panel goes off image on the left or right side --
     CC=INT((REAL(NS,RKIND)/P%SMPLRT)*P%SCANRT)+1 ! SMPL * S/SMPL * COL/S = COL
-    IF (CC.LT.0.OR.CC.GT.P%PI%NCOLS) THEN
+    IF (CC.LT.1.OR.CC.GT.P%PI%NCOLS) THEN
        DONE=.TRUE.
        RETURN
     END IF
@@ -290,22 +293,26 @@ CONTAINS
     ! -- Tick all ratemeters that need it!
     IF (ASSOCIATED(P%DTSINE)) THEN
        DO CONCURRENT(I=LBOUND(P%ASINE,1):UBOUND(P%ASINE,1))
-          CALL RM_TICK(P%ASINE(I),P%WSINE(I),P%RMCNST,P%DTSINE(CC,I),P%VZERO)
+          CALL RM_TICK(P%ASINE(I),P%WSINE(I),P%RMCNST, &
+          MERGE(0.0_RKIND,P%DTSINE(CC,I),CC.GE.P%PI%NCOLS),P%VZERO)
        END DO
     END IF
     IF (ASSOCIATED(P%DTSQWV)) THEN
        DO CONCURRENT(I=LBOUND(P%ASQWV,1):UBOUND(P%ASQWV,1))
-          CALL RM_TICK(P%ASQWV(I),P%WSQWV(I),P%RMCNST,P%DTSQWV(CC,I),P%VZERO)
+          CALL RM_TICK(P%ASQWV(I),P%WSQWV(I),P%RMCNST, &
+          MERGE(0.0_RKIND,P%DTSQWV(CC,I),CC.GE.P%PI%NCOLS),P%VZERO)
        END DO
     END IF
     IF (ASSOCIATED(P%DTSWTH)) THEN
        DO CONCURRENT(I=LBOUND(P%ASWTH,1):UBOUND(P%ASWTH,1))
-          CALL RM_TICK(P%ASWTH(I),P%WSWTH(I),P%RMCNST,P%DTSWTH(CC,I),P%VZERO)
+          CALL RM_TICK(P%ASWTH(I),P%WSWTH(I),P%RMCNST, &
+          MERGE(0.0_RKIND,P%DTSWTH(CC,I),CC.GE.P%PI%NCOLS),P%VZERO)
        END DO
     END IF
     IF (ASSOCIATED(P%DTTRNG)) THEN
        DO CONCURRENT(I=LBOUND(P%ATRNG,1):UBOUND(P%ATRNG,1))
-          CALL RM_TICK(P%ATRNG(I),P%WTRNG(I),P%RMCNST,P%DTTRNG(CC,I),P%VZERO)
+          CALL RM_TICK(P%ATRNG(I),P%WTRNG(I),P%RMCNST, &
+          MERGE(0.0_RKIND,P%DTTRNG(CC,I),CC.GE.P%PI%NCOLS),P%VZERO)
        END DO
     END IF    
     ! --- END CODE ---

@@ -15,7 +15,9 @@ development status.
 MZ2SYNTH is a wavetable synthesizer inspired by the ANS synthesizer
 built by Yevgeny Murzin in various versions up to 1958, and currently
 housed in the Glinka State Central Museum of Musical Culture in Moscow
-(https://en.wikipedia.org/wiki/ANS_synthesizer).
+(https://en.wikipedia.org/wiki/ANS_synthesizer).  Familiarizing
+yourself with the layout of this instrument will greatly enhance the
+user's understanding of this synthesizer.
 
 MZ2SYNTH models 720 oscillators spanning 10 octaves, with oscillator
 no. 294 set up with a fundamental frequency of 440 Hz and all others
@@ -29,7 +31,7 @@ frequency would be silent.
 
 Input takes the form of a PPM graphics file with 720 rows and as many
 columns as desired.  MZ2SYNTH begins at the leftmost column and
-advances, column by column at the desired rate. Pitch goes from bass
+advances, column by column at the desired rate.  Pitch goes from bass
 to treble from the bottom row of the image (as it would appear on
 screen) to the top. By default, the amplitude of the sine, square,
 sawtooth and triangle wave channels is multiplied by the red, green,
@@ -85,6 +87,10 @@ The following options are available (case insensitive):
 |Sampling rate           |44100 c.p.s.                                                  |
 |Fixed phase mode        |off (i.e., phase relationships between oscillators not fixed) |
 |Zero phase initially    |off (i.e., phases are randomized at start by default)         |
+
+NB:  Avoid placing any non-black pixels in the last column, because the
+code uses the last column to decay the oscillator outputs down towards
+zero to avoid ending on a click in most common use-cases.
 
 ### USAGE EXAMPLES
 

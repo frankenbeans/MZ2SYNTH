@@ -53,7 +53,7 @@ The following options are available (case insensitive):
 |-h        | -help                    | Show help screen and exit                       |
 |-v        | -verbose                 | Toggle verbose textual output mode              |
 |-d        | -debug                   | Toggle debugging output mode                    |
-|-p        | -dynamic-compression     | Toggle dynamic compression on                   |
+|-p        | -dynamic-compression     | Toggle dynamic compression (soft clipper) on    |
 |-w        | -overwrite               | Toggle audio file overwrite mode                |
 |-x        | -fixed-phase             | Toggle on fixed-phase mode (slower, accurate)   |
 |-z        | -zero-phase              | Toggle on zero-phase mode (changes beat freq.s) |

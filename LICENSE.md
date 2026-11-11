@@ -1,4 +1,6 @@
-# FrankenBeans Public License Version 1
+# FrankenBeans Public License Version 1.01
+## Change note:
+- v1 -> v1.01:  no changes, only a clarification under license terms regarding outputs.
 
 ## Definitions:
 - **I/Me/Myself:** The person of Dr E. Lamprecht, the creator of the FrankenBeans Github Repositories, who holds the copyright to their contents.
@@ -13,6 +15,9 @@
 - You have no rights over the Materials whatsoever except for those granted by these license terms.
 - By the act of obtaining, retaining, producing copies of the Materials or distributing unmodified or modified copies of these,
   you signify that you agree with these license terms.
+- To clarify previous questions I have received, I claim no rights to the OUTPUTS that you create in the
+  normal use of any executables derived from the Materials, e.g., audio files created using a software synthesizer.
+  Those belong to you.
   
 ### Rights Conferred to You by this License
 - You may freely obtain copies of the Materials for your own use as you see fit, but at your own risk.
@@ -40,4 +45,4 @@ I have provided the Materials to you on the understanding that:
 - No guarantee of suitability for any purpose whatsoever is stated or implied by me.
 - No responsibility falls upon me for any damages that may arise directly or indirectly from the use of the Materials.
 
-Dr E. Lamprecht, 2024-11-09
+Dr E. Lamprecht, 2026-11-11

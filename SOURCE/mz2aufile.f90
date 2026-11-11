@@ -183,7 +183,7 @@ CONTAINS
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
        IF (STAT.NE.0) THEN
-          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          IF (PFL_VERB) WRITE(*,800) 'Buffer NOT flushed to unit ',SNAU%AUFU
           RETURN
        END IF
        SNAU%BCUR=1
@@ -216,7 +216,7 @@ CONTAINS
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
        IF (STAT.NE.0) THEN
-          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          IF (PFL_VERB) WRITE(*,800) 'Buffer NOT flushed to unit ',SNAU%AUFU
           RETURN
        END IF
        SNAU%BCUR=1
@@ -249,7 +249,7 @@ CONTAINS
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
        IF (STAT.NE.0) THEN
-          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          IF (PFL_VERB) WRITE(*,800) 'Buffer NOT flushed to unit ',SNAU%AUFU
           RETURN
        END IF
        SNAU%BCUR=1
@@ -282,7 +282,7 @@ CONTAINS
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
        IF (STAT.NE.0) THEN
-          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          IF (PFL_VERB) WRITE(*,800) 'Buffer NOT flushed to unit ',SNAU%AUFU
           RETURN
        END IF       
        SNAU%BCUR=1
@@ -308,10 +308,11 @@ CONTAINS
     IF (SNAU%BCUR.GT.1) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF(1:SNAU%BCUR-1)
        IF (STAT.NE.0) THEN
-          IF (ALLOCATED(SNAU%BUFF)) DEALLOCATE(SNAU%BUFF)
-          SNAU=SunAu()
+          IF (PFL_VERB) THEN
+             WRITE(*,700) 'Buffer NOT flushed to unit',SNAU%AUFU
+             WRITE(*,700) 'Have NOT closed unit ',SNAU%AUFU
+          END IF
           RETURN
-          IF (PFL_VERB) WRITE(*,700) 'Buffer flushed failed to unit',SNAU%AUFU
        END IF
        IF (PFL_VERB) WRITE(*,700) 'Buffer flushed into unit',SNAU%AUFU
     END IF

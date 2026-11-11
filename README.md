@@ -141,9 +141,9 @@ zero to avoid ending on a click in most common use-cases.
 
 # INSTALLATION GUIDE
 
-MZ2SYNTH is written in standard Fortran 2003.  It should therefore
-work on any platform for which a recent version of GCC exists.  I
-shall assume that you have GCC installed on your system.
+MZ2SYNTH is written in standard Fortran 2008 (previously F2003).  It should therefore
+work on any platform for which a recent version of GCC exists.  I shall assume that you 
+have GCC installed on your system.
 
 For simplicity I shall assume that we are working in our home directory.
 

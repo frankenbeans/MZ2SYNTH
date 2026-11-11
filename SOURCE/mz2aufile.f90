@@ -27,6 +27,13 @@
 !           that each call contains just one sample for each channel in
 !           the header.
 !
+! #NEW:2026-09-11a:
+!
+!       (a) Just minor bug-fixes to print better informational messages and
+!           to improve buffer and file tidy upon error.  Main change is that
+!           we have moved onto to ALLOCATABLE members in TYPE(SunAu) instead
+!           of pointers.
+!
 ! COPYRIGHT (C) 2024,2026 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 
@@ -138,6 +145,11 @@ CONTAINS
     WRITE(SNAU%AUFU,IOSTAT=STAT) &
          Nord_I32((/DFMAGIC,HDRSIZE,DATSIZE,ENCD,SMPR,NCHN,0/),SNAU%MCBE)
     IF (PFL_VERB) THEN
+       IF (STAT.NE.0) THEN
+          IF (PFL_VERB) WRITE(*,820) 'Header write FAILED in unit ',SNAU%AUFU
+          IF (PFL_VERB) WRITE(*,820) 'Please run Au_Close on unit ',SNAU%AUFU
+          RETURN
+       END IF          
        IF (.NOT.SNAU%MCBE) THEN
           WRITE(*,700) 'Hardware is little-endian so samples will be converted'
        END IF
@@ -148,6 +160,7 @@ CONTAINS
 700 FORMAT('*INF (Au_WrtHdr):',1X,A,:,999(1x,I0))
 800 FORMAT('*ERR (Au_WrtHdr): INVALID',1X,A,1X,'=',I0)
 810 FORMAT('*ERR (Au_WrtHdr):',1X,A)
+820 FORMAT('*ERR (Au_WrtHdr):',1X,I0)
 900 WRITE(*,800) 'ENCD',ENCD ; STOP    
 910 WRITE(*,800) 'SMPR',SMPR ; STOP
 920 WRITE(*,800) 'NCHN',NCHN ; STOP
@@ -169,7 +182,10 @@ CONTAINS
     STAT=0 ! Fake out as OK unless there REALLY was a write error
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
-       IF (STAT.NE.0) RETURN
+       IF (STAT.NE.0) THEN
+          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          RETURN
+       END IF
        SNAU%BCUR=1
     END IF
     ZTFR=SNAU%ZSMP*SIZE(AUDS)
@@ -199,7 +215,10 @@ CONTAINS
     STAT=0 ! Fake out as OK unless there REALLY was a write error
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
-       IF (STAT.NE.0) RETURN
+       IF (STAT.NE.0) THEN
+          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          RETURN
+       END IF
        SNAU%BCUR=1
     END IF
     ZTFR=SNAU%ZSMP*SIZE(AUDS)
@@ -229,7 +248,10 @@ CONTAINS
     STAT=0 ! Fake out as OK unless there REALLY was a write error
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
-       IF (STAT.NE.0) RETURN
+       IF (STAT.NE.0) THEN
+          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          RETURN
+       END IF
        SNAU%BCUR=1
     END IF
     ZTFR=SNAU%ZSMP*SIZE(AUDS)
@@ -259,7 +281,10 @@ CONTAINS
     STAT=0 ! Fake out as OK unless there REALLY was a write error
     IF (SNAU%BCUR.GT.UBOUND(SNAU%BUFF,1)) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF
-       IF (STAT.NE.0) RETURN
+       IF (STAT.NE.0) THEN
+          IF (PFL_VERB) WRITE(*,800) 'Sample write FAILED in unit ',SNAU%AUFU
+          RETURN
+       END IF       
        SNAU%BCUR=1
     END IF
     ZTFR=SNAU%ZSMP*SIZE(AUDS)
@@ -283,10 +308,10 @@ CONTAINS
     IF (SNAU%BCUR.GT.1) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF(1:SNAU%BCUR-1)
        IF (STAT.NE.0) THEN
-          IF (ALLOCATED(SNAU%BUFF)) THEN
-             DEALLOCATE(SNAU%BUFF)
-             RETURN
-          END IF
+          IF (ALLOCATED(SNAU%BUFF)) DEALLOCATE(SNAU%BUFF)
+          SNAU=SunAu()
+          RETURN
+          IF (PFL_VERB) WRITE(*,700) 'Buffer flushed failed to unit',SNAU%AUFU
        END IF
        IF (PFL_VERB) WRITE(*,700) 'Buffer flushed into unit',SNAU%AUFU
     END IF

@@ -34,6 +34,8 @@
 !           we have moved onto to ALLOCATABLE members in TYPE(SunAu) instead
 !           of pointers.
 !
+!       (b) Definite policy now of leaving unflushed buffers intact.
+!
 ! COPYRIGHT (C) 2024,2026 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
 ! ------------------------------------------------------------------------------
 

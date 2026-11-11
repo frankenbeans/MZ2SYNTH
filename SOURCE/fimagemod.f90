@@ -161,10 +161,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! +-------------------+
     ! | Validation checks |
     ! +-------------------+
-    IF (sim%nrows.LT.1)                                                   GOTO 900
-    IF (sim%ncols.LT.1)                                                   GOTO 910
-    IF (sim%maxval.LT.1.OR.sim%maxval.GT.2**16-1)                         GOTO 920
-    IF (sim%subtype.LT.FIM_subtype_pgm.OR.sim%subtype.GT.FIM_subtype_ppm) GOTO 930
+    IF (sim%nrows.LT.1) GOTO 900
+    IF (sim%ncols.LT.1) GOTO 910
+    IF (sim%maxval.LT.1.OR.sim%maxval.GT.2**16-1) GOTO 920
+    IF (sim%subtype.LT.FIM_subtype_pgm.OR. &
+         sim%subtype.GT.FIM_subtype_ppm) GOTO 930
     ! +--------------------------------+
     ! | Create new image based on sim. |
     ! +--------------------------------+
@@ -564,7 +565,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! | Check that image contains some data and calculate the number of RGB   |
     ! | size based in nchan and the image dimensions.                         |
     ! +-----------------------------------------------------------------------+
-    IF (fim%nrows.LT.1.OR.fim%nrows.LT.1) GOTO 910
+    IF (fim%nrows.LT.1.OR.fim%ncols.LT.1) GOTO 910
     nsmp=nchan*fim%ncols*fim%nrows
     ! +-----------------------------------------------------------------------+
     ! | Allocate chunk of memory to hold binary output data for writing.      |
@@ -599,12 +600,14 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        DO r=1,fim%nrows
           DO c=1,fim%ncols
              n=nchan*nbps*((r-1)*fim%ncols+c)
-             chtmp(n-1)=ACHAR(ISHFT(NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
-                                                                  fim%dgrn(c,r), &
-                                                                  fim%dblu(c,r)))),-8))
-             chtmp(n-0)=ACHAR( IAND(NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
-                                                                  fim%dgrn(c,r), &
-                                                                  fim%dblu(c,r)))),LBT))
+             chtmp(n-1)=ACHAR(ISHFT(                           &
+                  NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
+                  fim%dgrn(c,r),                               &
+                  fim%dblu(c,r)))),-8))
+             chtmp(n-0)=ACHAR( IAND(                           &
+                  NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
+                  fim%dgrn(c,r),                               &
+                  fim%dblu(c,r)))),LBT))
           END DO
        END DO
        !$OMP END PARALLEL DO
@@ -614,7 +617,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +-------------------------+
        !$OMP PARALLEL DO PRIVATE(n)
        DO r=1,fim%nrows
-          DO c=nbps,fim%ncols
+          DO c=1,fim%ncols
              n=nchan*nbps*((r-1)*fim%ncols+c)
              chtmp(n-2)=ACHAR(NINT(fim%maxval*LGC(fim%dred(c,r))))
              chtmp(n-1)=ACHAR(NINT(fim%maxval*LGC(fim%dgrn(c,r))))
@@ -855,7 +858,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! | First make sure you're not writing out an uninitialized FImage. |
     ! +-----------------------------------------------------------------+
     IF (.NOT.(ASSOCIATED(fim%dred).AND.ASSOCIATED(fim%dgrn).AND. & 
-              ASSOCIATED(fim%dgrn))) GOTO 900
+              ASSOCIATED(fim%dblu))) GOTO 900
     ! +-----------------------------------------------------------------+
     ! | Now open output file (in REPLACE mode).                         |
     ! +-----------------------------------------------------------------+

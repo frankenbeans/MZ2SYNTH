@@ -56,7 +56,7 @@ MODULE Mz2AuFile
      LOGICAL            :: OVWT=.FALSE.
      INTEGER            :: BCUR=1                   ! Buffer cursor
      INTEGER            :: ZSMP=0 !#NEW:2026-05-06a ! Sample-size in bytes
-     INTEGER(KIND=C_INT8_T),POINTER :: BUFF(:)=>NULL()
+     INTEGER(KIND=C_INT8_T),ALLOCATABLE :: BUFF(:) !#NEW:2026-09-11a (ALLOC)
   END TYPE SunAu
 
   INTERFACE Au_WrtSmp
@@ -127,7 +127,12 @@ CONTAINS
     END IF
     OPEN(FILE=AUFN,UNIT=SNAU%AUFU,FORM='UNFORMATTED',ACCESS='STREAM', &
          POSITION='REWIND',ACTION='WRITE',STATUS=FSTA,IOSTAT=STAT)
-    IF (STAT.NE.0) RETURN
+    IF (STAT.NE.0) THEN
+       DEALLOCATE(SNAU%BUFF)
+       WRITE(*,700) 'WARNING: could not open file '//TRIM(AUFN)// 'on unit', &
+            SNAU%AUFU
+       RETURN
+    END IF
     IF (PFL_VERB) WRITE(*,700) 'File '//TRIM(AUFN)//' opened in mode '&
                                       //TRIM(FSTA)//' on unit',SNAU%AUFU
     WRITE(SNAU%AUFU,IOSTAT=STAT) &
@@ -146,7 +151,7 @@ CONTAINS
 900 WRITE(*,800) 'ENCD',ENCD ; STOP    
 910 WRITE(*,800) 'SMPR',SMPR ; STOP
 920 WRITE(*,800) 'NCHN',NCHN ; STOP
-930 WRITE(*,810) 'BUFFER ALLOCATION FAILED' ; STOP 
+930 WRITE(*,810) 'BUFFER ALLOCATION FAILED' ; STOP
   END SUBROUTINE Au_WrtHdr
 
   SUBROUTINE Au_WrtSmp_I16(SNAU,AUDS,STAT)
@@ -277,7 +282,12 @@ CONTAINS
     ! --- EXE CODE  ---
     IF (SNAU%BCUR.GT.1) THEN
        WRITE(SNAU%AUFU,IOSTAT=STAT) SNAU%BUFF(1:SNAU%BCUR-1)
-       IF (STAT.NE.0) RETURN
+       IF (STAT.NE.0) THEN
+          IF (ALLOCATED(SNAU%BUFF)) THEN
+             DEALLOCATE(SNAU%BUFF)
+             RETURN
+          END IF
+       END IF
        IF (PFL_VERB) WRITE(*,700) 'Buffer flushed into unit',SNAU%AUFU
     END IF
     CLOSE(SNAU%AUFU,IOSTAT=STAT)
@@ -285,7 +295,7 @@ CONTAINS
        WRITE(*,700) 'Closed file unit',SNAU%AUFU
        WRITE(*,700) 'Status of operation is',STAT
     END IF    
-    IF (ASSOCIATED(SNAU%BUFF)) DEALLOCATE(SNAU%BUFF)
+    IF (ALLOCATED(SNAU%BUFF)) DEALLOCATE(SNAU%BUFF)
     SNAU=SunAu()
     IF (PFL_VERB) WRITE(*,700) 'Buffer deallocated'
     RETURN

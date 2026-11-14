@@ -267,18 +267,22 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     CASE DEFAULT       ! +----------------+
        GOTO 910        ! | Oops, invalid! |
     END SELECT         ! +----------------+
+    
     ! +-------------------------------------------------------------+
-    ! | Read <ncols> x <nrows> line, storing any leading comments.  |
+    ! | Read <ncols> <nrows> <pmaxval>, which can be on one, two or |
+    ! | three lines.  This is a bodgematic tokenizer...             |
     ! +-------------------------------------------------------------+
-    CALL process_comments_and_blanks(pcb_rderr)  ; IF (pcb_rderr) GOTO 920
-    READ(UNIT=linebuf,FMT=*,ERR=920) pncols, pnrows
-    IF (pncols.LT.1.OR.pnrows.LT.1) GOTO 920
-    ! +----------------------------------------------------+
-    ! | Read <maxval> line, storing  any leading comments, |
-    ! | and check for validity.                            |
-    ! +----------------------------------------------------+
-    CALL process_comments_and_blanks(pcb_rderr)  ; IF (pcb_rderr) GOTO 930
-    READ(UNIT=linebuf,FMT=*,ERR=930) pmaxval
+    CALL process_comments_and_blanks(pcb_rderr) ; IF (pcb_rderr) GOTO 920
+    READ(UNIT=linebuf,FMT=*,END= 10,ERR=920) pncols, pnrows, pmaxval
+    GOTO 40 ! Read everything, start validating
+10  READ(UNIT=linebuf,FMT=*,END= 20,ERR=920) pncols, pnrows
+    GOTO 30 ! Still to read maxval
+20  READ(UNIT=linebuf,FMT=*,END=920,ERR=920) pncols ! To read pnrows & pmaxval
+    CALL process_comments_and_blanks(pcb_rderr) ; IF (pcb_rderr) GOTO 920
+    READ(UNIT=linebuf,FMT=*,END=920,ERR=920) pnrows
+30  CALL process_comments_and_blanks(pcb_rderr) ; IF (pcb_rderr) GOTO 920
+    READ(UNIT=linebuf,FMT=*,END=920,ERR=920) pmaxval
+40  IF (pncols.LT.1.OR.pnrows.LT.1)       GOTO 920 ! Oops, invalid!
     IF (pmaxval.LT.1.OR.pmaxval.GT.65535) GOTO 930 ! Oops, invalid!
     IF (pmaxval.LE.255) THEN
        pnbps=1
@@ -335,8 +339,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     fim%ecode=FIM_error_frd ; GOTO 999
 910 WRITE(*,992) TRIM(fname), ' ID code ("P2", "P3", "P5" or "P6")'
     fim%ecode=FIM_error_hdr ; GOTO 999
-920 WRITE(*,992) TRIM(fname), '<width> x <height>, with both >=1'
-    fim%ecode=FIM_error_hdr ; GOTO 999
+920 WRITE(*,992) TRIM(fname), '<width> x <height>, with both >=1 and'
 930 WRITE(*,992) TRIM(fname), '<maxval> >=1 and <=65535'
     fim%ecode=FIM_error_hdr ; GOTO 999
 940 WRITE(*,993) TRIM(fname), 'Out of memory for tmp storage.'
@@ -409,7 +412,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
       INQUIRE(UNIT=funit,POS=fp)
       CLOSE(funit)
       OPEN(UNIT=funit,FILE=fname,ACTION='READ',STATUS='OLD', &
-           ACCESS='STREAM',FORM='UNFORMATTED',ERR=900)
+           ACCESS='STREAM',FORM='UNFORMATTED',ERR=920)
       READ(UNIT=funit,POS=fp)
       READ(UNIT=funit,ERR=900,END=920) chtmp
       ! +-----------------------------------------------------------------+
@@ -1014,11 +1017,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     IMPLICIT NONE
     TYPE(FImage),INTENT(INOUT)     :: fim
     ! --- Executable code ---
-    !$OMP PARALLEL
+    !$OMP PARALLEL WORKSHARE
     fim%dred=DOMFIT(fim%dred)
     fim%dgrn=DOMFIT(fim%dgrn)
     fim%dblu=DOMFIT(fim%dblu)
-    !$OMP END PARALLEL
+    !$OMP END PARALLEL WORKSHARE
     ! --- End code        ---
   END SUBROUTINE FIM_fit_domain
 !==============================================================================
@@ -1662,7 +1665,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! Set up filter kernel assuming window ends are at 3 sigma away from middle
     sgma=real(fww,RKIND)/(2*3) ! 3 sigma is half the window width
     ALLOCATE(gkrn(-fww/2:fww/2),STAT=MS) ; IF (MS.NE.0) GOTO 920
-    gkrn=(/(EXP(-REAL(i,RKIND)**2/(2*sgma)),i=-fww/2,fww/2)/)
+    gkrn=(/(EXP(-REAL(i,RKIND)**2/(2*(sgma**2))),i=-fww/2,fww/2)/)
     gkrn=gkrn/SUM(gkrn) ! Normalize kernel against sum of all elements
     ! Set up and filter vertically down each column
     ALLOCATE(tmpa(1-fww/2:fim%nrows+fww/2),STAT=MS) ;  IF (MS.NE.0) GOTO 920

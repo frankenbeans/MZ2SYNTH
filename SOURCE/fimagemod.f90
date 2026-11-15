@@ -503,7 +503,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     INTEGER,PARAMETER              :: LBT  =2**8-1
     ! --- Variables       ---
     INTEGER                        :: ms,nbps,nsmp,nchan
-    INTEGER                        :: r,c,n,j
+    INTEGER                        :: r,c,n,j,fptr
     CHARACTER(LEN=1),ALLOCATABLE   :: chtmp(:)
     CHARACTER(LEN=2)               :: pcode
     LOGICAL                        :: tplain
@@ -667,8 +667,14 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO j=1,fim%ncomments
        WRITE(UNIT=funit,FMT=996,ERR=930) TRIM(fim%comments(j))
     END DO
-    WRITE(UNIT=funit,FMT=997,ERR=930) fim%ncols, fim%nrows, fim%maxval
     IF (tplain.EQV..FALSE.) THEN
+       ! +--------------------------------------------------------------------+
+       ! | Write dims & maxval using strictly only a single NL character after|
+       ! | fim%maxval.  Thereafter obtain the file pointer BEFORE closing.    |
+       ! +--------------------------------------------------------------------+
+       WRITE(UNIT=funit,FMT=997,ERR=930,ADVANCE='NO') &
+            fim%ncols,fim%nrows,fim%maxval,ACHAR(10)
+       INQUIRE(UNIT=funit,POS=fptr,ERR=930)
        ! +----------------------------------------------------------+
        ! | Close and reopen output file in unformatted stream mode, |
        ! | setting up to append.                                    |
@@ -676,8 +682,13 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        CLOSE(UNIT=funit)
        OPEN(UNIT=funit,FILE=fname, FORM='UNFORMATTED',ACTION='READWRITE', &
             ACCESS='STREAM', STATUS='OLD',POSITION='APPEND',ERR=930)
-       WRITE(UNIT=funit,ERR=930) chtmp
+       WRITE(UNIT=funit,POS=fptr,ERR=930) chtmp
     ELSE
+       ! +--------------------------------------------------------------------+
+       ! | Write dims & maxval using the system's NEWLINE characters.         |
+       ! +--------------------------------------------------------------------+
+       WRITE(UNIT=funit,FMT=997,ERR=930,ADVANCE='YES') &
+            fim%ncols,fim%nrows,fim%maxval
        ! +--------------------------------------------------------------------+
        ! | Write out data as ASCII in slightly different formats depending on |
        ! | whether we are writing a PPM or PGM image and depending on maxval. |
@@ -719,7 +730,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 994 FORMAT('*** WARNING (FIM_write): cannot write output file ',A,' on unit',I6)
 995 FORMAT(A2)
 996 FORMAT(A)
-997 FORMAT(I0,' ',I0,/,I0)
+997 FORMAT(I0,' ',I0,/,I0,:,A1)
 ! +-----------------------------------------------------------+
 ! | Common exit point --- tidy up and exit from this routine. |
 ! +-----------------------------------------------------------+
@@ -1674,7 +1685,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO c=1,fim%ncols
        tmpa=(/(fim%dred(c,i),i=fww/2,1,-1), &
                fim%dred(c,:),               &
-              (fim%dred(c,fim%nrows-i),i=1,fww/2)/)
+              (fim%dred(c,fim%nrows-i+1),i=1,fww/2)/)
        fim%dred(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%nrows)/))
     END DO
@@ -1684,7 +1695,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO c=1,fim%ncols
        tmpa=(/(fim%dgrn(c,i),i=fww/2,1,-1), &
                fim%dgrn(c,:),               &
-              (fim%dgrn(c,fim%nrows-i),i=1,fww/2)/)
+              (fim%dgrn(c,fim%nrows-i+1),i=1,fww/2)/)
        fim%dgrn(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%nrows)/))
     END DO
@@ -1694,7 +1705,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO c=1,fim%ncols
        tmpa=(/(fim%dblu(c,i),i=fww/2,1,-1), &
                fim%dblu(c,:),               &
-              (fim%dblu(c,fim%nrows-i),i=1,fww/2)/)
+              (fim%dblu(c,fim%nrows-i+1),i=1,fww/2)/)
        fim%dblu(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%nrows)/))
     END DO
@@ -1708,7 +1719,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO r=1,fim%nrows
        tmpa=(/(fim%dred(i,r),i=fww/2,1,-1), &
                fim%dred(:,r),               &
-              (fim%dred(fim%ncols-i,r),i=1,fww/2)/)
+              (fim%dred(fim%ncols-i+1,r),i=1,fww/2)/)
        fim%dred(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%ncols)/))
     END DO
@@ -1718,7 +1729,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO r=1,fim%nrows
        tmpa=(/(fim%dgrn(i,r),i=fww/2,1,-1), &
                fim%dgrn(:,r),               &
-              (fim%dgrn(fim%ncols-i,r),i=1,fww/2)/)
+              (fim%dgrn(fim%ncols-i+1,r),i=1,fww/2)/)
        fim%dgrn(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%ncols)/))
     END DO
@@ -1728,7 +1739,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO r=1,fim%nrows
        tmpa=(/(fim%dblu(i,r),i=fww/2,1,-1), &
                fim%dblu(:,r),               &
-              (fim%dblu(fim%ncols-i,r),i=1,fww/2)/)
+              (fim%dblu(fim%ncols-i+1,r),i=1,fww/2)/)
        fim%dblu(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%ncols)/))
     END DO

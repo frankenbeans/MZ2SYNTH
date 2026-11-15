@@ -414,7 +414,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
       OPEN(UNIT=funit,FILE=fname,ACTION='READ',STATUS='OLD', &
            ACCESS='STREAM',FORM='UNFORMATTED',ERR=920)
       READ(UNIT=funit,POS=fp)
-      READ(UNIT=funit,ERR=900,END=920) chtmp
+      READ(UNIT=funit,ERR=900,END=900) chtmp
       ! +-----------------------------------------------------------------+
       ! | Interpret chunk of memory as one- or two-byte integers, depend- |
       ! | ing on whether pnbps is 1 or 2, and populate tmp store accord-  |
@@ -1138,7 +1138,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     TYPE(FImage),INTENT(INOUT)  :: fim
     INTERFACE
        PURE FUNCTION AFUN(X,CFS)
-         USE Constant, ONLY:  RKIND
+         IMPORT RKIND ! Fixed 2026-09-15: no longer require repeated USE
          IMPLICIT NONE
          ! ---INTERFACE RETURN TYPE----------
          REAL(RKIND)                 :: AFUN
@@ -1708,7 +1708,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO r=1,fim%nrows
        tmpa=(/(fim%dred(i,r),i=fww/2,1,-1), &
                fim%dred(:,r),               &
-              (fim%dred(fim%nrows-i,r),i=1,fww/2)/)
+              (fim%dred(fim%ncols-i,r),i=1,fww/2)/)
        fim%dred(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%ncols)/))
     END DO
@@ -1718,7 +1718,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO r=1,fim%nrows
        tmpa=(/(fim%dgrn(i,r),i=fww/2,1,-1), &
                fim%dgrn(:,r),               &
-              (fim%dgrn(fim%nrows-i,r),i=1,fww/2)/)
+              (fim%dgrn(fim%ncols-i,r),i=1,fww/2)/)
        fim%dgrn(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%ncols)/))
     END DO
@@ -1728,7 +1728,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO r=1,fim%nrows
        tmpa=(/(fim%dblu(i,r),i=fww/2,1,-1), &
                fim%dblu(:,r),               &
-              (fim%dblu(fim%nrows-i,r),i=1,fww/2)/)
+              (fim%dblu(fim%ncols-i,r),i=1,fww/2)/)
        fim%dblu(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
             i=1,fim%ncols)/))
     END DO

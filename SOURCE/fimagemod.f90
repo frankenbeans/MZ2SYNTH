@@ -674,6 +674,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +--------------------------------------------------------------------+
        WRITE(UNIT=funit,FMT=997,ERR=930,ADVANCE='NO') &
             fim%ncols,fim%nrows,fim%maxval,ACHAR(10)
+       FLUSH(UNIT=funit,ERR=930)
        INQUIRE(UNIT=funit,POS=fptr,ERR=930)
        ! +----------------------------------------------------------+
        ! | Close and reopen output file in unformatted stream mode, |

@@ -44,7 +44,7 @@
 !+============================================================================+
 
 MODULE FImageMod
-  USE Constant,    ONLY: RKIND
+  USE Constant   , ONLY: RKIND
   USE SFRealComp , ONLY: RNZ
   IMPLICIT NONE
 
@@ -1008,19 +1008,6 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 991 FORMAT('*** WARNING (FIM_verify_data): Invalid RGB information in fim.')
   END SUBROUTINE FIM_verify_data
 !==============================================================================
-  ELEMENTAL FUNCTION DOMFIT(X)
-    ! +-----------------------------------------------------------------------+
-    ! | Adjust domain of linear RGB value X to [0..1].                        |
-    ! +-----------------------------------------------------------------------+
-    IMPLICIT NONE
-    REAL(KIND=RKIND) :: DOMFIT
-    ! --- Dummy arguments ---
-    REAL(KIND=RKIND),INTENT(IN) :: X
-    ! --- Executable code ---
-    DOMFIT=min(max(x,0.0_RKIND),1.0_RKIND)
-    ! --- End code        ---
-  END FUNCTION DOMFIT
-!==============================================================================
   SUBROUTINE FIM_fit_domain(fim)
     ! +-----------------------------------------------------------------------+
     ! | Adjust domain of linear RGB values to [0..1].                         |
@@ -1029,11 +1016,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     IMPLICIT NONE
     TYPE(FImage),INTENT(INOUT)     :: fim
     ! --- Executable code ---
-    !$OMP PARALLEL WORKSHARE
-    fim%dred=DOMFIT(fim%dred)
-    fim%dgrn=DOMFIT(fim%dgrn)
-    fim%dblu=DOMFIT(fim%dblu)
-    !$OMP END PARALLEL WORKSHARE
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/))
     ! --- End code        ---
   END SUBROUTINE FIM_fit_domain
 !==============================================================================
@@ -1260,16 +1243,41 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- End code        ---        
   END FUNCTION AMINV
 !==============================================================================
+  PURE FUNCTION ATHRS(V,D)
+    IMPLICIT NONE
+    REAL(KIND=RKIND) :: ATHRS
+   ! --- Dummy arguments ---
+    REAL(KIND=RKIND),INTENT(IN) :: V
+    REAL(KIND=RKIND),INTENT(IN) :: D(0:)
+    ! --- Executable code ---
+    ATHRS=MERGE(D(1),D(2),V.LE.D(0))
+    ! --- End code        ---        
+  END FUNCTION ATHRS
+!==============================================================================
   PURE FUNCTION ACLMP(V,D)
     IMPLICIT NONE
     REAL(KIND=RKIND) :: ACLMP
    ! --- Dummy arguments ---
     REAL(KIND=RKIND),INTENT(IN) :: V
     REAL(KIND=RKIND),INTENT(IN) :: D(0:)
+    ! --- Variables ---
+    REAL(KIND=RKIND) :: CLMN,CLMX
     ! --- Executable code ---
-    ACLMP=MERGE(D(1),D(2),V.LE.D(0))
+    CLMN=MINVAL(D(0:1)) ; CLMX=MAXVAL(D(0:1))
+    ACLMP=MIN(MAX(V,CLMN),CLMX)
     ! --- End code        ---        
-  END FUNCTION ACLMP  
+  END FUNCTION ACLMP
+!==============================================================================
+  PURE FUNCTION AABSC(V,D)
+    IMPLICIT NONE
+    REAL(KIND=RKIND) :: AABSC
+   ! --- Dummy arguments ---
+    REAL(KIND=RKIND),INTENT(IN) :: V
+    REAL(KIND=RKIND),INTENT(IN) :: D(0:)
+    ! --- Executable code ---
+    AABSC=ACLMP(ABS(V),D)
+    ! --- End code        ---        
+  END FUNCTION AABSC
 !============================================================================== 
 ! * * *   G A M M A   C O R R E C T I O N    A N D    L U M I N A N C E   * * *
 !==============================================================================
@@ -1306,8 +1314,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     REAL(KIND=RKIND)             :: GC
     REAL(KIND=RKIND), INTENT(IN) :: L
     ! --- CONSTANTS ---
-    REAL(KIND=RKIND), PARAMETER :: ExpGamma        = 2.2_RKIND
-    REAL(KIND=RKIND), PARAMETER :: ExpOneOverGamma = 1.0_RKIND/ExpGamma
+    REAL(KIND=RKIND), PARAMETER :: ExpOneOverGamma = 0.45_RKIND
+    REAL(KIND=RKIND), PARAMETER :: ExpGamma        = 1/ExpOneOverGamma
     REAL(KIND=RKIND), PARAMETER :: ExpCoefficient  = 1.099_RKIND
     REAL(KIND=RKIND), PARAMETER :: ExpSubtrahend   = 0.099_RKIND
     REAL(KIND=RKIND), PARAMETER :: LinearThreshold = 0.018_RKIND
@@ -1331,7 +1339,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
   PURE FUNCTION GCL(GC) RESULT(L)
     ! +-----------------------------------------------------------------------+
     ! | Perform inverse gamma-correction on linear RGB or grayscale value     |
-    ! | GC, and return gamma-corrected value.                                 |
+    ! | GC, and return the linear value.                                 |
     ! |                                                                       |
     ! | ARGUMENTS:                                                            |
     ! |   GC : Gamma-corrected value                                          |
@@ -1349,8 +1357,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     REAL(KIND=RKIND)             :: L
     REAL(KIND=RKIND), INTENT(IN) :: GC
     ! --- CONSTANTS ---
-    REAL(KIND=RKIND), PARAMETER :: ExpGamma        = 2.2_RKIND
-    REAL(KIND=RKIND), PARAMETER :: ExpOneOverGamma = 1.0_RKIND/ExpGamma
+    REAL(KIND=RKIND), PARAMETER :: ExpOneOverGamma = 0.45_RKIND
+    REAL(KIND=RKIND), PARAMETER :: ExpGamma        = 1/ExpOneOverGamma
     REAL(KIND=RKIND), PARAMETER :: ExpCoefficient  = 1.099_RKIND
     REAL(KIND=RKIND), PARAMETER :: ExpSubtrahend   = 0.099_RKIND
     REAL(KIND=RKIND), PARAMETER :: LinearThreshold = 0.018_RKIND
@@ -1687,30 +1695,36 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dred(c,i),i=fww/2,1,-1), &
                fim%dred(c,:),               &
               (fim%dred(c,fim%nrows-i+1),i=1,fww/2)/)
-       fim%dred(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
-            i=1,fim%nrows)/))
+       fim%dred(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%nrows)/)
     END DO
     !$OMP END PARALLEL DO
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/), &
+         (/.TRUE.,.FALSE.,.FALSE./))
 10  IF (.NOT.lcmsk(2)) GOTO 20
     !$OMP PARALLEL DO PRIVATE(tmpa)
     DO c=1,fim%ncols
        tmpa=(/(fim%dgrn(c,i),i=fww/2,1,-1), &
                fim%dgrn(c,:),               &
               (fim%dgrn(c,fim%nrows-i+1),i=1,fww/2)/)
-       fim%dgrn(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
-            i=1,fim%nrows)/))
+       fim%dgrn(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%nrows)/)
     END DO
     !$OMP END PARALLEL DO
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/), &
+         (/.FALSE.,.TRUE.,.FALSE./))
 20  IF (.NOT.lcmsk(3)) GOTO 30
     !$OMP PARALLEL DO PRIVATE(tmpa)
     DO c=1,fim%ncols
        tmpa=(/(fim%dblu(c,i),i=fww/2,1,-1), &
                fim%dblu(c,:),               &
               (fim%dblu(c,fim%nrows-i+1),i=1,fww/2)/)
-       fim%dblu(c,:)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
-            i=1,fim%nrows)/))
+       fim%dblu(c,:)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%nrows)/)
     END DO
     !$OMP END PARALLEL DO
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/), &
+         (/.FALSE.,.FALSE.,.TRUE./))
 30  CONTINUE
     DEALLOCATE(tmpa,STAT=MS)  ; IF (MS.NE.0) GOTO 920
     ! Set up and filter horizontally across each column
@@ -1721,30 +1735,36 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        tmpa=(/(fim%dred(i,r),i=fww/2,1,-1), &
                fim%dred(:,r),               &
               (fim%dred(fim%ncols-i+1,r),i=1,fww/2)/)
-       fim%dred(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
-            i=1,fim%ncols)/))
+       fim%dred(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%ncols)/)
     END DO
     !$OMP END PARALLEL DO
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/), &
+         (/.TRUE.,.FALSE.,.FALSE./))
 40  IF (.NOT.lcmsk(2)) GOTO 50
     !$OMP PARALLEL DO PRIVATE(tmpa)
     DO r=1,fim%nrows
        tmpa=(/(fim%dgrn(i,r),i=fww/2,1,-1), &
                fim%dgrn(:,r),               &
               (fim%dgrn(fim%ncols-i+1,r),i=1,fww/2)/)
-       fim%dgrn(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
-            i=1,fim%ncols)/))
+       fim%dgrn(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%ncols)/)
     END DO
     !$OMP END PARALLEL DO
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/), &
+         (/.FALSE.,.TRUE.,.FALSE./))
 50  IF (.NOT.lcmsk(3)) GOTO 60
     !$OMP PARALLEL DO PRIVATE(tmpa)
     DO r=1,fim%nrows
        tmpa=(/(fim%dblu(i,r),i=fww/2,1,-1), &
                fim%dblu(:,r),               &
               (fim%dblu(fim%ncols-i+1,r),i=1,fww/2)/)
-       fim%dblu(:,r)=DOMFIT((/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
-            i=1,fim%ncols)/))
+       fim%dblu(:,r)=(/(dot_product(gkrn,tmpa(i-fww/2:i+fww/2)), &
+            i=1,fim%ncols)/)
     END DO
     !$OMP END PARALLEL DO
+    CALL FIM_ctf_iter(fim,ACLMP,(/0.0_RKIND,1.0_RKIND/), &
+         (/.FALSE.,.FALSE.,.TRUE./))
 60  CONTINUE
     DEALLOCATE(tmpa,STAT=MS) ; IF (MS.NE.0) GOTO 920
     DEALLOCATE(gkrn,STAT=MS) ; IF (MS.NE.0) GOTO 920
@@ -1779,11 +1799,11 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     CALL FIM_flt_gauss(fim0,wid2)
     ! --- Take the difference and clamp ---
     !$OMP PARALLEL WORKSHARE
-    fim%dred=DOMFIT(ABS(fim0%dred-fim%dred))
-    fim%dgrn=DOMFIT(ABS(fim0%dgrn-fim%dgrn))
-    fim%dblu=DOMFIT(ABS(fim0%dblu-fim%dblu))
+    fim%dred=ABS(fim0%dred-fim%dred)
+    fim%dgrn=ABS(fim0%dgrn-fim%dgrn)
+    fim%dblu=ABS(fim0%dblu-fim%dblu)
     !$OMP END PARALLEL WORKSHARE
-    CALL FIM_clear(fim0)
+    CALL FIM_ctf_iter(fim,AABSC,(/0.0_RKIND,1.0_RKIND/))
     ! --- End exe code    ---
     GOTO 999
 900 WRITE(*,991) 'Cannot filter uninitialized structure.' ; STOP

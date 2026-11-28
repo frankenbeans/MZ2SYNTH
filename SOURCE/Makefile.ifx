@@ -5,7 +5,8 @@ CFLAGS=-warn all           \
        -fp-model fast -ftz \
        -flto               \
        -stand f08 -free    \
-       -check bounds
+       -check bounds       \
+       -g -traceback
 
 EXE=mz2
 OBJ=constant.o caseconv.o wvecmp.o pflags.o sfrealcomp.o \

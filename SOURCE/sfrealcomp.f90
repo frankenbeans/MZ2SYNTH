@@ -1,14 +1,16 @@
 ! ------------------------------------------------------------------------------
 ! SFREALCOMP.F90
 !
-! PRACTICAL REAL NUMBER COMPARISON FUNCTIONS (ORIGINALLY FOR SFDEFLIC PROJECT)
+! Practical real-number comparisons for SFDEFLIC project
 !
-! COPYRIGHT (C) 2024 BY E. LAMPRECHT - ALL RIGHTS RESERVED.
+! Copyright (C) 2026 by E. Lamprecht - all rights reserved
 ! ------------------------------------------------------------------------------
 
 MODULE SFRealComp
   USE Constant, ONLY: RKIND
   IMPLICIT NONE
+
+  REAL(KIND=RKIND),PARAMETER :: ATOL=100.0_RKIND*EPSILON(1.0_RKIND)
 
 CONTAINS
 
@@ -18,7 +20,7 @@ CONTAINS
     LOGICAL :: REQ
     REAL(KIND=RKIND),INTENT(IN) :: R1,R2
     ! --- EXE CODE ---
-    REQ=(ABS(R1-R2).LE.TINY(R1))
+    REQ=(ABS(R1-R2).LE.ATOL)
     ! --- END CODE ---
   END FUNCTION REQ
 
@@ -28,7 +30,7 @@ CONTAINS
     LOGICAL :: RNE
     REAL(KIND=RKIND),INTENT(IN) :: R1,R2
     ! --- EXE CODE ---
-    RNE=(ABS(R1-R2).GT.TINY(R1))
+    RNE=(ABS(R1-R2).GT.ATOL)
     ! --- END CODE ---
   END FUNCTION RNE
 
@@ -38,7 +40,7 @@ CONTAINS
     LOGICAL :: RIZ
     REAL(KIND=RKIND),INTENT(IN) :: R1
     ! --- EXE CODE ---
-    RIZ=ABS(R1).LE.TINY(R1)
+    RIZ=ABS(R1).LE.ATOL
     ! --- END CODE ---
   END FUNCTION RIZ
 
@@ -48,12 +50,8 @@ CONTAINS
     LOGICAL :: RNZ
     REAL(KIND=RKIND),INTENT(IN) :: R1
     ! --- EXE CODE ---
-    RNZ=ABS(R1).GT.TINY(R1)
+    RNZ=ABS(R1).GT.ATOL
     ! --- END CODE ---
   END FUNCTION RNZ
   
 END MODULE SFRealComp
-  
-  
-  
-  

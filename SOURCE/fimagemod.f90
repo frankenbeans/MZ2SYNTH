@@ -30,7 +30,7 @@
 !|                                                                            |
 !| Changing ncols or nrows is not safe.                                       |
 !|                                                                            |
-!| SUPPORTED PLATFORMS:  Fortran 2003 (for stream I/O);                       |
+!| SUPPORTED PLATFORMS:  Fortran 2008                                         |
 !|                                                                            |
 !| BUGS AND LIMITATIONS:                                                      |
 !| --------------------                                                       |
@@ -56,6 +56,9 @@ MODULE FImageMod
   ENUMERATOR :: FIM_subtype_nul=0,  &  ! Un-initialized structure
                 FIM_subtype_pgm=1,  &  ! PGM grayscale PnM image
                 FIM_subtype_ppm=2      ! PPM RGB PnM image
+  ENUMERATOR :: FIM_gamma_none =0,  &  ! No gamma correction - linear PnM
+                FIM_gamma_bt709=1,  &  ! BT-709 transfer function (std. PnM)
+                FIM_gamma_srgb =2      ! SRGB transfer function
   ENUMERATOR :: FIM_nchan_pgm  =1,  &  ! Number of channels in PGM image
                 FIM_nchan_ppm  =3      ! Number of channels in PPM image
   ENUMERATOR :: FIM_error_nul  =0,  &  ! Un-initialized structure
@@ -64,7 +67,8 @@ MODULE FImageMod
                 FIM_error_fwt  =2,  &  ! File write error
                 FIM_error_pre  =3,  &  ! Premature EOF
                 FIM_error_hdr  =4,  &  ! Invalid header
-                FIM_error_dat  =5      ! Invalid data
+                FIM_error_dat  =5,  &  ! Invalid data
+                FIM_error_gtf  =6      ! Invalid gamma transfer function type
   ENUMERATOR :: FIM_grscl_nul  =0,  &  ! Un-initialized structure
                 FIM_grscl_amn  =1,  &  ! Grey = arithmetic mean (r,g,b)
                 FIM_grscl_gmn  =2,  &  ! Grey = geometric  mean (r,g,b)
@@ -73,19 +77,51 @@ MODULE FImageMod
                 FIM_grscl_rvl  =5,  &  ! Grey = r
                 FIM_grscl_gvl  =6,  &  ! Grey = g
                 FIM_grscl_bvl  =7,  &  ! Grey = b
-                FIM_grscl_lum  =8      ! Grey = Luminance (r,g,b)
+                FIM_grscl_lum  =8,  &  ! Grey = Luminance (r,g,b)
+                FIM_grscl_med  =9      ! Grey = median value (r,g,b)
   END ENUM
 
+  TYPE GammaTF
+     REAL(KIND=RKIND) :: THR=0
+     REAL(KIND=RKIND) :: GAM=0
+     REAL(KIND=RKIND) :: IGM=0
+     REAL(KIND=RKIND) :: SUB=0
+     REAL(KIND=RKIND) :: FCE=1 ! Avoid divide by zero
+     REAL(KIND=RKIND) :: FCL=0
+  END TYPE GammaTF
+
+  TYPE(GammaTF),PARAMETER :: GMA_NONE=GammaTF(   &
+       THR=1.0E+2_RKIND,                         &
+       FCL=1.0E+0_RKIND)
+
+  TYPE(GammaTF),PARAMETER :: GMA_BT709M=GammaTF( &
+       THR=0.018_RKIND ,                         &
+       GAM=0.450_RKIND ,                         &
+       IGM=1/0.45_RKIND,                         &
+       SUB=0.099_RKIND ,                         &
+       FCE=1.099_RKIND ,                         &
+       FCL=(1.099_RKIND*(0.018_RKIND**0.450_RKIND)-0.099_RKIND)/0.018_RKIND )
+
+  TYPE(GammaTF),PARAMETER :: GMA_SRGBM=GammaTF( &
+       THR=0.0031308_RKIND ,                    &
+       GAM=1/2.4_RKIND     ,                    &
+       IGM=2.40_RKIND      ,                    &
+       SUB=0.055_RKIND     ,                    &
+       FCE=1.055_RKIND     ,                    &
+       FCL=(1.055_RKIND*(0.0031308_RKIND**(1/2.4_RKIND))-0.055_RKIND) / &
+            0.0031308_RKIND )
+  
   TYPE FImage
-     INTEGER                                 :: subtype=FIM_subtype_nul
-     INTEGER                                 :: ncols=0,nrows=0
-     INTEGER                                 :: maxval=0
-     REAL(KIND=RKIND),DIMENSION(:,:),POINTER :: dred=>NULL() ! Red   channel
-     REAL(KIND=RKIND),DIMENSION(:,:),POINTER :: dgrn=>NULL() ! Green channel
-     REAL(KIND=RKIND),DIMENSION(:,:),POINTER :: dblu=>NULL() ! Blue  channel
-     CHARACTER(LEN=FIM_comlen)               :: comments(1:FIM_ncomments)=''
-     INTEGER                                 :: ncomments=0
-     INTEGER                                 :: ecode=FIM_error_nul
+     INTEGER                   :: subtype=FIM_subtype_nul
+     INTEGER                   :: gammatf=FIM_gamma_bt709
+     INTEGER                   :: ncols=0,nrows=0
+     INTEGER                   :: maxval=0
+     REAL(KIND=RKIND),POINTER  :: dred(:,:)=>NULL() ! Red   channel
+     REAL(KIND=RKIND),POINTER  :: dgrn(:,:)=>NULL() ! Green channel
+     REAL(KIND=RKIND),POINTER  :: dblu(:,:)=>NULL() ! Blue  channel
+     CHARACTER(LEN=FIM_comlen) :: comments(1:FIM_ncomments)=''
+     INTEGER                   :: ncomments=0
+     INTEGER                   :: ecode=FIM_error_nul
   END TYPE FImage
 
 CONTAINS ! /// ------------------------------------------------------------ ///
@@ -142,7 +178,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     STOP
 991 FORMAT('*** ERROR (FIM_new): invalid ', A, I6, '; should be >=1')
 992 FORMAT('*** ERROR (FIM_new): ', A)
-993 FORMAT('*** ERROR (FIM_new): invalid maxval  ', I6, '; should be <=65536')
+993 FORMAT('*** ERROR (FIM_new): invalid maxval  ', I6, '; should be <=65535')
 994 FORMAT('*** ERROR (FIM_new): invalid subtype ', I6)
 999 RETURN
   END SUBROUTINE FIM_new
@@ -166,10 +202,13 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     IF (sim%maxval.LT.1.OR.sim%maxval.GT.2**16-1) GOTO 920
     IF (sim%subtype.LT.FIM_subtype_pgm.OR. &
          sim%subtype.GT.FIM_subtype_ppm) GOTO 930
+    IF (sim%gammatf.LT.FIM_gamma_none.OR.sim%gammatf.GT.FIM_gamma_srgb) &
+         GOTO 940
     ! +--------------------------------+
     ! | Create new image based on sim. |
     ! +--------------------------------+
     CALL FIM_new(fim,sim%ncols,sim%nrows,sim%maxval,sim%subtype)
+    fim%gammatf=sim%gammatf
     !$OMP PARALLEL DO
     DO r=1,fim%nrows
        DO c=1,fim%ncols
@@ -192,13 +231,16 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     STOP
 930 WRITE(*,993) sim%subtype
     STOP
+940 WRITE(*,994) sim%gammatf
+    STOP    
 991 FORMAT('*** ERROR (FIM_copy): invalid ', A, I6, '; should be >=1')
-992 FORMAT('*** ERROR (FIM_copy): invalid maxval  ', I6, '; should be <=65536')
+992 FORMAT('*** ERROR (FIM_copy): invalid maxval  ', I6, '; should be <=65535')
 993 FORMAT('*** ERROR (FIM_copy): invalid subtype ', I6)
+994 FORMAT('*** ERROR (FIM_copy): invalid gammatf ', I6)
 999 RETURN
   END SUBROUTINE FIM_copy
 !==============================================================================
-  SUBROUTINE FIM_read(fim,fname,funit)
+  SUBROUTINE FIM_read(fim,fname,funit,gtfi)
     ! +-----------------------------------------------------------------------+
     ! | Read the file named fname, using unit funit, and store the PNM data   |
     ! | in the FImage structure fim.  Note that this function calls FIM_new   |
@@ -208,7 +250,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- Dummy arguments ---      
     TYPE(FImage),INTENT(INOUT)     :: fim
     CHARACTER(LEN=*),INTENT(IN)    :: fname
-    INTEGER         ,INTENT(IN)    :: funit
+    INTEGER         ,INTENT(IN)    :: funit,gtfi
+    OPTIONAL :: gtfi
     ! --- Parameters      ---
     INTEGER,PARAMETER              :: PFORM_asc =0,PFORM_bin=1
     ! --- Variables       ---
@@ -222,8 +265,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     INTEGER,ALLOCATABLE            :: tmp(:)
     INTEGER                        :: ms
     CHARACTER(LEN=FIM_comlen)      :: tcomments(1:FIM_ncomments)
-    INTEGER                        :: j,tncomments
+    INTEGER                        :: lgtfi,j,tncomments
     LOGICAL                        :: pcb_rderr
+    TYPE(GammaTF)                  :: gtf
     ! --- Executable code ---
     ! +-----------------------------+
     ! | Preliminary initializations |
@@ -232,6 +276,20 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     pform=0  ! Shut up -Wall
     tncomments=0
     tcomments=''
+    ! +---------------------------------------------------------------+
+    ! | Select gamma transfer function and let FIM remember it.       |
+    ! +---------------------------------------------------------------+
+    lgtfi=fim%gammatf ; IF (PRESENT(gtfi)) lgtfi=gtfi
+    SELECT CASE(lgtfi)
+    CASE(FIM_gamma_none)
+       gtf=GMA_NONE ;
+    CASE(FIM_gamma_bt709)
+       gtf=GMA_BT709M
+    CASE(FIM_gamma_srgb)
+       gtf=GMA_SRGBM
+    CASE DEFAULT
+       GOTO 905
+    END SELECT
     ! +---------------------------------------------------------------+
     ! | Read header and figure out size, type and maxval of PNM file. |
     ! | Also work out if this is a binary or 'plain' PNM.             |
@@ -289,17 +347,34 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ELSE
        pnbps=2
     END IF
+
+    ! +-------------------------------------------------------------------+
+    ! | Check whether image dimensions as per header are so large that    |
+    ! | we will not be able to allocate chtmp that we will require later. |
+    ! +-------------------------------------------------------------------+
+    BLOCK
+      INTEGER(kind=8) :: bignbytes,facts(1:4)
+      facts=(/nchan,pnbps,pncols,pnrows/)
+      bignbytes=1 ;
+      DO j=lbound(facts,1),ubound(facts,1)
+         bignbytes=bignbytes*facts(j)
+         if (bignbytes > huge(pnbps)) goto 950
+      END DO
+    END BLOCK
+    
     ! +----------------------------------------------------+
     ! | Create new FIM structure now that we know all the  |
     ! | necessary parameters, and add stored comments.     |
     ! +----------------------------------------------------+
     CALL FIM_new(fim,pncols,pnrows,pmaxval,psubtype)
-    fim%ecode=FIM_error_ok ;
+    fim%ecode=FIM_error_ok
+    fim%gammatf=lgtfi
     DO j=1,tncomments
        CALL FIM_add_comment(fim,tcomments(j))
     END DO
     ! +-------------------------------------------------------------+
     ! | Allocate temporary space for reading in grayscale/RGB data. |
+    ! | These are plain INTEGERS so npbs does not feature here.     |
     ! +-------------------------------------------------------------+
     ALLOCATE(tmp(1:nchan*fim%ncols*fim%nrows),STAT=ms)
     IF (ms.NE.0) GOTO 940
@@ -337,6 +412,8 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     GOTO 999
 900 WRITE(*,991) TRIM(fname)
     fim%ecode=FIM_error_frd ; GOTO 999
+905 WRITE(*,994) lgtfi
+    fim%ecode=FIM_error_gtf ; GOTO 999
 910 WRITE(*,992) TRIM(fname), ' ID code ("P2", "P3", "P5" or "P6")'
     fim%ecode=FIM_error_hdr ; GOTO 999
 920 WRITE(*,992) TRIM(fname), '<width> x <height>, with both >=1 and'
@@ -344,9 +421,12 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     fim%ecode=FIM_error_hdr ; GOTO 999
 940 WRITE(*,993) TRIM(fname), 'Out of memory for tmp storage.'
     STOP
-991 FORMAT('*** WARNING (FIM_read_pnm): Cannot read input file '  ,A)
-992 FORMAT('*** WARNING (FIM_read_pnm): Error or EOF in "',A, '", expecting ',A)
-993 FORMAT('*** ERROR (FIM_read_pnm): While reading input file ',A,', ',A)
+950 WRITE(*,993) TRIM(fname), 'Image header dimensions exceed 32 bit domain'
+    STOP
+991 FORMAT('*** WARNING (FIM_read): Cannot read input file '  ,A)
+992 FORMAT('*** WARNING (FIM_read): Error or EOF in "',A, '", expecting ',A)
+993 FORMAT('*** ERROR (FIM_read): While reading input file ',A,', ',A)
+994 FORMAT('*** ERROR (FIM_read): Bad gamma transfer function no.',1x,I0)
 ! +-------------------------------------------------------+
 ! | Common exit-point for this routine.  Clean up & quit. |
 ! +-------------------------------------------------------+
@@ -422,12 +502,12 @@ CONTAINS ! /// ------------------------------------------------------------ ///
       ! +-----------------------------------------------------------------+
       IF (pnbps.EQ.1) THEN
          !$OMP PARALLEL WORKSHARE
-         tmp=IACHAR(chtmp)
+         tmp=IAND(IACHAR(chtmp),255)
          !$OMP END PARALLEL WORKSHARE
       ELSE IF (pnbps.EQ.2) THEN
          !$OMP PARALLEL WORKSHARE
-         tmp=(/(ISHFT(IACHAR(chtmp(j)),8)+IACHAR(chtmp(j+1)), &
-              j=1,SIZE(chtmp),2) /)
+         tmp=(/(ISHFT(IAND(IACHAR(chtmp(j)),255),8)+ &
+                IAND(IACHAR(chtmp(j+1)),255),j=1,SIZE(chtmp),2)/)
          !$OMP END PARALLEL WORKSHARE
       END IF
       ! --- END CODE ---
@@ -438,9 +518,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
       STOP
 920   WRITE(*,993) TRIM(fname)
       fim%ecode=FIM_error_frd ; GOTO 999
-991   FORMAT('*** ERROR (FIM_read_pnm): Prem. EOF before bin. data in ',A)
-992   FORMAT('*** ERROR (FIM_read_pnm): ',A)
-993   FORMAT('*** ERROR (FIM_read_pnm): Cannot re-open file ',A)
+991   FORMAT('*** ERROR (FIM_read): Prem. EOF before bin. data in ',A)
+992   FORMAT('*** ERROR (FIM_read): ',A)
+993   FORMAT('*** ERROR (FIM_read): Cannot re-open file ',A)
 ! +----------------------------------------------------------+
 ! | Common exit point --- deallocate chtmp and quit routine. |
 ! +----------------------------------------------------------+
@@ -461,9 +541,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
          DO r=1,fim%nrows
             DO c=1,fim%ncols
                n=nchan*((r-1)*fim%ncols+c)
-               fim%dred(c,r)=GCL(real(tmp(n-2),kind=rkind)/fim%maxval)
-               fim%dgrn(c,r)=GCL(real(tmp(n-1),kind=rkind)/fim%maxval)
-               fim%dblu(c,r)=GCL(real(tmp(n-0),kind=rkind)/fim%maxval)
+               fim%dred(c,r)=GCL(real(tmp(n-2),kind=rkind)/fim%maxval,gtf)
+               fim%dgrn(c,r)=GCL(real(tmp(n-1),kind=rkind)/fim%maxval,gtf)
+               fim%dblu(c,r)=GCL(real(tmp(n-0),kind=rkind)/fim%maxval,gtf)
             END DO
          END DO
          !$OMP END PARALLEL DO
@@ -472,9 +552,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
          DO r=1,fim%nrows
             DO c=1,fim%ncols
                n=nchan*(r-1)*fim%ncols+c
-               fim%dred(c,r)=GCL(real(tmp(n),kind=rkind)/fim%maxval)
-               fim%dgrn(c,r)=GCL(real(tmp(n),kind=rkind)/fim%maxval)
-               fim%dblu(c,r)=GCL(real(tmp(n),kind=rkind)/fim%maxval)
+               fim%dred(c,r)=GCL(real(tmp(n),kind=rkind)/fim%maxval,gtf)
+               fim%dgrn(c,r)=GCL(real(tmp(n),kind=rkind)/fim%maxval,gtf)
+               fim%dblu(c,r)=GCL(real(tmp(n),kind=rkind)/fim%maxval,gtf)
             END DO
          END DO
          !$OMP END PARALLEL DO
@@ -490,23 +570,25 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     END SUBROUTINE tidy
   END SUBROUTINE FIM_read
 !==============================================================================
-  SUBROUTINE FIM_write(fim,fname,funit,maxval,subtype,plain)
+  SUBROUTINE FIM_write(fim,fname,funit,maxval,subtype,plain,gtfi)
     IMPLICIT NONE
     ! --- Dummy arguments ---      
     TYPE(FImage),INTENT(INOUT)     :: fim
     CHARACTER(LEN=*),INTENT(IN)    :: fname
     INTEGER         ,INTENT(IN)    :: funit
     INTEGER,OPTIONAL,INTENT(IN)    :: maxval
-    INTEGER,OPTIONAL,INTENT(IN)    :: subtype
+    INTEGER,OPTIONAL,INTENT(IN)    :: subtype,gtfi
     LOGICAL,OPTIONAL,INTENT(IN)    :: plain
     ! --- Parameters      ---
     INTEGER,PARAMETER              :: LBT  =2**8-1
     ! --- Variables       ---
-    INTEGER                        :: ms,nbps,nsmp,nchan
+    REAL(KIND=RKIND)               :: v,vr,vg,vb,lum
+    INTEGER                        :: lgtfi,ms,nbps,nsmp,nchan
     INTEGER                        :: r,c,n,j,fptr
     CHARACTER(LEN=1),ALLOCATABLE   :: chtmp(:)
     CHARACTER(LEN=2)               :: pcode
     LOGICAL                        :: tplain
+    TYPE(GammaTF)                  :: gtf
     ! --- Executable code ---
     ! *** /////////////////////////////////////////////////////////////////////
     ! *** /// SHOULD THESE MODIFY THE STRUCTURE, OR SHOULD WE USE TEMPORARY ///
@@ -528,7 +610,9 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! | Figure out nbps (# bytes/sample) and nchan (#channels) from subtype   |
     ! | and maxval.                                                           |
     ! +-----------------------------------------------------------------------+
-    IF (fim%subtype.EQ.FIM_subtype_pgm.AND.fim%maxval.LE.2**8-1) THEN
+    IF (fim%maxval.LE.0) THEN
+       GOTO 900
+    ELSE IF (fim%subtype.EQ.FIM_subtype_pgm.AND.fim%maxval.LE.2**8-1) THEN
        nbps=1
        nchan=FIM_nchan_pgm
        IF (tplain.EQV..TRUE.) THEN
@@ -563,16 +647,45 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ELSE
        GOTO 900
     END IF
-
+    ! +---------------------------------------------------------------+
+    ! | Select gamma transfer function and let fim remember it.       |
+    ! +---------------------------------------------------------------+
+    lgtfi=fim%gammatf ; IF (PRESENT(gtfi)) lgtfi=gtfi
+    SELECT CASE(lgtfi)
+    CASE(FIM_gamma_none)
+       gtf=GMA_NONE ;
+    CASE(FIM_gamma_bt709)
+       gtf=GMA_BT709M
+    CASE(FIM_gamma_srgb)
+       gtf=GMA_SRGBM
+    CASE DEFAULT
+       GOTO 905
+    END SELECT
+    fim%gammatf=lgtfi
     ! +-----------------------------------------------------------------------+
     ! | Check that image contains some data and calculate the number of RGB   |
     ! | size based in nchan and the image dimensions.                         |
     ! +-----------------------------------------------------------------------+
     IF (fim%nrows.LT.1.OR.fim%ncols.LT.1) GOTO 910
-    nsmp=nchan*fim%ncols*fim%nrows
+    
+    ! +-------------------------------------------------------------------+
+    ! | Check whether image dimensions as per header are so large that    |
+    ! | we will not be able to allocate chtmp that we will require later. |
+    ! +-------------------------------------------------------------------+
+    BLOCK
+      INTEGER(kind=kind(8)) :: bignbytes,facts(1:4)
+      facts=(/nchan,nbps,fim%ncols,fim%nrows/)
+      bignbytes=1 ;
+      DO j=lbound(facts,1),ubound(facts,1)
+         bignbytes=bignbytes*facts(j)
+         if (bignbytes > huge(nbps)) goto 940
+      END DO
+    END BLOCK
+
     ! +-----------------------------------------------------------------------+
     ! | Allocate chunk of memory to hold binary output data for writing.      |
     ! +-----------------------------------------------------------------------+
+    nsmp=nchan*fim%ncols*fim%nrows
     ALLOCATE(chtmp(1:nsmp*nbps),STAT=ms)
     IF (ms.NE.0) GOTO 920
     ! +-----------------------------------------------------------------------+
@@ -585,13 +698,13 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +-------------------------+
        ! | Handle  8-bit PGM data. |
        ! +-------------------------+
-       !$OMP PARALLEL DO PRIVATE(n)
+       !$OMP PARALLEL DO PRIVATE(n,v,lum)
        DO r=1,fim%nrows
           DO c=1,fim%ncols
-             n=nchan*nbps*((r-1)*fim%ncols+c) 
-             chtmp(n)=ACHAR(NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
-                                                          fim%dgrn(c,r), &
-                                                          fim%dblu(c,r)))))
+             n=nchan*nbps*((r-1)*fim%ncols+c)
+             lum=Luminance(fim%dred(c,r),fim%dgrn(c,r),fim%dblu(c,r))
+             v=ACLMP(LGC(lum,gtf),(/0.0_RKIND,1.0_RKIND/))
+             chtmp(n)=ACHAR(NINT(fim%maxval*v))
           END DO
        END DO
        !$OMP END PARALLEL DO
@@ -599,18 +712,14 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +-------------------------+
        ! | Handle 16-bit PGM data. |
        ! +-------------------------+
-       !$OMP PARALLEL DO PRIVATE(n)
+       !$OMP PARALLEL DO PRIVATE(n,v,lum)
        DO r=1,fim%nrows
           DO c=1,fim%ncols
              n=nchan*nbps*((r-1)*fim%ncols+c)
-             chtmp(n-1)=ACHAR(ISHFT(                           &
-                  NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
-                  fim%dgrn(c,r),                               &
-                  fim%dblu(c,r)))),-8))
-             chtmp(n-0)=ACHAR( IAND(                           &
-                  NINT(fim%maxval*LGC(Luminance(fim%dred(c,r), &
-                  fim%dgrn(c,r),                               &
-                  fim%dblu(c,r)))),LBT))
+             lum=Luminance(fim%dred(c,r),fim%dgrn(c,r),fim%dblu(c,r))
+             v=fim%maxval*ACLMP(LGC(lum,gtf),(/0.0_RKIND,1.0_RKIND/))
+             chtmp(n-1)=ACHAR(ISHFT(NINT(v),-8))
+             chtmp(n-0)=ACHAR( IAND(NINT(v),LBT))
           END DO
        END DO
        !$OMP END PARALLEL DO
@@ -618,13 +727,16 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +-------------------------+
        ! | Handle  8-bit PPM data. |
        ! +-------------------------+
-       !$OMP PARALLEL DO PRIVATE(n)
+       !$OMP PARALLEL DO PRIVATE(n,vr,vg,vb)
        DO r=1,fim%nrows
           DO c=1,fim%ncols
              n=nchan*nbps*((r-1)*fim%ncols+c)
-             chtmp(n-2)=ACHAR(NINT(fim%maxval*LGC(fim%dred(c,r))))
-             chtmp(n-1)=ACHAR(NINT(fim%maxval*LGC(fim%dgrn(c,r))))
-             chtmp(n-0)=ACHAR(NINT(fim%maxval*LGC(fim%dblu(c,r))))
+             vr=fim%maxval*ACLMP(LGC(fim%dred(c,r),gtf),(/0.0_RKIND,1.0_RKIND/))
+             vg=fim%maxval*ACLMP(LGC(fim%dgrn(c,r),gtf),(/0.0_RKIND,1.0_RKIND/))
+             vb=fim%maxval*ACLMP(LGC(fim%dblu(c,r),gtf),(/0.0_RKIND,1.0_RKIND/))
+             chtmp(n-2)=ACHAR(NINT(vr))
+             chtmp(n-1)=ACHAR(NINT(vg))
+             chtmp(n-0)=ACHAR(NINT(vb))
           END DO
        END DO
        !$OMP END PARALLEL DO       
@@ -632,22 +744,19 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +-------------------------+
        ! | Handle 16-bit PPM data. |
        ! +-------------------------+
-       !$OMP PARALLEL DO PRIVATE(n)
+       !$OMP PARALLEL DO PRIVATE(n,vr,vg,vb)
        DO r=1,fim%nrows
           DO c=1,fim%ncols
              n=nchan*nbps*((r-1)*fim%ncols+c)
-             chtmp(n-5)= &
-                  ACHAR(ISHFT(NINT(fim%maxval*LGC(fim%dred(c,r))),-8))
-             chtmp(n-4)= &
-                  ACHAR( IAND(NINT(fim%maxval*LGC(fim%dred(c,r))),LBT))
-             chtmp(n-3)= &
-                  ACHAR(ISHFT(NINT(fim%maxval*LGC(fim%dgrn(c,r))),-8))
-             chtmp(n-2)= &
-                  ACHAR( IAND(NINT(fim%maxval*LGC(fim%dgrn(c,r))),LBT))
-             chtmp(n-1)= &
-                  ACHAR(ISHFT(NINT(fim%maxval*LGC(fim%dblu(c,r))),-8))
-             chtmp(n-0)= &
-                  ACHAR( IAND(NINT(fim%maxval*LGC(fim%dblu(c,r))),LBT))
+             vr=fim%maxval*ACLMP(LGC(fim%dred(c,r),gtf),(/0.0_RKIND,1.0_RKIND/))
+             vg=fim%maxval*ACLMP(LGC(fim%dgrn(c,r),gtf),(/0.0_RKIND,1.0_RKIND/))
+             vb=fim%maxval*ACLMP(LGC(fim%dblu(c,r),gtf),(/0.0_RKIND,1.0_RKIND/))
+             chtmp(n-5)= ACHAR(ISHFT(NINT(vr),-8))
+             chtmp(n-4)= ACHAR( IAND(NINT(vr),LBT))
+             chtmp(n-3)= ACHAR(ISHFT(NINT(vg),-8))
+             chtmp(n-2)= ACHAR( IAND(NINT(vg),LBT))
+             chtmp(n-1)= ACHAR(ISHFT(NINT(vb),-8))
+             chtmp(n-0)= ACHAR( IAND(NINT(vb),LBT))
           END DO
        END DO
        !$OMP END PARALLEL DO
@@ -667,7 +776,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     DO j=1,fim%ncomments
        WRITE(UNIT=funit,FMT=996,ERR=930) TRIM(fim%comments(j))
     END DO
-    IF (tplain.EQV..FALSE.) THEN
+    IF (.NOT.tplain) THEN
        ! +--------------------------------------------------------------------+
        ! | Write dims & maxval using strictly only a single NL character after|
        ! | fim%maxval.  Thereafter obtain the file pointer BEFORE closing.    |
@@ -696,21 +805,21 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ! +--------------------------------------------------------------------+
        IF (fim%subtype.EQ.FIM_subtype_pgm) THEN
           IF (fim%maxval.LE.2**8-1) THEN
-             WRITE(UNIT=funit,FMT='(12(I6))',ERR=930) IACHAR(chtmp)
+             WRITE(UNIT=funit,FMT='(9(I6))',ERR=930) IAND(IACHAR(chtmp),255)
           ELSE
-             WRITE(UNIT=funit,FMT='(12(I6))',ERR=930) &
-                  (/(ISHFT(IACHAR(chtmp(j)),8)+IACHAR(chtmp(j+1)), &
-                  j=1,SIZE(chtmp),2)/)
+             WRITE(UNIT=funit,FMT='(9(I6))',ERR=930) &
+                  (/(ISHFT(IAND(IACHAR(chtmp(j)),255),8)+ &
+                     IAND(IACHAR(chtmp(j+1)),255),j=1,SIZE(chtmp),2)/)
           END IF
        ELSE
           IF (fim%maxval.LE.2**8-1) THEN
              WRITE(UNIT=funit,ERR=930,FMT= &
-               '(I6,I6,I6," ",I6,I6,I6," ",I6,I6,I6)') IACHAR(chtmp)
+               '(I6,I6,I6," ",I6,I6,I6," ",I6,I6,I6)') IAND(IACHAR(chtmp),255)
           ELSE
              WRITE(UNIT=funit,ERR=930,FMT= &
                '(I6,I6,I6," ",I6,I6,I6," ",I6,I6,I6)') &
-               (/(ISHFT(IACHAR(chtmp(j)),8)+IACHAR(chtmp(j+1)), &
-               j=1,SIZE(chtmp),2)/)
+               (/(ISHFT(IAND(IACHAR(chtmp(j)),255),8)+ &
+               IAND(IACHAR(chtmp(j+1)),255),j=1,SIZE(chtmp),2)/)
           END IF
        END IF
     END IF
@@ -718,12 +827,16 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     GOTO 999
 900 WRITE(*,991) fim%subtype, fim%maxval
     fim%ecode=FIM_error_hdr ; GOTO 999
+905 WRITE(*,998) lgtfi
+    fim%ecode=FIM_error_gtf ; GOTO 999    
 910 WRITE(*,992) fim%ncols, fim%nrows
     fim%ecode=FIM_error_hdr ; GOTO 999
 920 WRITE(*,993) 'Out of memory.'
     STOP
 930 WRITE(*,994) fname, funit
-    fim%ecode=FIM_error_fwt ; GOTO 999
+    fim%ecode=FIM_error_fwt ; GOTO 999    
+940 WRITE(*,993) 'Image header dimensions exceed 32-bit domain'
+    STOP
     ! --- FORMATS  ---
 991 FORMAT('*** WARNING (FIM_write): invalid fim%subtype / fim%maxval ',I6,I6)
 992 FORMAT('*** WARNING (FIM_write): invalid fim%ncols or fim%nrows: ',2(I12))
@@ -732,6 +845,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 995 FORMAT(A2)
 996 FORMAT(A)
 997 FORMAT(I0,' ',I0,/,I0,:,A1)
+998 FORMAT('*** ERROR (FIM_write): Bad gamma transfer function no.',1x,I0)
 ! +-----------------------------------------------------------+
 ! | Common exit point --- tidy up and exit from this routine. |
 ! +-----------------------------------------------------------+
@@ -779,10 +893,19 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- Dummy arguments ---
     TYPE(FImage),INTENT(INOUT) :: fim
     CHARACTER(LEN=*)           :: com
+    ! --- Variables ---
     ! --- Executable code ---    
     IF (fim%ncomments.LT.FIM_ncomments) THEN
        fim%ncomments=fim%ncomments+1
-       fim%comments(fim%ncomments)=com
+       IF (TRIM(com).EQ.'') THEN
+          fim%comments(fim%ncomments)='#'
+       ELSE
+          IF (com(1:1).EQ.'#') THEN
+             fim%comments(fim%ncomments)=com
+          ELSE
+             fim%comments(fim%ncomments)='# '//com
+          END IF
+       END IF
     END IF
   END SUBROUTINE FIM_add_comment
 !==============================================================================
@@ -840,8 +963,13 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- END CODE ---
     GOTO 999
 900 WRITE(*,990) 'Error reading file ' // fname
-    fim%ecode=FIM_error_frd ; CALL tidy ; GOTO 999
-910 WRITE(*,991) 'Bad header information in file ' // fname ; GOTO 999
+    fim%ecode=FIM_error_frd
+    CALL tidy
+    GOTO 999
+910 WRITE(*,991) 'Bad header information in file ' // fname
+    fim%ecode=FIM_error_hdr
+    CALL tidy
+    GOTO 999
 990 FORMAT('*** ERROR (FIM_read_unf): ',A)
 991 FORMAT('*** WARNING (FIM_read_unf): ',A)
 999 RETURN
@@ -972,14 +1100,13 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     STOP
 910 WRITE(*,991) 'Invalid subtype.'
     STOP
-991 FORMAT('*** ERROR (FIM_check_data): ')
+991 FORMAT('*** ERROR (FIM_check_data):',1x,A)
 999 RETURN
   END FUNCTION FIM_check_data_ok
 !==============================================================================
   SUBROUTINE FIM_verify_header(fim)
     ! +-----------------------------------------------------------------------+
-    ! | Terminate program with an error message if the header of fim does not |
-    ! | make sense, or do nothing otherwise.                                  |
+    ! | Set FIM error code  if the header of fim does not make sense.         |
     ! +-----------------------------------------------------------------------+
     IMPLICIT NONE
     ! --- Dummy arguments ---
@@ -994,8 +1121,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 !==============================================================================
   SUBROUTINE FIM_verify_data(fim)
     ! +-----------------------------------------------------------------------+
-    ! | Terminate program with an error message if the data of fim does not   |
-    ! | make sense, or do nothing otherwise.                                  |
+    ! | Set FIM error code if the data of fim does not make sense.            |
     ! +-----------------------------------------------------------------------+
     IMPLICIT NONE
     ! --- Dummy arguments ---
@@ -1101,6 +1227,12 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        fim%dgrn=fim%dred
        fim%dblu=fim%dred
        !$OMP END PARALLEL WORKSHARE
+    CASE (FIM_grscl_med)
+       !$OMP PARALLEL WORKSHARE
+       fim%dred=Median(fim%dred,fim%dgrn,fim%dblu)
+       fim%dgrn=fim%dred
+       fim%dblu=fim%dred
+       !$OMP END PARALLEL WORKSHARE       
     CASE DEFAULT
        GOTO 910
     END SELECT
@@ -1294,7 +1426,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
 ! | (4) https://stackoverflow.com/a/19045659                                  |
 ! +---------------------------------------------------------------------------+
 
-  PURE FUNCTION LGC(L) RESULT(GC)
+  PURE FUNCTION LGC(L,TF) RESULT(GC)
     ! +-----------------------------------------------------------------------+
     ! | Perform gamma-correction on linear RGB or grayscale value L, and      |
     ! | return gamma-corrected value.                                         |
@@ -1302,6 +1434,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! | ARGUMENTS:                                                            |
     ! |   L :  Linear RGB or grayscale component value                        |
     ! |        Real number in the range [0,1]                                 |
+    ! |   TF : Gamma transfer function - must be enum in in FIM_gamma_*       |
     ! |                                                                       |
     ! | RETURN VALUE:                                                         |
     ! |   GC : Gamma-corrected value                                          |
@@ -1313,30 +1446,16 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- DUMMIES ---
     REAL(KIND=RKIND)             :: GC
     REAL(KIND=RKIND), INTENT(IN) :: L
-    ! --- CONSTANTS ---
-    REAL(KIND=RKIND), PARAMETER :: ExpOneOverGamma = 0.45_RKIND
-    REAL(KIND=RKIND), PARAMETER :: ExpGamma        = 1/ExpOneOverGamma
-    REAL(KIND=RKIND), PARAMETER :: ExpCoefficient  = 1.099_RKIND
-    REAL(KIND=RKIND), PARAMETER :: ExpSubtrahend   = 0.099_RKIND
-    REAL(KIND=RKIND), PARAMETER :: LinearThreshold = 0.018_RKIND
-    ! +-----------------------------------------------------------------------+
-    ! | LinearCoefficient differs slightly from the value 4.5 (exactly) given |
-    ! | in (Ref. 1), but the change is necessary to avoid a discontinuity.    |
-    ! | What's done here is similar to the approach used in NetPBM.           |
-    ! +-----------------------------------------------------------------------+
-    REAL(KIND=RKIND), PARAMETER :: LinearCoefficient =                        &
-         (ExpCoefficient*(LinearThreshold**ExpOneOverGamma)-ExpSubtrahend) /  &
-         LinearThreshold
+    TYPE(GammaTF)   , INTENT(IN) :: TF
     ! --- EXE CODE ---
-    IF (L.LE.LinearThreshold) THEN
-       GC=LinearCoefficient*L
-    ELSE
-       GC=ExpCoefficient*(L**(ExpOneOverGamma))-ExpSubtrahend
-    END IF
+    ASSOCIATE(THR=>TF%THR,GAM=>TF%GAM,IGM=>TF%IGM,SUB=>TF%SUB,FCE=>TF%FCE, &
+         FCL=>TF%FCL)
+      GC=MERGE(FCL*L,FCE*(MAX(L,0.0_RKIND)**GAM)-SUB,L.LT.THR)
+    END ASSOCIATE
     ! --- END CODE ---
   END FUNCTION LGC
 !==============================================================================
-  PURE FUNCTION GCL(GC) RESULT(L)
+  PURE FUNCTION GCL(GC,TF) RESULT(L)
     ! +-----------------------------------------------------------------------+
     ! | Perform inverse gamma-correction on linear RGB or grayscale value     |
     ! | GC, and return the linear value.                                 |
@@ -1344,6 +1463,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! | ARGUMENTS:                                                            |
     ! |   GC : Gamma-corrected value                                          |
     ! |        Real number in the range [0,1]                                 |
+    ! |   TF : Gamma transfer function - must be enum in in FIM_gamma_*       |
     ! |                                                                       |
     ! | RETURN VALUE:                                                         |
     ! |   L :  Linear RGB or grayscale component value                        |
@@ -1356,28 +1476,12 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     ! --- DUMMIES ---
     REAL(KIND=RKIND)             :: L
     REAL(KIND=RKIND), INTENT(IN) :: GC
-    ! --- CONSTANTS ---
-    REAL(KIND=RKIND), PARAMETER :: ExpOneOverGamma = 0.45_RKIND
-    REAL(KIND=RKIND), PARAMETER :: ExpGamma        = 1/ExpOneOverGamma
-    REAL(KIND=RKIND), PARAMETER :: ExpCoefficient  = 1.099_RKIND
-    REAL(KIND=RKIND), PARAMETER :: ExpSubtrahend   = 0.099_RKIND
-    REAL(KIND=RKIND), PARAMETER :: LinearThreshold = 0.018_RKIND
-    REAL(KIND=RKIND), PARAMETER :: Threshold =                                &
-         ExpCoefficient*LinearThreshold**(ExpOneOverGamma)-ExpSubtrahend
-    ! +-----------------------------------------------------------------------+
-    ! | LinearCoefficient differs slightly from the value 4.5 (exactly) given |
-    ! | in (Ref. 1), but the change is necessary to avoid a discontinuity.    |
-    ! | What's done here is similar to the approach used in NetPBM.           |
-    ! +-----------------------------------------------------------------------+
-    REAL(KIND=RKIND), PARAMETER :: LinearCoefficient =                        &
-         (ExpCoefficient*(LinearThreshold**ExpOneOverGamma)-ExpSubtrahend) /  &
-         LinearThreshold
+    TYPE(GammaTF)   , INTENT(IN) :: TF
     ! --- EXE CODE ---
-    IF (GC.LE.Threshold) THEN
-       L=GC/LinearCoefficient
-    ELSE
-       L=((GC+ExpSubtrahend)/ExpCoefficient)**ExpGamma
-    END IF
+    ASSOCIATE(THR=>TF%THR*TF%FCL,GAM=>TF%GAM,IGM=>TF%IGM,SUB=>TF%SUB, &
+         FCE=>TF%FCE,FCL=>TF%FCL)
+      L=MERGE(GC/FCL,((GC+SUB)/FCE)**IGM,GC.LT.THR)
+    END ASSOCIATE    
     ! --- END CODE ---
   END FUNCTION GCL
 !==============================================================================
@@ -1525,7 +1629,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
   SUBROUTINE FIM_stf_vflip(fim)
     ! +-----------------------------------------------------------------------+
     ! | Flip image across a   vertical dividing line.                         |
-    ! +-----------------------------------------------------------------------+    
+    ! +-----------------------------------------------------------------------+ 
     IMPLICIT NONE
     ! --- Dummy arguments ---      
     TYPE(FImage),INTENT(INOUT)     :: fim
@@ -1580,7 +1684,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
        ALLOCATE(red(1:fim%nrows,1:fim%ncols),grn(1:fim%nrows,1:fim%ncols), &
                 blu(1:fim%nrows,1:fim%ncols),stat=ms)
        IF (MS.ne.0) goto 910
-       IF (rop.EQ.90.or.rop.eq.-270) THEN
+       IF (rop.EQ.-90.OR.rop.EQ.+270) THEN
           !$OMP PARALLEL DO PRIVATE (r1,r2,c1,c2,tr,tg,tb)
           DO r1=1,fim%nrows
              c2=fim%nrows+1-r1
@@ -1633,7 +1737,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
              c2=fim%ncols-c1+1
              tr=red(c1,r1)        ;tg        =grn(c1,r1);tb        =blu(c1,r1)
              red(c1,r1)=red(c2,r1);grn(c1,r1)=grn(c2,r1);blu(c1,r1)=blu(c2,r1)
-             red(c2,r1)=tr        ;grn(c2,r1)=tg        ;blu(c2,r1)=tb             
+             red(c2,r1)=tr        ;grn(c2,r1)=tg        ;blu(c2,r1)=tb
           END DO
           !$OMP END PARALLEL DO
        END IF
@@ -1804,6 +1908,7 @@ CONTAINS ! /// ------------------------------------------------------------ ///
     fim%dblu=ABS(fim0%dblu-fim%dblu)
     !$OMP END PARALLEL WORKSHARE
     CALL FIM_ctf_iter(fim,AABSC,(/0.0_RKIND,1.0_RKIND/))
+    CALL FIM_clear(fim0)
     ! --- End exe code    ---
     GOTO 999
 900 WRITE(*,991) 'Cannot filter uninitialized structure.' ; STOP
